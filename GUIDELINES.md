@@ -1,15 +1,33 @@
 # 🚀 Project Workflow Guidelines
 
-This guide will help you and your team collaborate effectively using **GitHub Desktop** and **VS Code** for the TSU RFID Scheduling System.
+This guide helps all contributors to properly **run, edit, push, pull, and collaborate** on the RFID Scheduling System using **GitHub Desktop** and **VS Code**.
+
+---
+
+## 📚 Table of Contents
+
+- [🛠 Tools You Need](#-tools-you-need)
+- [📁 Project Structure](#-project-structure)
+- [🌱 Initial Setup](#-initial-setup)
+- [🔧 Running the Frontend (React)](#-running-the-frontend-react)
+- [🔧 Running the Backend (PHP--MySQL)](#-running-the-backend-php--mysql)
+- [🌿 Branching Guidelines](#-branching-guidelines)
+- [🔄 Pulling & Syncing Updates](#-pulling--syncing-updates)
+- [🧼 Code Guidelines](#-code-guidelines)
+- [❌ Files You Should Never Push](#️-files-you-should-never-push)
+- [🆘 Common Issues](#-common-issues)
 
 ---
 
 ## 🛠 Tools You Need
 
+Install the following:
+
 - [GitHub Desktop](https://desktop.github.com/)
 - [Visual Studio Code](https://code.visualstudio.com/)
-- XAMPP / PHP server (for PHP backend)
-- MySQL (included in XAMPP)
+- [Node.js](https://nodejs.org/en) (For React)
+- [XAMPP](https://www.apachefriends.org/index.html) (Apache + MySQL)
+- A modern browser (Chrome, Edge, etc.)
 
 ---
 
@@ -17,146 +35,178 @@ This guide will help you and your team collaborate effectively using **GitHub De
 
 ```
 rfid-scheduling-system/
-├── frontend/    # React app
-├── backend/     # PHP API
-├── docs/        # Documentation
-├── .env         # Local environment variables (do not push this!)
+├── frontend/        # React + Tailwind
+├── backend/         # PHP + MySQL
+├── docs/            # README, Guidelines, Screenshots
+├── .env             # Local secrets (DO NOT push this)
 ```
 
 ---
 
 ## 🌱 Initial Setup
 
-1. **Clone the repository:**
+### Step 1: Clone the Repository
 
-   Open **GitHub Desktop**  
-   → Click **File > Clone Repository**  
-   → Choose the repo  
-   → Clone to your desired folder
+- Open [Repository](https://github.com/MUMEi-28/TSU-ID-Scheduling-System)
+  
+![image](https://github.com/user-attachments/assets/5cb5daa6-7cb1-4c66-bd34-f2ba577a4069)
+- Go to `File > Clone Repository`
+- Choose a local folder to save it
 
-2. **Open in VS Code:**
+---
 
-   In GitHub Desktop  
-   → Click `Open in Visual Studio Code`
+### Step 2: Open in VS Code
+
+- In GitHub Desktop, click `Open in Visual Studio Code`
+![image](https://github.com/user-attachments/assets/52310414-9603-406b-94a4-3a8e690e4b80)
 
 ---
 
 ## 🔧 Running the Frontend (React)
 
-1. Open Terminal in VS Code:
-   ```
+1. In VS Code terminal:
+
+   -Open terminal using `ctrl + backtick` (ctrl + `)
+
+   ```bash
    cd frontend
    npm install
    npm run dev
    ```
 
-2. Access the site:
-   - Go to `http://localhost:5173`
+3. Open your browser and visit:
+   ```
+   http://localhost:5173
+   ```
+
+![image](https://github.com/user-attachments/assets/7aa266cb-33af-4d99-9b18-22082a127f01)
 
 ---
 
 ## 🔧 Running the Backend (PHP + MySQL)
 
-1. Start **XAMPP** and turn on:
+1. Launch **XAMPP** and start:
    - Apache
    - MySQL
 
-2. Place `backend/` files inside:
+🖼️ ![XAMPP Screenshot](<insert-your-screenshot-url-here>)
+
+2. Place the backend folder in:
    ```
    C:/xampp/htdocs/rfid-scheduling-system/backend
    ```
 
-3. Access API:
-   - e.g. `http://localhost/rfid-scheduling-system/backend/api/login.php`
-
-4. Import the database:
-   - Open `phpMyAdmin`
+3. Import the database:
+   - Open `http://localhost/phpmyadmin`
    - Create database: `rfid_system`
-   - Import from `backend/database/schema.sql`
+   - Import `schema.sql` from `backend/database/`
+
+4. Access the backend APIs:
+   ```
+   http://localhost/rfid-scheduling-system/backend/api/login.php
+   ```
 
 ---
 
 ## 🌿 Branching Guidelines
 
-> Never push directly to `main`.
+> NEVER push directly to `main`.
 
-### To create a feature branch:
+### Creating a Branch:
 
 1. In GitHub Desktop:
-   - Click `Current Branch` → `New Branch`
-   - Name it using this format:
+   - Click `Current Branch > New Branch`
+   - Name it like:
 
      ```
      feature/booking-form
-     fix/login-validation
+     fix/login-error
      docs/update-readme
      ```
 
-2. After working, **commit your changes**:
-   - Write a clear commit message like:
-     ```
-     feat: add booking form with calendar
-     ```
-
-3. **Push the branch**:
-   - Click `Push origin` in GitHub Desktop
-
-4. **Open a Pull Request (PR)**:
-   - Go to GitHub.com → Click `Compare & Pull Request`
+🖼️ ![Branching Screenshot](<insert-your-screenshot-url-here>)
 
 ---
 
-## 🔄 Syncing Changes (Pulling Updates)
+### Committing Your Code
 
-> Always pull before starting a task.
+Write clear, meaningful commit messages:
+```bash
+feat: add calendar slot selection
+fix: correct invalid input warning
+```
+
+🖼️ ![Commit Screenshot](<insert-your-screenshot-url-here>)
+
+---
+
+### Pushing Your Work
 
 1. In GitHub Desktop:
-   - Click `Fetch origin` then `Pull origin/main`
+   - Click `Push origin`
+2. On GitHub.com:
+   - Create a Pull Request (PR)
 
-2. If you have a branch:
-   - Pull latest from main into your branch:
-     ```
-     git checkout your-branch-name
-     git merge main
-     ```
+---
+
+## 🔄 Pulling & Syncing Updates
+
+> Always pull before starting work to avoid conflicts.
+
+1. In GitHub Desktop:
+   - Click `Fetch origin`
+   - Then click `Pull origin/main`
+
+2. To merge `main` into your branch:
+
+```bash
+git checkout your-branch-name
+git merge main
+```
+
+🖼️ ![Pulling Screenshot](<insert-your-screenshot-url-here>)
 
 ---
 
 ## 🧼 Code Guidelines
 
-- Keep commits small and meaningful
-- Test before pushing
-- Avoid pushing unnecessary files (`.env`, `node_modules`, `.vscode`)
+### JavaScript + React
+- Use `const`, `let`, arrow functions
+- Use meaningful component/variable names
+- Keep files modular and reusable
+
+### PHP
+- Use `filter_input()` or similar for validation
+- Organize logic in separate files/functions
+
+### MySQL
+- Use clear table/column names
+- Index important fields (e.g., student number)
 
 ---
 
 ## ❌ Files You Should Never Push
 
+These are already in `.gitignore`, but double-check before committing:
+
 - `.env`
 - `node_modules/`
 - `*.log`
+- `.vscode/`
 - `*.DS_Store`
-
-These are already in `.gitignore`, but double-check before committing.
 
 ---
 
 ## 🆘 Common Issues
 
-| Problem                        | Solution                                      |
-|-------------------------------|-----------------------------------------------|
-| Conflicts when pushing        | Pull first, resolve conflicts, then push      |
-| API not working               | Check if Apache/MySQL are running in XAMPP   |
-| Changes not showing on site   | Run `npm run dev` again or clear browser cache |
+| Problem                        | Solution                                           |
+|-------------------------------|----------------------------------------------------|
+| Port 5173 already in use       | Close other projects or change port in `vite.config.js` |
+| API returns error              | Check Apache & MySQL are running                  |
+| Cannot connect to DB          | Check DB credentials and `.env` file              |
+| Conflicts when pushing        | Pull first, resolve, then push                    |
+| Changes not showing           | Restart `npm run dev` or refresh browser          |
 
 ---
 
-## 🧠 Tips
-
-- Create a branch for each task.
-- Avoid pushing directly to `main`.
-- Use descriptive commit messages.
-- Coordinate in group chat to avoid merge conflicts.
-
----
 
