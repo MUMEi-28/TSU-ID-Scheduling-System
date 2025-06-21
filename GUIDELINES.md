@@ -62,22 +62,6 @@ rfid-scheduling-system/
 
 ---
 
-### Step 3: Create `vite.config.js`
--create `vite.config.js` file under `rfid-scheduling-system/frontend/`  
--paste this line of code  
-
-```js
-// vite.config.js
-import { defineConfig } from 'vite'
-import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react'
-
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-})
-```
-
 ## 🔧 Running the Frontend (React)
 
 1. In VS Code terminal:
