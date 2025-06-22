@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom';
 
 export default function TimeSlot({ time, indicator, availableSlots })
 {
@@ -16,14 +17,17 @@ export default function TimeSlot({ time, indicator, availableSlots })
     return (
         <div className='flex flex-col w-full'>
             {/* Time header */}
-            <div className='bg-gray-200 shadow-lg rounded-lg mb-3 border-gray-500 py-4 px-5 text-nowrap text-center flex justify-between items-center'>
-                <span className='font-bold text-2xl'>
-                    {time}
-                </span>
-                <span className='font-bold text-xl text-red-800'>
-                    {indicator}
-                </span>
-            </div>
+
+            <Link to='/receipt'>
+                <div className='bg-gray-200 shadow-lg rounded-lg mb-3 border-gray-500 py-4 px-5 text-nowrap text-center flex justify-between items-center hover:bg-gray-300'>
+                    <span className='font-bold text-2xl'>
+                        {time}
+                    </span>
+                    <span className='font-bold text-xl text-red-800'>
+                        {indicator}
+                    </span>
+                </div>
+            </Link>
 
             {/* Availability info */}
             <div className='flex flex-row justify-between items-center'>

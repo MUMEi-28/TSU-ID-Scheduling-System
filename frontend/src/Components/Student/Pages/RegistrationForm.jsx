@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function RegistrationForm()
 {
@@ -25,9 +26,11 @@ export default function RegistrationForm()
                     </div>
 
                     <div className="flex justify-center">
-                        <button type='submit' className='bg-blue-500 text-white py-2 px-12 rounded-2xl hover:bg-blue-600'>
-                            Submit
-                        </button>
+                        <Link to='/schedule'>
+                            <button type='submit' className='bg-blue-500 text-white py-2 px-12 rounded-2xl hover:bg-blue-600'>
+                                Submit
+                            </button>
+                        </Link>
                     </div>
 
                 </form>
