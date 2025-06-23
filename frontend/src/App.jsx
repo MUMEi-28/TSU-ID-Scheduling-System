@@ -4,6 +4,7 @@ import ScheduleSelection from "./Components/Student/Pages/ScheduleSelection";
 import AdminPage from "./Components/Admin/AdminPage";
 import DatePicker from "./Components/Student/NewScheduleSelection/DatePicker"
 import { Routes, Route } from "react-router-dom";
+import QueryPanel from "./Components/Student/NewScheduleSelection/QueryPanel";
 
 export default function App()
 {
@@ -16,6 +17,6 @@ export default function App()
     //   <Route path="/receipt" element={<ScheduleReceipt />} />
     // </Routes>
 
-    <DatePicker/>
+    <QueryPanel/>
   )
 }

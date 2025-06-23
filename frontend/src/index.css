@@ -1,1 +1,7 @@
+@import url('https://fonts.cdnfonts.com/css/league-spartan');
 @import "tailwindcss";
+
+
+.league-font{
+    font-family: 'League Spartan', sans-serif;
+}
