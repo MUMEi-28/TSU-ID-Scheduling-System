@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios'
 
 export default function RegistrationForm()
 {
@@ -20,12 +21,14 @@ export default function RegistrationForm()
     {
         event.preventDefault();
 
-        // AXIOS PUT CODE HERE
+        axios.post(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/register.php`, registrationInputs);
+
 
         console.log(registrationInputs);
     }
 
-    return (
+    // Check if both fields have values
+    const isFormEmpty = !registrationInputs.fullname || !registrationInputs.student_number; return (
         <div className='flex min-h-screen'>
             {/* Left Panel Form */}
             <div className='bg-gray-100 w-1/2 flex items-center justify-center'>
@@ -54,16 +57,18 @@ export default function RegistrationForm()
 
                     <div className="flex justify-center">
                         {/*   <Link to='/schedule'> */}
-                        <button type='submit' className='bg-blue-500 text-white py-2 px-12 rounded-2xl hover:bg-blue-600'>
+                        <button type='submit'
+                            disabled={isFormEmpty}
+                            className={` text-white py-2 px-12 rounded-2xl  ${isFormEmpty ? 'bg-blue-200 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`}>
                             Submit
                         </button>
                         {/* </Link> */}
                     </div>
 
                 </form>
-            </div>
+            </div >
             {/* Right Panel Form */}
-            <div className='bg-gray-200 w-1/2 flex items-center justify-center '>
+            < div className='bg-gray-200 w-1/2 flex items-center justify-center ' >
 
                 <div className='bg-white p-6 rounded-md shadow-lg w-2/6 text-center'>
                     <h2 className='text-xl font-bold mb-6'>Notice</h2>
@@ -72,7 +77,7 @@ export default function RegistrationForm()
                     <p className='mb-2'>Lorem Ipsum</p>
                     <p className='mb-2'>Lorem Ipsum</p>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

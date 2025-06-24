@@ -1,31 +1,16 @@
 <?php
-
-require_once 'loadEnv.php';
-loadEnv(); // Load variables from .env
-
+/* <!-- DATABASE CONNECTION --> */
 class DbConnect
 {
-    private $server;
-    private $dbname;
-    private $user;
-    private $pass;
-
-    public function __construct()
-    {
-        $this->server = getenv('PHP_SERVER');
-        $this->dbname = getenv('PHP_DATABASE_NAME');
-        $this->user = getenv('PHP_USER');
-        $this->pass = getenv('PHP_PASSWORD');
-    }
+    private $server = "localhost";
+    private $dbname = "tsuidschedule";
+    private $user = 'root';
+    private $password = '';
 
     public function connect()
     {
         try {
-            $conn = new PDO(
-                "mysql:host={$this->server};dbname={$this->dbname}",
-                $this->user,
-                $this->pass
-            );
+            $conn = new PDO('mysql:host=' . $this->server . '; dbname=' . $this->dbname, $this->user, $this->password);
             $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             return $conn;
         } catch (\Exception $e) {
