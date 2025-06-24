@@ -12,14 +12,14 @@ export default function App()
 {
   return (
 
-    // <Routes>
-    //   <Route path='/' element={<RegistrationForm />} />
-    //   <Route path='/schedule/' element={<ScheduleSelection />} />
-    //   <Route path='/schedule/:date' element={<ScheduleSelection />} />
-    //   <Route path='/schedule/:date/:timePeriod' element={<ScheduleSelection />} />
-    //   <Route path="/receipt" element={<ScheduleReceipt />} />
-    // </Routes>
-    <NewRegistrationForm/>
+
+    <Routes>
+      <Route path='/' element={<RegistrationForm />} />
+      <Route path='/schedule/' element={<NewScheduleSelection />} />
+      <Route path='/schedule/:date' element={<NewScheduleSelection />} />
+      <Route path='/schedule/:date/:timePeriod' element={<NewScheduleSelection />} />
+      <Route path="/receipt" element={<ScheduleReceipt />} />
+    </Routes>
 
   )
 }
