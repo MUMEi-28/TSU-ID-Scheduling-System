@@ -6,10 +6,12 @@ import { Routes, Route } from "react-router-dom";
 import QueryPanel from "./Components/Student/NewScheduleSelection/QueryPanel";
 import TimePicker from "./Components/Student/NewScheduleSelection/TimePicker";
 import NewScheduleSelection from "./Components/Student/Pages/NewScheduleSelection";
+import NewRegistrationForm from "./Components/Student/Pages/NewRegistrationForm";
 
 export default function App()
 {
   return (
+
 
     <Routes>
       <Route path='/' element={<RegistrationForm />} />
