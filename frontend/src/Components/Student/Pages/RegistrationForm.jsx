@@ -6,78 +6,92 @@ export default function RegistrationForm()
 {
     const [registrationInputs, setRegistrationInputs] = useState({});
 
-    function handleChange(event) 
+    function handleChange(event)
     {
         const name = event.target.name;
         const value = event.target.value;
-
-        console.log(name);
-        console.log(value);
-
         setRegistrationInputs(values => ({ ...values, [name]: value }));
     }
 
     function handleSubmit(event)
     {
         event.preventDefault();
-
         axios.post(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/register.php`, registrationInputs);
-
-
         console.log(registrationInputs);
     }
 
-    // Check if both fields have values
-    const isFormEmpty = !registrationInputs.fullname || !registrationInputs.student_number; return (
-        <div className='flex min-h-screen'>
+    const isFormEmpty = !registrationInputs.fullname || !registrationInputs.student_number;
+
+    return (
+        <div className='flex bg-[url(./Components/public/students-with-unif-tb.png)] min-h-screen'>
             {/* Left Panel Form */}
-            <div className='bg-gray-100 w-1/2 flex items-center justify-center'>
-                <form action=""
-                    onSubmit={handleSubmit}
-                    className='p-8 shadow-lg bg-white w-3/4 max-w-md '>
-                    <h1 className='font-bold text-3xl text-center mb-8'>Student Access</h1>
+            <div className='h-screen flex justify-center items-center sm:w-6/12'>
+                <div className='w-7/12 h-3/6 rounded-xl flex-col flex justify-center items-center gap-y-7 relative'>
+                    <div className='w-full h-full bg-[#ECECEC] absolute z-10 rounded-xl opacity-[.83]'></div>
+                    <div className='h-8 w-full bg-[#5C0101] rounded-t-xl absolute top-0 z-20 opacity-[.87]'></div>
 
-                    <div className='mb-4'>
-                        <label htmlFor="" className='block font-medium'>Full Name</label>
-                        <input type="text"
-                            onChange={handleChange}
-                            name="fullname"
-                            placeholder='Marc Jersey Castro' /* AM LIVING MY MARK HERE :D */
-                            className='border w-full border-gray-500 rounded-md px-3 py-2' />
+                    <div className='poppins-font text-[#5B0000] text-5xl font-medium tracking-[.001vw] mt-2 z-20'>
+                        Student Access
                     </div>
 
-                    <div className='mb-8'>
-                        <label htmlFor="" className='block font-medium'>Student Number</label>
-                        <input type="text"
-                            onChange={handleChange}
-                            name="student_number"
-                            placeholder='2022300766' /* THIS IS LEGIT NUMBER */
-                            className='border w-full px-2 py-3' />
-                    </div>
+                    <form onSubmit={handleSubmit} className='flex flex-col gap-y-6 w-10/12 justify-center items-center z-20'>
+                        <div className='w-full'>
+                            <label htmlFor="FullName" className='block'>Full Name</label>
+                            <input
+                                id="FullName"
+                                type="text"
+                                name="fullname"
+                                onChange={handleChange}
+                                placeholder='Marc Jersey Castro'
+                                className='p-4 bg-[#BABABA] w-full'
+                            />
+                        </div>
 
-                    <div className="flex justify-center">
-                        {/*   <Link to='/schedule'> */}
-                        <button type='submit'
+                        <div className='w-full'>
+                            <label htmlFor="StudentNum" className='block'>Student Number</label>
+                            <input
+                                id='StudentNum'
+                                type="text"
+                                name="student_number"
+                                onChange={handleChange}
+                                placeholder='2022300766'
+                                className='p-4 bg-[#BABABA] w-full'
+                            />
+                        </div>
+
+
+                        <button
+                            type='submit'
                             disabled={isFormEmpty}
-                            className={` text-white py-2 px-12 rounded-2xl  ${isFormEmpty ? 'bg-blue-200 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`}>
-                            Submit
+                            className={`py-4 shadow-lg w-4/12 istok-font text-white font-bold text-xl rounded-xl ${isFormEmpty ? 'bg-[#CE9D31]/50 cursor-not-allowed' : 'bg-[#CE9D31] hover:bg-[#CE9D31]/90'
+                                }`}
+                        >
+                            <Link to='/schedule'>   Enter</Link>
                         </button>
-                        {/* </Link> */}
+
+                    </form>
+                </div>
+            </div>
+
+            {/* Right Panel Form */}
+            <div className='sm:w-6/12 h-screen bg-[#4F0303] rounded-tl-[11vw] relative flex justify-center items-center'>
+                <div className='flex flex-col justify-evenly items-center h-full w-6/8 text-white poppins-font z-20'>
+                    <div className='text-6xl font-bold'>
+                        <h1>Welcome to TSU</h1>
+                        <h1 className='text-[#CC9318]'>ID Scheduling System!</h1>
                     </div>
 
-                </form>
-            </div >
-            {/* Right Panel Form */}
-            < div className='bg-gray-200 w-1/2 flex items-center justify-center ' >
-
-                <div className='bg-white p-6 rounded-md shadow-lg w-2/6 text-center'>
-                    <h2 className='text-xl font-bold mb-6'>Notice</h2>
-
-                    <p className='mb-2'>Lorem Ipsum</p>
-                    <p className='mb-2'>Lorem Ipsum</p>
-                    <p className='mb-2'>Lorem Ipsum</p>
+                    <div className='w-full flex items-start justify-start flex-col gap-y-10'>
+                        <h1 className='text-4xl tracking-[.001vw]'>NOTICE</h1>
+                        <p className='text-3xl text-[#AAAAAA]'>
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, <u>Hugo is the best character in ZZZ and Lighter and Lycaon</u> et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                        </p>
+                        <p className='opacity-[.34] italic'>06-21-2025</p>
+                    </div>
                 </div>
-            </div >
-        </div >
+
+                <div className='w-full h-full bg-linear-98 from-[#580000] from-13% via-[#95561C] via-80% to-[#3B0000] to-97% rounded-tl-[10vw] rounded-br-[17vw] hidden sm:block absolute z-10'></div>
+            </div>
+        </div>
     );
 }
