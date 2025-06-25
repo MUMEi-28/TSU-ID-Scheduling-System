@@ -3,7 +3,7 @@ import React from 'react'
 const QueryPanel = () =>
 {
   return (
-    <div className='h-fit sm:h-screen w-full sm:w-fit bg-gradient-to-bl from-[#641500] from-100% to-[#CA2A00] to-0% py-7 sm:py-10 px-1 lg:px-3 xl:px-15 league-font sm:text-right text-left relative'>
+    <div className='h-fit sm:h-screen w-full sm:w-fit bg-gradient-to-bl from-[#641500] from-100% to-[#CA2A00] to-0% py-7 sm:py-10 px-3 lg:px-3 xl:px-15 league-font sm:text-right text-left relative'>
       <h1 className='text-4xl sm:text-5xl font-bold text-white m-0'>2025</h1>
       <h1 className='text-xl sm:text-3xl font-bold text-white m-0'>Calendar</h1>
       <h1 className='text-md sm:text-xl font-sans  text-white m-0'>TSU ID</h1>
