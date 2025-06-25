@@ -31,7 +31,6 @@ const ScheduleReceipt = () => {
           <div className="w-full h-8 bg-[#5C0101] text-[#ECECEC] flex items-center justify-center rounded-t-4xl text-lg font-semibold">
             
           </div>
-
          
           <div className="h-6" />
 
@@ -54,7 +53,7 @@ const ScheduleReceipt = () => {
             Print
           </button>
         </div>
-        <h1 className=" justify-self-center italic poppins-font font-extralight text-[#D9D9D9] content-center">Note:  Please take a screenshot of the  receipt 
+        <h1 className=" text-center italic poppins-font font-extralight text-[#D9D9D9] ">Note:  Please take a screenshot of the  receipt 
 and close the website as soon as you finished your slot confirmation.</h1>
       </div>
     </div>
