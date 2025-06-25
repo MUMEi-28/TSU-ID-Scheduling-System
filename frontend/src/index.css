@@ -1,1 +1,22 @@
+
+@import url('https://fonts.cdnfonts.com/css/league-spartan');
+@import url('https://fonts.cdnfonts.com/css/martian-mono');
+@import url('https://fonts.cdnfonts.com/css/poppins');
+@import url('https://fonts.cdnfonts.com/css/istok');
 @import "tailwindcss";
+
+
+.league-font{
+    font-family: 'League Spartan', sans-serif;
+}
+
+.martian-font{
+    font-family: 'Martian Mono', sans-serif;
+}
+.poppins-font{
+    font-family: 'Poppins', sans-serif;
+}
+.istok-font{
+    font-family: 'Istok', sans-serif;
+                                                  
+}
