@@ -70,13 +70,13 @@ function DatePicker(props)
   };
 
   return (
-    <div className='flex-col flex justify-evenly items-center h-4/12 w-full lg:w-fit bg-red-100 '>
+    <div className='flex-col flex justify-evenly items-center h-4/12 2xl:h-5/12 w-full lg:w-fit '>
 
-      <h1 className='font-bold text-4xl text-gray-600 league-font'>
+      <h1 className='font-bold text-4xl text-gray-600 league-font '>
         Pick a date
       </h1>
 
-      <div className="flex items-center justify-center space-x-2 sm:space-x-4 w-full lg:w-fit h-full xl:h-3/4">
+      <div className="flex items-center justify-center space-x-2 sm:space-x-4 w-full lg:w-fit h-full 2xl:h-3/4">
 
         <button
           onClick={handlePrevWeek}
@@ -91,7 +91,7 @@ function DatePicker(props)
         </button>
 
         {/* Date Display */}
-        <div className="flex flex-wrap justify-center sm:justify-start shadow-lg shadow-gray-300 w-full sm:w-full xl:h-4/4 ">
+        <div className="flex flex-wrap justify-center sm:justify-start shadow-lg shadow-gray-300 w-full sm:w-full 2xl:h-3/4 ">
           {availableDates.map((date) => 
           {
             const dayOfWeek = format(date, 'EEE');
