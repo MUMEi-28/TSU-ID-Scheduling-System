@@ -70,13 +70,13 @@ function DatePicker(props)
   };
 
   return (
-    <div className='flex-col flex justify-evenly items-center h-4/12 2xl:h-5/12 w-full lg:w-fit '>
+    <div className='flex-col flex justify-evenly items-center h-4/12 w-full lg:w-fit md:mt-5 '>
 
       <h1 className='font-bold text-4xl text-gray-600 league-font '>
         Pick a date
       </h1>
 
-      <div className="flex items-center justify-center space-x-2 sm:space-x-4 w-full lg:w-fit h-full 2xl:h-3/4">
+      <div className="flex items-center justify-center space-x-2 sm:space-x-4 w-full lg:w-fit">
 
         <button
           onClick={handlePrevWeek}
@@ -91,7 +91,7 @@ function DatePicker(props)
         </button>
 
         {/* Date Display */}
-        <div className="flex flex-wrap justify-center sm:justify-start shadow-lg shadow-gray-300 w-full sm:w-full 2xl:h-3/4 ">
+        <div className="flex flex-wrap justify-center sm:justify-start shadow-lg shadow-gray-300 w-full sm:w-full ">
           {availableDates.map((date) => 
           {
             const dayOfWeek = format(date, 'EEE');
@@ -106,22 +106,22 @@ function DatePicker(props)
               <button
                 key={format(date, 'yyyy-MM-dd')}
                 className=' league-font
-                flex flex-col items-center justify-between 
-                w-1/4 lg:w-40 h-full bg-gray-100
+                flex flex-col items-center justify-between
+                w-1/4 sm:h-35 md:h-45 lg:w-40 xl:h-60 bg-gray-100
                 transition-all duration-200 ease-in-out border border-gray-300'
 
                 onClick={() => handleDateSelect(date)}
               >
-                <div className='text-sm sm:text-sm pt-1 font-semibold text-gray-600 mb-3 border-gray-400 w-full h-1/6 flex justify-center items-center bg-neutral-200'>
+                <div className='text-md sm:text-xl pt-3 font-semibold text-gray-600 mb-3 border-gray-400 w-full h-4/12 flex justify-center items-center bg-neutral-200'>
                   {dayOfWeek}
                 </div>
-                <div className={`text-3xl md:text-4xl xl:text-5xl font-bold flex items-end h-2/6 ${isSelected ? 'text-red-900' : 'text-neutral-500'}`}>
+                <div className={`text-3xl md:text-4xl lg:text-5xl font-bold flex items-end h-5/12 ${isSelected ? 'text-red-900' : 'text-neutral-500'}`}>
                   {dayOfMonth}
                 </div>
-                <div className={`text-sm md:text-xl xl:text-2xl font-mono uppercase h-1/6 ${isSelected ? 'text-red-900' : 'text-gray-500'}`}>
+                <div className={`text-sm md:text-xl lg:text-2xl font-mono uppercase h-3/12 ${isSelected ? 'text-red-900' : 'text-gray-500'}`}>
                   {month}
                 </div>
-                  <div className={`text-sm md:text-lg xl:text-xl font-mono uppercase h-1/6 ${isSelected ? 'text-red-900' : 'text-gray-400'}`}>
+                  <div className={`text-sm md:text-lg lg:text-xl font-mono uppercase h-3/12 ${isSelected ? 'text-red-900' : 'text-gray-400'}`}>
                   {year}
                 </div>
               </button>
