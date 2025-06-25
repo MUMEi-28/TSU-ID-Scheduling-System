@@ -5,7 +5,7 @@ const ScheduleReceipt = (props) =>
 
 
   return (
-    <div className="relative flex justify-evenly items-center h-screen bg-[url('Components\public\students-with-unif-tb.png')] bg-cover bg-center px-4 overflow-y-hidden">
+    <div className="relative flex justify-center items-center h-screen bg-[url('Components\public\students-with-unif-tb.png')] bg-cover bg-center px-4">
 
 
       <div className="absolute inset-0 bg-black opacity-70 z-0"></div>
