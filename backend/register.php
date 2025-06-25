@@ -25,12 +25,14 @@ try {
     }
 
     // Prepare and execute SQL
-    $sql = "INSERT INTO students (fullname, student_number) 
-            VALUES (:fullname, :student_number)";
+    $sql = "INSERT INTO students (fullname, student_number, schedule_time, schedule_date) 
+            VALUES (:fullname, :student_number, :schedule_time, :schedule_date)";
 
     $stmt = $conn->prepare($sql);
     $stmt->bindParam(':fullname', $input->fullname);
     $stmt->bindParam(':student_number', $input->student_number);
+    $stmt->bindParam(':schedule_time', $input->schedule_time);
+    $stmt->bindParam(':schedule_date', $input->schedule_date);
 
     if ($stmt->execute()) {
         $response = [
