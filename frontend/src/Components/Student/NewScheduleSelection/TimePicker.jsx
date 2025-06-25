@@ -100,7 +100,7 @@ const TimePicker = () =>
             </div>
 
             <button className='bg-[#E1A500] border-[#C68C10] league-font text-2xl px-13  py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200' onClick={handleSubmitSchedule}>
-                <Link to='/receipt'>Schedule</Link>
+                {/*  <Link to='/receipt'> */}Schedule{/* </Link> */}
             </button>
 
         </div>
