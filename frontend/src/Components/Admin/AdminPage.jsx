@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Calendar from '../Student/ScheduleSelection/Calendar';
 import { useLocation } from 'react-router-dom';
+import CustomDropdown from './CustomDropdown'; // Adjust the path if needed
 
 const AdminPage = () => {
     const location = useLocation();
@@ -8,7 +9,7 @@ const AdminPage = () => {
     const [showList, setShowList] = useState(false);
     const [currentScheduleDate, setCurrentScheduleDate] = useState("No Date Chosen");
     const [placeHolderDate, setPlaceHolderDate] = useState("No Date Chosen");
-    const [selectedTime, setSelectedTime] = useState("8:00-9:00am");
+    const [selectedTime, setSelectedTime] = useState("8:00 - 9:00am");
 
     const HandleChangeDate = () => {
         setShowCalendar(true);
@@ -29,7 +30,6 @@ const AdminPage = () => {
 
     const HandleDateReplace = () => {
         setShowCalendar(false);
-
         const Url = window.location.pathname;
         const urlSegments = Url.split('/');
         const dateNumerical = urlSegments[urlSegments.length - 1];
@@ -61,38 +61,31 @@ const AdminPage = () => {
         <div className="w-screen h-screen flex">
             {/* Sidebar */}
             <div className="w-3/12 h-screen relative flex flex-col justify-center items-center gap-5">
-                <h1 className="absolute border-2 left-0 top-10 text-2xl px-10 py-1">Admin</h1>
+                <h1 className="absolute border-2 left-0 top-10 text-2xl px-14 py-1 bg-[#971212] text-white">Admin</h1>
 
-                <h1 className="text-4xl">Scheduled Time</h1>
+                <h1 className="text-3xl ml-12 font-bold">Scheduled Time</h1>
                 
-                {/* Dropdown Time Selector */}
-                <select
-                    className="text-[clamp(1.25rem,3cqw,2rem)] border-4 rounded-lg py-4 px-6 duration-300 hover:bg-pink-200 text-center"
-                    value={selectedTime}
-                    onChange={(e) => setSelectedTime(e.target.value)}
-                >
-                    <option value="8:00-9:00am">8:00 - 9:00am</option>
-                    <option value="9:00-10:00am">9:00 - 10:00am</option>
-                    <option value="10:00-11:00am">10:00 - 11:00am</option>
-                    <option value="11:00-12:00am">11:00 - 12:00am</option>
-                </select>
+                {/* Custom Dropdown Time Selector */}
+                <CustomDropdown selectedTime={selectedTime} setSelectedTime={setSelectedTime} />
 
                 {/* Change Date Button */}
-                <div className="flex flex-col items-center gap-2 mt-4">
+                <div className="flex flex-col items-center gap-2 mt-45 ml-12">
                     <p className="text-xl">Change Date</p>
                     <button
-                        onClick={HandleChangeDate}
-                        className="w-fit text-center duration-300 border-2 hover:border-amber-400 hover:text-amber-400 px-6 py-2 text-2xl"
+                        onClick={HandleChangeDate} 
+                        className="w-fit text-center duration-150 border-2 text-white bg-[#AC0000] hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] 
+                        px-25 py-2 text-lg rounded-md "
                     >
                         {currentScheduleDate}
                     </button>
                 </div>
 
                 {/* Generate List Button */}
-                <div className="flex flex-col items-center gap-2 mt-4">
+                <div className="flex flex-col items-center gap-2 mt-0 ml-12">
                     <button
                         onClick={HandleShowList}
-                        className="w-fit text-center duration-300 hover:border-amber-400 hover:text-amber-400 border-2 px-6 py-2 text-2xl"
+                        className="w-fit text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:text-bold
+                         hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-25 py-2 text-lg"
                     >
                         Generate List
                     </button>
@@ -139,21 +132,21 @@ const AdminPage = () => {
 
                 {/* Table */}
                 <div className="w-10/12 h-8/12 bg-white flex">
-                    <div className="h-full w-2/6 border-2 self-end">
-                        <div className="w-full h-1/12 border-b-2 text-2xl text-center bg-gray-300">
-                            <h1>Name</h1>
+                    <div className="h-full w-2/6 border-1 border-[#c9c9c9] bg-[#f3f3f3] self-end">
+                        <div className="w-full h-1/12  text-2xl text-center bg-[#971212]">
+                            <h1 className="text-white pt-3 text-xl">Name</h1>
                         </div>
                     </div>
 
-                    <div className="h-full w-2/6 border-2 self-end">
-                        <div className="w-full h-1/12 border-b-2 text-2xl text-center bg-gray-300">
-                            <h1>Student Number</h1>
+                    <div className="h-full w-2/6 border-1 border-[#c9c9c9] bg-[#f3f3f3] self-end">
+                        <div className="w-full h-1/12  text-2xl text-center bg-[#971212]">
+                            <h1 className="text-white pt-3 text-xl">Student Number</h1>
                         </div>
                     </div>
 
-                    <div className="h-full w-2/6 border-2 self-end">
-                        <div className="w-full h-1/12 border-b-2 text-2xl text-center bg-gray-300">
-                            <h1>Date/Time</h1>
+                    <div className="h-full w-2/6 border-1 border-[#c9c9c9] bg-[#f3f3f3] self-end">
+                        <div className="w-full h-1/12  text-2xl text-center bg-[#971212]">
+                            <h1 className="text-white pt-3 text-xl">Date/Time</h1>
                         </div>
                     </div>
                 </div>
