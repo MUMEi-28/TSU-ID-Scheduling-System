@@ -24,6 +24,29 @@ try {
         throw new Exception("Student number is required");
     }
 
+    // Check if student_number is a 10-digit number
+    if (!preg_match('/^\d{10}$/', $input->student_number)) {
+        echo json_encode([
+            'status' => 0,
+            'message' => 'Invalid student number format. Please try again!'
+        ]);
+        exit;
+    }
+
+    // Check for duplicate student number
+    $checkSql = "SELECT COUNT(*) FROM students WHERE student_number = :student_number";
+    $checkStmt = $conn->prepare($checkSql);
+    $checkStmt->bindParam(':student_number', $input->student_number);
+    $checkStmt->execute();
+    $count = $checkStmt->fetchColumn();
+    if ($count > 0) {
+        echo json_encode([
+            'status' => 0,
+            'message' => 'Student number already exists. Please go to the Business Center with your printed schedule.'
+        ]);
+        exit;
+    }
+
     // Prepare and execute SQL
     $sql = "INSERT INTO students (fullname, student_number, schedule_time, schedule_date) 
             VALUES (:fullname, :student_number, :schedule_time, :schedule_date)";
