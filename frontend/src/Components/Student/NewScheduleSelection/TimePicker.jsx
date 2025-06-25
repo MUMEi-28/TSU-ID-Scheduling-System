@@ -26,7 +26,7 @@ const TimePicker = () =>
     }
 
     return (
-        <div className='flex flex-col justify-center items-center gap-y-10 w-fit '>
+        <div className='flex flex-col justify-center items-center gap-y-5 w-fit md:mx-10'>
 
             <h1 className='league-font text-[#686868] text-3xl font-medium'>
                 Choose your Availability
@@ -51,9 +51,9 @@ const TimePicker = () =>
                 </div>
             </div>
 
-            <div className='flex-col flex gap-y-8'>
+            <div className='flex-col flex gap-y-8 text-xs md:text-lg lg:text-xl'>
 
-                <div className='flex martian-font text-xs sm:text-xl gap-x-8'>
+                <div className='flex martian-font gap-x-8'>
 
                     <button value={isAM ? "8:00am - 9:00am" : "1:00pm - 2:00pm"}
                         onClick={(e) => handleChooseTime(e)}
@@ -75,7 +75,7 @@ const TimePicker = () =>
 
                 </div>
 
-                <div className='flex martian-font text-xs sm:text-xl gap-x-8'>
+                <div className='flex martian-font gap-x-8'>
 
                     <button value={isAM ? "10:00am-11:00am" : "3:00pm - 4:00pm"}
                         onClick={(e) => handleChooseTime(e)}
@@ -99,7 +99,7 @@ const TimePicker = () =>
 
             </div>
 
-            <button className='bg-[#E1A500] border-[#C68C10] league-font text-2xl px-13  py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200' onClick={handleSubmitSchedule}>
+            <button className='bg-[#E1A500] border-[#C68C10] league-font text-lg sm:text-2xl px-13 py-2 sm:py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200' onClick={handleSubmitSchedule}>
                 {/*  <Link to='/receipt'> */}Schedule{/* </Link> */}
             </button>
 
