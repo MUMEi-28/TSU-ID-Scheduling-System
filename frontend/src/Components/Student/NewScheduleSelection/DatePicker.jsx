@@ -8,7 +8,7 @@ function DatePicker(props)
 
     const today = new Date();
     const dayOfWeek = today.getDay();
-    
+
 
     if (dayOfWeek === 2)
     { // Tuesday
@@ -101,7 +101,7 @@ function DatePicker(props)
             const year = format(date, "yyyy")
             const isSelected = props.selectedDate && format(props.selectedDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
             const isCurrentDay = isToday(date);
-           
+
             return (
               <button
                 key={format(date, 'yyyy-MM-dd')}
@@ -121,7 +121,7 @@ function DatePicker(props)
                 <div className={`text-sm md:text-xl xl:text-2xl font-mono uppercase h-1/6 ${isSelected ? 'text-red-900' : 'text-gray-500'}`}>
                   {month}
                 </div>
-                  <div className={`text-sm md:text-lg xl:text-xl font-mono uppercase h-1/6 ${isSelected ? 'text-red-900' : 'text-gray-400'}`}>
+                <div className={`text-sm md:text-lg xl:text-xl font-mono uppercase h-1/6 ${isSelected ? 'text-red-900' : 'text-gray-400'}`}>
                   {year}
                 </div>
               </button>

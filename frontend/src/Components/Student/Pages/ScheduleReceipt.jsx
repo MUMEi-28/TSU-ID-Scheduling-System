@@ -57,7 +57,6 @@ const ScheduleReceipt = (props) =>
           <button
             id="downloadBtn"
             className=" px-6 rounded-lg' bg-[#CE9D31] hover:bg-[#5d4e2e] self-center w-8/12 sm:w-6/12 md:w-5/12 py-3 text-sm sm:text-base md:text-lg istok-font text-white font-bold rounded-xl shadow-lg mt-4"
-
             onClick={props.handleSubmit}
           >
             Print
