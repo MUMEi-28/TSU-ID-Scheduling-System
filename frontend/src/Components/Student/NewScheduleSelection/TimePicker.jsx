@@ -109,7 +109,7 @@ const TimePicker = (props) =>
                     props.setRegistrationInputs(prev => (
                         {
                             ...prev,
-                            time: props.selectedTime
+                            schedule_time: props.selectedTime
                         }
                     ));
 

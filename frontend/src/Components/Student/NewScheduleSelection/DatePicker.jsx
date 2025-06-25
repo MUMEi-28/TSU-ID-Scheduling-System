@@ -59,7 +59,7 @@ function DatePicker(props)
     props.setRegistrationInputs(prev => (
       {
         ...prev,
-        date: props.selectedDate ? format(props.selectedDate, "MMMM d, yyyy") : "No date selected"
+        schedule_date: props.selectedDate ? format(props.selectedDate, "MMMM d, yyyy") : "No date selected"
       }
     ))
 

@@ -67,13 +67,13 @@ export default function App()
         setSelectedDate={setSelectedDate}
 
 
-
         handlingDataObjectsTest={handlingDataObjectsTest}
         setRegistrationInputs={setRegistrationInputs}
       />} />
 
       <Route path="/receipt" element={<ScheduleReceipt
         registrationInputs={registrationInputs}
+        handleSubmit={handleSubmit}
 
       />} />
     </Routes>

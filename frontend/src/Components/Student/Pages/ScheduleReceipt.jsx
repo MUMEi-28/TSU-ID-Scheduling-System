@@ -46,9 +46,9 @@ const ScheduleReceipt = (props) =>
           <br></br>
 
           <h2 className="mt-2 mb-3 font-medium underline text-[#656565]">Date and Time:</h2>
-          <h3 className="mb-6 font-light text-[#656565]">{props.registrationInputs.date},
+          <h3 className="mb-6 font-light text-[#656565]">{props.registrationInputs.schedule_date},
             <br>
-            </br>{props.registrationInputs.time}</h3>
+            </br>{props.registrationInputs.schedule_time}</h3>
 
           <h2 className="mb-3 font-medium underline text-[#656565]">Your Details:</h2>
           <h3 className="mb-2 font-light text-[#656565]">Student Number: {props.registrationInputs.fullname} </h3>
@@ -56,7 +56,10 @@ const ScheduleReceipt = (props) =>
 
           <button
             id="downloadBtn"
-            className=" px-6 rounded-lg' bg-[#CE9D31] hover:bg-[#5d4e2e] self-center w-8/12 sm:w-6/12 md:w-5/12 py-3 text-sm sm:text-base md:text-lg istok-font text-white font-bold rounded-xl shadow-lg mt-4">
+            className=" px-6 rounded-lg' bg-[#CE9D31] hover:bg-[#5d4e2e] self-center w-8/12 sm:w-6/12 md:w-5/12 py-3 text-sm sm:text-base md:text-lg istok-font text-white font-bold rounded-xl shadow-lg mt-4"
+
+            onClick={props.handleSubmit}
+          >
             Print
           </button>
         </div>
