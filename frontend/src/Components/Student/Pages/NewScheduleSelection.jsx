@@ -9,7 +9,7 @@ const NewScheduleSelection = (props) =>
   return (
     <div className='flex flex-col sm:flex-row-reverse justify-center items-center bg-[#E7E7E7]'>
 
-      <div className='flex w-full sm:w-2/12 justify-end'>
+      <div className='flex w-full sm:w-fit xl:w-2/12 justify-end'>
         <QueryPanel />
       </div>
 
@@ -26,6 +26,7 @@ const NewScheduleSelection = (props) =>
           handlingDataObjectsTest={props.handlingDataObjectsTest}
           setRegistrationInputs={props.setRegistrationInputs}
         />
+
       </div>
 
 
