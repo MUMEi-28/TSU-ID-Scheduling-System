@@ -28,7 +28,7 @@ const TimePicker = (props) =>
     }
 
     return (
-        <div className='flex flex-col justify-center items-center gap-y-5 w-fit md:mx-10'>
+        <div className='flex flex-col justify-evenly items-center h-6/12 w-fit md:mx-10'>
 
             <h1 className='league-font text-[#686868] text-3xl font-medium'>
                 Choose your Availability
@@ -101,7 +101,7 @@ const TimePicker = (props) =>
 
             </div>
 
-            <button className='bg-[#E1A500] border-[#C68C10] league-font text-2xl px-13  py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200'
+            <button className='bg-[#E1A500] border-[#C68C10] league-font text-lg sm:text-2xl px-13  py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200'
 
                 onClick={() =>
                 {

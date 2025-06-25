@@ -70,7 +70,7 @@ function DatePicker(props)
   };
 
   return (
-    <div className='flex-col flex justify-center items-center gap-y-8 w-full lg:w-fit md:mt-5'>
+    <div className='flex-col flex justify-evenly items-center h-4/12 w-full lg:w-fit md:mt-5 '>
 
       <h1 className='font-bold text-4xl text-gray-600 league-font'>
         Pick a date
@@ -99,7 +99,7 @@ function DatePicker(props)
             const month = format(date, 'MMM');
 
             const year = format(date, "yyyy")
-            const isSelected = selectedDate && format(selectedDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
+            const isSelected = props.selectedDate && format(props.selectedDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
             const isCurrentDay = isToday(date);
            
             return (
