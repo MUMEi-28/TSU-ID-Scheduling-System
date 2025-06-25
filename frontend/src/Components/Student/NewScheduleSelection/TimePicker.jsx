@@ -53,7 +53,7 @@ const TimePicker = (props) =>
                 </div>
             </div>
 
-            <div className='flex-col flex gap-y-4 text-xs md:text-lg lg:text-xl'>
+            <div className='flex-col flex gap-y-8 text-xs md:text-lg lg:text-xl'>
 
                 <div className='flex martian-font gap-x-8'>
 
