@@ -101,7 +101,7 @@ const TimePicker = (props) =>
 
             </div>
 
-            <button className='bg-[#E1A500] border-[#C68C10] league-font text-lg sm:text-2xl px-13  py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200'
+            <button className='bg-[#E1A500] border-[#C68C10] league-font text-lg sm:text-2xl px-13 mt-4 py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200'
 
                 onClick={() =>
                 {
