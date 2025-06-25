@@ -49,6 +49,7 @@ export default function App()
   }
 
   return (
+<<<<<<< Updated upstream
     <Routes>
       <Route path='/' element={<RegistrationForm
         registrationInputs={registrationInputs}
@@ -63,6 +64,17 @@ export default function App()
       <Route path="/receipt" element={<ScheduleReceipt />}
         handleSubmit={handleSubmit} />
     </Routes>
+=======
+    /*  <Routes>
+       <Route path='/' element={<RegistrationForm />} />
+       <Route path='/schedule/' element={<NewScheduleSelection />} />
+       <Route path='/schedule/:date' element={<NewScheduleSelection />} />
+       <Route path='/schedule/:date/:timePeriod' element={<NewScheduleSelection />} />
+       <Route path="/receipt" element={<ScheduleReceipt />} />
+ 
+     </Routes> */
+    <AdminPage />
+>>>>>>> Stashed changes
 
   )
 }
