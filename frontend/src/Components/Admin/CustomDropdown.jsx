@@ -6,12 +6,13 @@ export default function CustomDropdown({ selectedTime, setSelectedTime })
 
     const times = [
         '08:00 AM - 09:00 AM',
-        '09:00 AM - 10:00 AM',
-        '10:00 AM - 11:00 AM',
-        '11:00 AM - 12:00 AM',
-        '1:00 PM - 2:00 PM',
-        '2:00 PM - 3:00 PM',
-        '3:00 PM - 4:00 PM',
+        '8:00am -9:00am',
+        '10:00am-11:00am',
+        '11:00am-12:00am',
+        '1:00pm -2:00pm',
+        '2:00pm -3:00pm',
+        '3:00pm -4:00pm',
+        '4:00pm -5:00pm',
     ];
 
     return (

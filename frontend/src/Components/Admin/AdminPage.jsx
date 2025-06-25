@@ -62,6 +62,11 @@ const AdminPage = () =>
         setPlaceHolderDate(realDate);
     }, [location.pathname]);
 
+    // Filter students based on selected date and time
+    const filteredStudents = students.filter(student =>
+        student.schedule_date === currentScheduleDate && student.schedule_time === selectedTime
+    );
+
     return (
         <div className="w-screen h-screen flex">
             {/* Sidebar */}
@@ -145,8 +150,8 @@ const AdminPage = () =>
                             </tr>
                         </thead>
                         <tbody>
-                            {students.length > 0 ? (
-                                students.map((student, index) => (
+                            {(currentScheduleDate !== "No Date Chosen" && filteredStudents.length > 0) ? (
+                                filteredStudents.map((student, index) => (
                                     <tr key={index} className="hover:bg-gray-100">
                                         <td className="py-2 border">{student.fullname}</td>
                                         <td className="py-2 border">{student.student_number}</td>
