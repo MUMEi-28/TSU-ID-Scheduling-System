@@ -2,29 +2,29 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios'
 
-export default function RegistrationForm()
+export default function RegistrationForm(props)
 {
-    const [registrationInputs, setRegistrationInputs] = useState({});
+    /*  const [registrationInputs, setRegistrationInputs] = useState({});
+ 
+     function handleChange(event)
+     {
+         const name = event.target.name;
+         const value = event.target.value;
+         setRegistrationInputs(values => ({ ...values, [name]: value }));
+     }
+ 
+     function handleSubmit(event)
+     {
+         event.preventDefault();
+         axios.post(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/register.php`, registrationInputs);
+         console.log(registrationInputs);
+     } */
 
-    function handleChange(event)
-    {
-        const name = event.target.name;
-        const value = event.target.value;
-        setRegistrationInputs(values => ({ ...values, [name]: value }));
-    }
-
-    function handleSubmit(event)
-    {
-        event.preventDefault();
-        axios.post(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/register.php`, registrationInputs);
-        console.log(registrationInputs);
-    }
-
-    const isFormEmpty = !registrationInputs.fullname || !registrationInputs.student_number;
+    const isFormEmpty = !props.registrationInputs.fullname || !props.registrationInputs.student_number;
 
     return (
         <div className='flex flex-col lg:flex-row bg-[url(./Components/public/students-with-unif-tb.png)] min-h-screen'>
-  
+
             {/* Left Panel Form */}
             <div className='w-full lg:w-3/6 min-h-screen flex justify-center items-center px-6'>
                 <div className="relative w-full max-w-md sm:max-w-lg md:max-w-xl rounded-xl flex flex-col justify-center items-center gap-y-6 px-6 sm:px-10 pt-16 pb-1">
@@ -34,15 +34,15 @@ export default function RegistrationForm()
                         Student Access
                     </div>
 
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-y-6 w-full px-6 sm:px-10 z-20">
+                    <form onSubmit={props.handleSubmit} className="flex flex-col gap-y-6 w-full px-6 sm:px-10 z-20">
                         <div className='w-full'>
                             <label htmlFor="FullName" className='block'>Full Name</label>
                             <input
                                 id="FullName"
                                 type="text"
                                 name="fullname"
-                                onChange={handleChange}
-                                placeholder='Miyabi'
+                                onChange={props.handleChange}
+                                placeholder='Marc Jersey Castro'
                                 className='p-4 bg-[#BABABA] w-full'
                             />
                         </div>
@@ -53,19 +53,21 @@ export default function RegistrationForm()
                                 id='StudentNum'
                                 type="text"
                                 name="student_number"
-                                onChange={handleChange}
-                                placeholder='6969696969'
+                                onChange={props.handleChange}
+                                placeholder='2022300766'
                                 className='p-4 bg-[#BABABA] w-full'
                             /> </div>
-              
-                         <button
+
+                        <button
                             type="submit"
                             disabled={isFormEmpty}
                             className={`self-center w-8/12 sm:w-6/12 md:w-5/12 py-3 text-sm sm:text-base md:text-lg
                                 istok-font text-white font-bold rounded-xl shadow-lg mt-4
                                 ${isFormEmpty ? 'bg-[#CE9D31]/50 cursor-not-allowed' : 'bg-[#CE9D31] hover:bg-[#CE9D31]/90'}`}>
-                            <Link to="/schedule">Enter</Link>
-                            </button>
+                            {/*  <Link to="/schedule">Submit</Link> */}
+                            Next
+                        </button>
+
                     </form>
                 </div>
             </div>
@@ -85,7 +87,7 @@ export default function RegistrationForm()
                         <h1 className='text-3xl sm:text-2xl md:text-3xl tracking-[.001vw] mt-0 font-medium'>Notice</h1>
                         <p className='text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-[#AAAAAA]'>
                             Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                            <u> I love Ju fufu, she the best Cat Thiren in ZZZ, smash must pull</u> et dolore magna aliqua. 
+                            <u> I love Ju fufu, she the best Cat Thiren in ZZZ, smash must pull</u> et dolore magna aliqua.
                             Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
                         </p>
                         <p className='opacity-[.34] italic'>06-21-2025</p>
@@ -94,6 +96,6 @@ export default function RegistrationForm()
 
                 <div className='w-full h-full bg-linear-98 from-[#580000] from-13% via-[#95561c] via-80% to-[#3B0000] to-97% rounded-tl-[10vw] sm:rounded-tl-[0vw] rounded-br-[0vw] sm:block absolute z-10'></div>
             </div>
-        </div>
+        </div >
     );
 }
