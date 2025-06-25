@@ -56,11 +56,11 @@ const AdminPage = () => {
         <div className="w-screen h-screen flex flex-col sm:flex-row">
             
             <div className="w-full sm:w-3/12 min-w-[250px] h-auto sm:h-screen relative flex flex-col justify-center items-center gap-5 p-5 sm:p-0">
-                <h1 className="border-2 sm:absolute left-0 sm:left-0 top-0 sm:top-10 text-2xl px-14 py-1 bg-[#971212] text-white">
+                <h1 className=" sm:absolute left-0 sm:left-0 top-0 sm:top-10 text-2xl px-14 py-1 bg-[#971212] text-white">
                     Admin
                 </h1>
 
-                <h1 className="text-4xl ml-12 font-bold text-[#232323] sm:mt-0 mt-20 text-center sm:text-left">
+                <h1 className="text-4xl ml-12 font-bold text-[#232323] sm:mt-0 mt-22 text-center sm:text-left">
                     <u>Scheduled Time</u>
                 </h1>
 
@@ -79,8 +79,10 @@ const AdminPage = () => {
                 <div className="flex flex-col items-center gap-2 mt-5 ml-12">
                     <button
                         onClick={HandleShowList}
-                        className="w-fit text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:text-bold hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-25 py-2 text-lg"
-                    >
+                        className="w-fit text-center duration-150
+                        text-white rounded-md hover:border-2 border-2 
+                        hover:text-bold hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] 
+                        bg-[#AC0000] px-25 py-2 text-lg">
                         Generate List
                     </button>
                 </div>
@@ -137,21 +139,24 @@ const AdminPage = () => {
            
             {showList && (
                 <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-20">
-                    <div className="bg-white p-6 opacity-100 shadow-xl w-11/12 sm:w-3/12 h-fit flex flex-col justify-evenly items-center border-4">
-                        <h1 className="text-4xl sm:text-5xl mb-1 text-center">Generate List</h1>
-                        <hr className="w-full" />
-                        <h1 className="text-black text-2xl sm:text-4xl">Date</h1>
-                        <h1 className="text-black text-2xl sm:text-4xl">{currentScheduleDate}</h1>
-                        <h1 className="text-black text-xl sm:text-3xl">Time</h1>
-                        <h1 className="text-black text-xl sm:text-3xl">{selectedTime}</h1>
-                        <button
-                            onClick={handleDownloadList}
-                            className="w-fit p-5 text-xl sm:text-2xl border-2 text-black rounded-md hover:bg-gray-600"
-                        >
-                            Download
-                        </button>
+                    <div className="bg-white p-6 opacity-100 shadow-xl w-11/12 max-w-[500px] sm:w-3/12 h-fit flex flex-col justify-evenly items-center border-4">
+                         <h1 className="text-3xl sm:text-5xl mb-3 text-center">Generate List</h1>
+                         <hr className="w-full mb-2" />
+                        
+                         <h1 className="text-black text-xl sm:text-2xl">Date</h1>
+                         <h1 className="text-black text-lg sm:text-2xl mb-2 text-center">{currentScheduleDate}</h1>
+                        
+                         <h1 className="text-black text-lg sm:text-2xl">Time</h1>
+                         <h1 className="text-black text-base sm:text-2xl mb-4 text-center">{selectedTime}</h1>
+                        
+                <button
+                    onClick={handleDownloadList}
+                    className="w-fit px-6 py-2 text-base mt-4 sm:text-xl border-1 text-black rounded-md hover:bg-[#D9D9D9]">
+                    Download
+                </button>
                     </div>
                 </div>
+
             )}
         </div>
     );
