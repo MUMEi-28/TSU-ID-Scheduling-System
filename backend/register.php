@@ -24,6 +24,20 @@ try {
         throw new Exception("Student number is required");
     }
 
+    // Check for duplicate student_number
+    $checkSql = "SELECT COUNT(*) FROM students WHERE student_number = :student_number";
+    $checkStmt = $conn->prepare($checkSql);
+    $checkStmt->bindParam(':student_number', $input->student_number);
+    $checkStmt->execute();
+    $count = $checkStmt->fetchColumn();
+    if ($count > 0) {
+        echo json_encode([
+            'status' => 0,
+            'message' => 'User already exists with this student number.'
+        ]);
+        exit;
+    }
+
     // Prepare and execute SQL
     $sql = "INSERT INTO students (fullname, student_number) 
             VALUES (:fullname, :student_number)";
