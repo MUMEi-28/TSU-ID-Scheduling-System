@@ -70,13 +70,13 @@ function DatePicker(props)
   };
 
   return (
-    <div className='flex-col flex justify-evenly items-center h-4/12 w-full lg:w-fit '>
+    <div className='flex-col flex justify-bet items-center h-4/12 w-full lg:w-fit '>
 
       <h1 className='font-bold text-4xl text-gray-600 league-font'>
         Pick a date
       </h1>
 
-      <div className="flex items-center justify-center space-x-2 sm:space-x-4 w-full lg:w-fit h-full xl:h-3/4">
+      <div className="flex items-center justify-center space-x-2 sm:space-x-4 w-full lg:w-fit h-full 2xl:h-3/4">
 
         <button
           onClick={handlePrevWeek}
