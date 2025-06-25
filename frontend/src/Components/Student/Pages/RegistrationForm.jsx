@@ -92,7 +92,7 @@ export default function RegistrationForm()
                     </div>
                 </div>
 
-                <div className='w-full h-full bg-linear-98 from-[#580000] from-13% via-[#95561c] via-80% to-[#3B0000] to-97% rounded-tl-[10vw] rounded-br-[17vw] sm:rounded-tl-[0vw] rounded-br-[0vw] sm:block absolute z-10'></div>
+                <div className='w-full h-full bg-linear-98 from-[#580000] from-13% via-[#95561c] via-80% to-[#3B0000] to-97% rounded-tl-[10vw] sm:rounded-tl-[0vw] rounded-br-[0vw] sm:block absolute z-10'></div>
             </div>
         </div>
     );
