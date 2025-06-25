@@ -12,7 +12,7 @@ export default function CustomDropdown({ selectedTime, setSelectedTime }) {
 
     return (
         <div className="relative w-64">
-            {/* Dropdown Button */}
+            
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full text-[clamp(1rem,2cqw,1.5rem)] rounded-lg py-3 pr-5 pl-5 mt-1 px-3
@@ -21,7 +21,7 @@ export default function CustomDropdown({ selectedTime, setSelectedTime }) {
                 {selectedTime}
             </button>
 
-            {/* Dropdown List */}
+            
             {isOpen && (
                 <ul className="absolute w-full bg-[#f7f7f7] border-0 rounded-lg mt-2 z-10 ml-6">
                     {times.map((time) => (
