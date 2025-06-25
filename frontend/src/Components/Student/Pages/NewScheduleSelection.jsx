@@ -13,7 +13,7 @@ const NewScheduleSelection = (props) =>
         <QueryPanel />
       </div>
 
-      <div className='flex flex-col justify-evenly xl:justify-center items-center w-full sm:w-10/12 h-screen  '>
+      <div className='flex flex-col justify-center gap-y-4 xl:gap-y-0 items-center w-full sm:w-10/12 h-screen  '>
         <DatePicker
           selectedDate={props.selectedDate}
           setSelectedDate={props.setSelectedDate}

@@ -30,7 +30,7 @@ const TimePicker = (props) =>
     return (
         <div className='flex flex-col justify-between items-center h-6/12 xl:h-5/12 w-fit md:mx-10'>
 
-            <h1 className='league-font text-[#686868] text-3xl font-medium mt-3'>
+            <h1 className='league-font text-[#686868] text-3xl font-medium'>
                 Choose your Availability
             </h1>
 
