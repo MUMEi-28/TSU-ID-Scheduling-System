@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios'
 
 export default function RegistrationForm(props)
 {
+
+    const navigate = useNavigate();
     /*  const [registrationInputs, setRegistrationInputs] = useState({});
  
      function handleChange(event)
@@ -20,6 +22,15 @@ export default function RegistrationForm(props)
          console.log(registrationInputs);
      } */
 
+    function handleNextButton(event)
+    {
+        event.preventDefault();
+
+        console.log("SUBMMITED")
+        navigate('/schedule');
+    }
+
+
     const isFormEmpty = !props.registrationInputs.fullname || !props.registrationInputs.student_number;
 
     return (
@@ -34,7 +45,9 @@ export default function RegistrationForm(props)
                         Student Access
                     </div>
 
-                    <form onSubmit={props.handleSubmit} className="flex flex-col gap-y-6 w-full px-6 sm:px-10 z-20">
+                    <form
+                        onSubmit={handleNextButton}
+                        className="flex flex-col gap-y-6 w-full px-6 sm:px-10 z-20">
                         <div className='w-full'>
                             <label htmlFor="FullName" className='block'>Full Name</label>
                             <input
@@ -61,6 +74,7 @@ export default function RegistrationForm(props)
                         <button
                             type="submit"
                             disabled={isFormEmpty}
+                            /* onClick={() => { handleNextButton }} */
                             className={`self-center w-8/12 sm:w-6/12 md:w-5/12 py-3 text-sm sm:text-base md:text-lg
                                 istok-font text-white font-bold rounded-xl shadow-lg mt-4
                                 ${isFormEmpty ? 'bg-[#CE9D31]/50 cursor-not-allowed' : 'bg-[#CE9D31] hover:bg-[#CE9D31]/90'}`}>
