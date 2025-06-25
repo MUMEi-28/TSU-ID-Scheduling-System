@@ -1,28 +1,30 @@
 import React from 'react'
 import { useState } from 'react'
 
-import { Link } from 'react-router-dom';
-const TimePicker = () =>
+import { Link, useNavigate } from 'react-router-dom';
+const TimePicker = (props) =>
 {
+
+    const navigate = useNavigate();
 
     const [isAM, setIsAm] = useState(true);
     const [slotNumber, setSlotNumber] = useState(9) // number of slots left
-    const [selectedTime, setSelectedTime] = useState(null);
 
     const handleChangePeriod = () =>
     {
         setIsAm(!isAM)
-        setSelectedTime(null)
+        props.setSelectedTime(null)
     }
 
     const handleChooseTime = (e) =>
     {
-        setSelectedTime(e.target.value);
+        props.setSelectedTime(e.target.value);
     }
 
     const handleSubmitSchedule = () =>
     {
-        alert("Your Schedule is " + selectedTime + " someday idk when")
+
+        alert("Your Schedule is " + props.selectedTime + " someday idk when")
     }
 
     return (
@@ -57,7 +59,7 @@ const TimePicker = () =>
 
                     <button value={isAM ? "8:00am - 9:00am" : "1:00pm - 2:00pm"}
                         onClick={(e) => handleChooseTime(e)}
-                        className={` shadow-md rounded-lg transition-all py-5 p-2 sm:px-10 duration-200 border-2 ${selectedTime === (isAM ? "8:00am - 9:00am" : "1:00pm - 2:00pm")
+                        className={` shadow-md rounded-lg transition-all py-5 p-2 sm:px-10 duration-200 border-2 ${props.selectedTime === (isAM ? "8:00am - 9:00am" : "1:00pm - 2:00pm")
                             ? isAM ? 'bg-[#E1A500] border-[#C68C10] text-white' : ' text-white bg-purple-400 border-purple-500' :
                             'bg-[#EBEBEB] text-[#7B7B7B] border-[#D4D4D4]'}`}>
 
@@ -66,7 +68,7 @@ const TimePicker = () =>
 
                     <button value={isAM ? "9:00am -10:00am" : "2:00pm - 3:00pm"}
                         onClick={(e) => handleChooseTime(e)}
-                        className={`shadow-md rounded-lg transition-all duration-200 py-5 p-2 sm:px-10 border-2 ${selectedTime === (isAM ? "9:00am -10:00am" : "2:00pm - 3:00pm")
+                        className={`shadow-md rounded-lg transition-all duration-200 py-5 p-2 sm:px-10 border-2 ${props.selectedTime === (isAM ? "9:00am -10:00am" : "2:00pm - 3:00pm")
                             ? isAM ? 'bg-[#E1A500] border-[#C68C10] text-white' : ' text-white bg-purple-400 border-purple-500' :
                             'bg-[#EBEBEB] text-[#7B7B7B] border-[#D4D4D4]'}`}>
 
@@ -79,7 +81,7 @@ const TimePicker = () =>
 
                     <button value={isAM ? "10:00am-11:00am" : "3:00pm - 4:00pm"}
                         onClick={(e) => handleChooseTime(e)}
-                        className={`shadow-md rounded-lg transition-all py-5 p-2 sm:px-10 duration-200 border-2 ${selectedTime === (isAM ? "10:00am-11:00am" : "3:00pm - 4:00pm")
+                        className={`shadow-md rounded-lg transition-all py-5 p-2 sm:px-10 duration-200 border-2 ${props.selectedTime === (isAM ? "10:00am-11:00am" : "3:00pm - 4:00pm")
                             ? isAM ? 'bg-[#E1A500] border-[#C68C10] text-white' : ' text-white bg-purple-400 border-purple-500' :
                             'bg-[#EBEBEB] text-[#7B7B7B] border-[#D4D4D4]'}`}>
 
@@ -88,7 +90,7 @@ const TimePicker = () =>
 
                     <button value={isAM ? "11:00am-12:00am" : "4:00pm - 5:00pm"}
                         onClick={(e) => handleChooseTime(e)}
-                        className={`shadow-md rounded-lg transition-all duration-200 py-5 p-2 sm:px-10 border-2 ${selectedTime === (isAM ? "11:00am-12:00am" : "4:00pm - 5:00pm")
+                        className={`shadow-md rounded-lg transition-all duration-200 py-5 p-2 sm:px-10 border-2 ${props.selectedTime === (isAM ? "11:00am-12:00am" : "4:00pm - 5:00pm")
                             ? isAM ? 'bg-[#E1A500] border-[#C68C10] text-white' : ' text-white bg-purple-400 border-purple-500' :
                             'bg-[#EBEBEB] text-[#7B7B7B] border-[#D4D4D4]'}`}>
 
@@ -99,8 +101,26 @@ const TimePicker = () =>
 
             </div>
 
-            <button className='bg-[#E1A500] border-[#C68C10] league-font text-2xl px-13  py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200' onClick={handleSubmitSchedule}>
-                {/*  <Link to='/receipt'> */}Schedule{/* </Link> */}
+            <button className='bg-[#E1A500] border-[#C68C10] league-font text-2xl px-13  py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200'
+
+                onClick={() =>
+                {
+
+                    props.setRegistrationInputs(prev => (
+                        {
+                            ...prev,
+                            time: props.selectedTime
+                        }
+                    ));
+
+                    navigate('/receipt');
+
+
+                    props.handlingDataObjectsTest();
+                }}
+
+            >
+                Schedule
             </button>
 
         </div>

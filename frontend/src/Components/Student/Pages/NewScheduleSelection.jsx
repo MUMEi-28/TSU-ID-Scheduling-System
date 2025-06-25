@@ -4,7 +4,7 @@ import QueryPanel from '../NewScheduleSelection/QueryPanel'
 import TimePicker from '../NewScheduleSelection/TimePicker'
 
 
-const NewScheduleSelection = () =>
+const NewScheduleSelection = (props) =>
 {
   return (
     <div className='flex flex-col sm:flex-row-reverse justify-center items-center bg-[#E7E7E7]'>
@@ -14,8 +14,18 @@ const NewScheduleSelection = () =>
       </div>
 
       <div className='flex flex-col justify-evenly items-center w-full sm:w-10/12 h-screen    '>
-        <DatePicker />
-        <TimePicker />
+        <DatePicker
+          selectedDate={props.selectedDate}
+          setSelectedDate={props.setSelectedDate}
+          setRegistrationInputs={props.setRegistrationInputs}
+        />
+        <TimePicker
+          setSelectedTime={props.setSelectedTime}
+          selectedTime={props.selectedTime}
+
+          handlingDataObjectsTest={props.handlingDataObjectsTest}
+          setRegistrationInputs={props.setRegistrationInputs}
+        />
       </div>
 
 

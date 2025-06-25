@@ -8,7 +8,7 @@ import TimePicker from "./Components/Student/NewScheduleSelection/TimePicker";
 import NewScheduleSelection from "./Components/Student/Pages/NewScheduleSelection";
 
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function App()
 {
@@ -17,6 +17,9 @@ export default function App()
 
   // Submission 
   const [registrationInputs, setRegistrationInputs] = useState({});
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
+
 
   function handleStudentInfoChange(event)
   {
@@ -27,15 +30,16 @@ export default function App()
 
   }
 
-  function handleScheduleSelectionChange(date, time)
+  useEffect(() =>
   {
-    setRegistrationInputs(prev => (
-      {
-        ...prev, selectedDate: date,
-        selectedTime: time,
-      }))
-  }
+    console.log(registrationInputs);
 
+  }, [registrationInputs])
+
+  function handlingDataObjectsTest()
+  {
+    /*  console.log(registrationInputs); */
+  }
 
   function handleSubmit(event)
   {
@@ -57,11 +61,21 @@ export default function App()
 
 
       <Route path='/schedule' element={<NewScheduleSelection
+        selectedTime={selectedTime}
+        setSelectedTime={setSelectedTime}
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
 
+
+
+        handlingDataObjectsTest={handlingDataObjectsTest}
+        setRegistrationInputs={setRegistrationInputs}
       />} />
 
-      <Route path="/receipt" element={<ScheduleReceipt />}
-        handleSubmit={handleSubmit} />
+      <Route path="/receipt" element={<ScheduleReceipt
+        registrationInputs={registrationInputs}
+
+      />} />
     </Routes>
 
   )

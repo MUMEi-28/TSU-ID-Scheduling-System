@@ -1,7 +1,9 @@
 import React from 'react';
 
-const ScheduleReceipt = () =>
+const ScheduleReceipt = (props) =>
 {
+
+
   return (
     <div className="relative flex justify-center items-center min-h-screen bg-[url('Components\public\students-with-unif-tb.png')] bg-cover bg-center px-4">
 
@@ -44,13 +46,13 @@ const ScheduleReceipt = () =>
           <br></br>
 
           <h2 className="mt-2 mb-3 font-medium underline text-[#656565]">Date and Time:</h2>
-          <h3 className="mb-6 font-light text-[#656565]">Jan 1, 2025,
+          <h3 className="mb-6 font-light text-[#656565]">{props.registrationInputs.date},
             <br>
-            </br>10am–12pm</h3>
+            </br>{props.registrationInputs.time}</h3>
 
           <h2 className="mb-3 font-medium underline text-[#656565]">Your Details:</h2>
-          <h3 className="mb-2 font-light text-[#656565]">Student Number: </h3>
-          <h3 className="mb-17 font-light text-[#656565]">Student Name: </h3>
+          <h3 className="mb-2 font-light text-[#656565]">Student Number: {props.registrationInputs.fullname} </h3>
+          <h3 className="mb-17 font-light text-[#656565]">Student Name: {props.registrationInputs.student_number}</h3>
 
           <button
             id="downloadBtn"

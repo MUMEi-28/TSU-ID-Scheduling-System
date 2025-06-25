@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { addDays, subDays, format, nextTuesday, previousTuesday, isToday } from 'date-fns';
 
-function DatePicker()
+function DatePicker(props)
 {
   const [currentWeekStart, setCurrentWeekStart] = useState(() =>
   {
@@ -22,7 +22,6 @@ function DatePicker()
   });
 
   const [availableDates, setAvailableDates] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(null);
 
   // Function to calculate the four days (Tuesday to Friday)
   const calculateWeekDays = useCallback(() =>
@@ -35,7 +34,7 @@ function DatePicker()
       currentDate = addDays(currentDate, 1);
     }
     setAvailableDates(dates);
-  }, [currentWeekStart, selectedDate]);
+  }, [currentWeekStart, props.selectedDate]);
 
   // Recalculate dates whenever currentWeekStart changes
   useEffect(() =>
@@ -55,7 +54,16 @@ function DatePicker()
 
   const handleDateSelect = (date) =>
   {
-    setSelectedDate(date);
+    props.setSelectedDate(date);
+
+    props.setRegistrationInputs(prev => (
+      {
+        ...prev,
+        date: props.selectedDate ? format(props.selectedDate, "MMMM d, yyyy") : "No date selected"
+      }
+    ))
+
+    console.log(format(props.selectedDate, "MMMM d, yyyy"));
   };
 
   return (
@@ -86,7 +94,7 @@ function DatePicker()
             const dayOfWeek = format(date, 'EEE');
             const dayOfMonth = format(date, 'dd');
             const month = format(date, 'MMM');
-            const isSelected = selectedDate && format(selectedDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
+            const isSelected = props.selectedDate && format(props.selectedDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
             const isCurrentDay = isToday(date);
 
             return (
