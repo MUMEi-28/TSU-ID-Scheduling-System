@@ -70,7 +70,7 @@ function DatePicker(props)
   };
 
   return (
-    <div className='flex-col flex justify-evenly items-center h-4/12 w-full lg:w-fit md:mt-5 '>
+    <div className='flex-col flex justify-evenly items-center h-4/12 w-full lg:w-fit bg-red-100 '>
 
       <h1 className='font-bold text-4xl text-gray-600 league-font '>
         Pick a date
