@@ -45,7 +45,7 @@ export default function App()
   {
     event.preventDefault();
 
-    axios.post(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/register.php`, registrationInputs)
+    axios.post(`http://localhost/GitHub/TSU-ID-Scheduling-System/backend/register.php`, registrationInputs)
       .then(() =>
       {
         console.log(registrationInputs);
@@ -76,6 +76,8 @@ export default function App()
         handleSubmit={handleSubmit}
 
       />} />
+
+      <Route path='/admin' element={<AdminPage />} />
     </Routes>
   )
 }
