@@ -28,13 +28,13 @@ const TimePicker = (props) =>
     }
 
     return (
-        <div className='flex flex-col justify-evenly items-center h-6/12 w-fit md:mx-10'>
+        <div className='flex flex-col justify-between items-center h-6/12 w-fit md:mx-10'>
 
             <h1 className='league-font text-[#686868] text-3xl font-medium'>
                 Choose your Availability
             </h1>
 
-            <div className='flex h-fit league-font w-full justify-between text-sm sm:text-md'>
+            <div className='flex h-fit league-font w-full justify-between text-sm sm:text-lg'>
 
                 <button onClick={handleChangePeriod} className='bg-[#BDBDBD] flex transition-all duration-300 rounded-lg shadow-md'>
                     <div className={`font-bold rounded-l-lg px-4 pt-2 transition-all duration-200 ${isAM ? 'bg-[#CE9D31] text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]  '}`}>
@@ -53,7 +53,7 @@ const TimePicker = (props) =>
                 </div>
             </div>
 
-            <div className='flex-col flex gap-y-8 text-xs md:text-lg lg:text-xl'>
+            <div className='flex-col flex gap-y-5 text-xs md:text-lg lg:text-xl'>
 
                 <div className='flex martian-font gap-x-8'>
 
