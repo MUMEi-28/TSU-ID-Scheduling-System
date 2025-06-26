@@ -6,6 +6,8 @@ export default function RegistrationForm(props)
 {
 
     const navigate = useNavigate();
+    const [error, setError] = useState("");
+
     /*  const [registrationInputs, setRegistrationInputs] = useState({});
  
      function handleChange(event)
@@ -22,9 +24,27 @@ export default function RegistrationForm(props)
          console.log(registrationInputs);
      } */
 
-    function handleNextButton(event)
+    async function handleNextButton(event)
     {
         event.preventDefault();
+
+        setError("");
+        try {
+            const response = await axios.post(
+                "http://localhost/GitHub/TSU-ID-Scheduling-System/backend/register.php",
+                props.registrationInputs
+            );
+            if (response.data.status === 1) {
+                navigate('/schedule');
+            } else {
+                window.alert(response.data.message || "Registration failed");
+                setError(response.data.message || "Registration failed");
+            }
+        } catch (err) {
+            window.alert("An error occurred. Please try again.");
+            setError("An error occurred. Please try again.");
+        }
+
 
         // Admin check
         if (
@@ -37,6 +57,7 @@ export default function RegistrationForm(props)
 
         console.log("SUBMMITED")
         navigate('/schedule');
+
     }
 
 
@@ -79,6 +100,10 @@ export default function RegistrationForm(props)
                                 placeholder='2022300766'
                                 className='p-4 bg-[#BABABA] w-full'
                             /> </div>
+
+                        {error && (
+                            <div className="text-red-600 text-center font-semibold">{error}</div>
+                        )}
 
                         <button
                             type="submit"

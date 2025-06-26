@@ -13,7 +13,19 @@ try {
 
     // Validate JSON decoding
     if ($input === null) {
-        throw new Exception("Invalid JSON data received"); // To prevent Uncaught Error: Attempt to modify property &quot;fullname&quot; on null
+        throw new Exception("Invalid JSON data received");
+    }
+
+    // Admin bypass: skip all checks and DB operations
+    if (
+        isset($input->fullname) && isset($input->student_number) &&
+        $input->fullname === 'admin' && $input->student_number === '1234512345'
+    ) {
+        echo json_encode([
+            'status' => 1,
+            'message' => 'Admin login bypass'
+        ]);
+        exit;
     }
 
     // Check required fields
@@ -22,6 +34,29 @@ try {
     }
     if (!isset($input->student_number)) {
         throw new Exception("Student number is required");
+    }
+
+    // Check if student_number is a 10-digit number
+    if (!preg_match('/^\d{10}$/', $input->student_number)) {
+        echo json_encode([
+            'status' => 0,
+            'message' => 'Invalid student number format. Please try again!'
+        ]);
+        exit;
+    }
+
+    // Check for duplicate student number
+    $checkSql = "SELECT COUNT(*) FROM students WHERE student_number = :student_number";
+    $checkStmt = $conn->prepare($checkSql);
+    $checkStmt->bindParam(':student_number', $input->student_number);
+    $checkStmt->execute();
+    $count = $checkStmt->fetchColumn();
+    if ($count > 0) {
+        echo json_encode([
+            'status' => 0,
+            'message' => 'Student number already exists. Please go to the Business Center with your printed schedule.'
+        ]);
+        exit;
     }
 
     // Prepare and execute SQL

@@ -13,7 +13,7 @@ dayjs.extend(isToday);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(advancedFormat);
 
-export default function Calendar()
+export default function Calendar({ onDateSelect })
 {
     const today = dayjs();
     const [currentDate, setCurrentDate] = useState(dayjs());
@@ -26,6 +26,11 @@ export default function Calendar()
     const startWeekday = startOfMonth.day();
     const daysInMonth = startOfMonth.daysInMonth();
 
+    const handleDateClick = (date) => {
+        if (onDateSelect) {
+            onDateSelect(date.format('YYYY-MM-DD'));
+        }
+    };
 
     const generateCalendar = () =>
     {
@@ -53,15 +58,14 @@ export default function Calendar()
                                 {date.date()}
                             </div>
                     ) : (
-                        <Link
-                            to={`/schedule/${date.format('YYYY-MM-DD')}`}
-                            className={`block p-2 rounded-lg transition-all hover:bg-orange-500 hover:text-white '
-                                }`}>
+                        <button
+                            type="button"
+                            onClick={() => handleDateClick(date)}
+                            className="block p-2 rounded-lg transition-all hover:bg-orange-500 hover:text-white"
+                        >
                             {date.date()}
-                        </Link>
-                    )
-                    }
-
+                        </button>
+                    )}
                 </div >
             );
         }
