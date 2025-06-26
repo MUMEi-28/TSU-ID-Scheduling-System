@@ -16,18 +16,25 @@ try {
         throw new Exception("Invalid JSON data received");
     }
 
-    // Admin bypass: skip all checks and DB operations
+    // Admin login: check if credentials match student with id=1
     if (
-        isset($input->fullname) && isset($input->student_number) &&
-        $input->fullname === 'admin' && $input->student_number === '1234512345'
+        isset($input->fullname) && isset($input->student_number)
     ) {
-        $adminToken = bin2hex(random_bytes(16));
-        echo json_encode([
-            'status' => 1,
-            'message' => 'Admin login bypass',
-            'admin_token' => $adminToken
-        ]);
-        exit;
+        $adminCheckSql = "SELECT fullname, student_number FROM students WHERE id = 1 LIMIT 1";
+        $adminStmt = $conn->prepare($adminCheckSql);
+        $adminStmt->execute();
+        $admin = $adminStmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($admin && $input->fullname === $admin['fullname'] && $input->student_number === $admin['student_number']) {
+            $adminToken = bin2hex(random_bytes(16));
+            echo json_encode([
+                'status' => 1,
+                'message' => 'Admin login',
+                'admin_token' => $adminToken,
+                'is_admin' => true
+            ]);
+            exit;
+        }
     }
 
     // Check required fields
