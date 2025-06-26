@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { format } from 'date-fns';
+import kuruKuru from '../../public/kurukuru-kururing.gif';
 
 const TimePicker = (props) =>
 {
