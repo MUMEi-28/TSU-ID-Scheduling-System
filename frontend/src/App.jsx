@@ -192,7 +192,7 @@ export default function App()
         </div>
       )}
       <div className="w-full bg-yellow-200 text-yellow-900 text-center py-2 font-bold fixed top-0 left-0 z-50 shadow-md" style={{fontSize: '0.95rem'}}>
-        DEBUG: Your progress is saved automatically in localStorage.<br/>
+        DEBUG: If you see this, please delete this debug bar if you're done debugging xD<br/>
         <span className="font-mono text-xs">{JSON.stringify(debugData, null, 2)}</span>
       </div>
       <div style={{ paddingTop: '72px' }}>
