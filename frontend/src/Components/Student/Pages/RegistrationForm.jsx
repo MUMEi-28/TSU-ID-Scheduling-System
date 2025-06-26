@@ -26,6 +26,15 @@ export default function RegistrationForm(props)
     {
         event.preventDefault();
 
+        // Admin check
+        if (
+            props.registrationInputs.fullname === 'admin' &&
+            props.registrationInputs.student_number === '1234512345'
+        ) {
+            navigate('/admin');
+            return;
+        }
+
         console.log("SUBMMITED")
         navigate('/schedule');
     }

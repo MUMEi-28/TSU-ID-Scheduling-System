@@ -63,8 +63,10 @@ export default function App()
       <Route path='/schedule' element={<NewScheduleSelection
         selectedTime={selectedTime}
         setSelectedTime={setSelectedTime}
+
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
+        registrationInputs={registrationInputs}
 
 
         handlingDataObjectsTest={handlingDataObjectsTest}
@@ -76,6 +78,8 @@ export default function App()
         handleSubmit={handleSubmit}
 
       />} />
-   </Routes>
+
+      <Route path='/admin' element={<AdminPage />} />
+    </Routes>
   )
 }
