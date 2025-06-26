@@ -27,6 +27,7 @@ export default function RegistrationForm(props)
     async function handleNextButton(event)
     {
         event.preventDefault();
+
         setError("");
         try {
             const response = await axios.post(
@@ -43,6 +44,20 @@ export default function RegistrationForm(props)
             window.alert("An error occurred. Please try again.");
             setError("An error occurred. Please try again.");
         }
+
+
+        // Admin check
+        if (
+            props.registrationInputs.fullname === 'admin' &&
+            props.registrationInputs.student_number === '1234512345'
+        ) {
+            navigate('/admin');
+            return;
+        }
+
+        console.log("SUBMMITED")
+        navigate('/schedule');
+>>>>>>> admin-backend
     }
 
 

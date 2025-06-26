@@ -4,21 +4,11 @@ header("Access-Control-Allow-Headers: *");
 header("Access-Control-Allow-Methods: *");
 header("Content-Type: application/json, Content-Type, Authorization");
 
-
-
-
-
-
 /* <!-- DATABASE CONNECTION --> */
 define('server', "localhost");
 define('dbname', "tsuidschedule");
 define('user', 'root');
 define('password', '');
-
-
-
-
-
 
 try {
     $conn = new PDO('mysql:host=' . server . '; dbname=' . dbname, user, password);

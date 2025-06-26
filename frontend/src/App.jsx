@@ -76,6 +76,8 @@ export default function App()
         handleSubmit={handleSubmit}
 
       />} />
-   </Routes>
+
+      <Route path='/admin' element={<AdminPage />} />
+    </Routes>
   )
 }
