@@ -57,7 +57,7 @@ export default function RegistrationForm(props)
 
         console.log("SUBMMITED")
         navigate('/schedule');
->>>>>>> admin-backend
+
     }
 
 
