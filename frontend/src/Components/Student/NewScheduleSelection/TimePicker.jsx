@@ -28,7 +28,7 @@ const TimePicker = (props) =>
     }
 
     return (
-        <div className='flex flex-col justify-between  items-center h-7/12 2xl:h-5/12 w-fit md:mx-10'>
+        <div className='flex flex-col justify-between 2xl:justify items-center h-6/12 2xl:h-5/12 w-fit md:mx-10'>
 
             <h1 className='league-font text-[#686868] text-3xl font-medium'>
                 Choose your Availability
@@ -53,7 +53,7 @@ const TimePicker = (props) =>
                 </div>
             </div>
 
-            <div className='flex-col flex gap-y-4 text-xs md:text-lg lg:text-xl'>
+            <div className='flex-col flex gap-y-5 text-xs md:text-lg lg:text-xl'>
 
                 <div className='flex martian-font gap-x-8'>
 
