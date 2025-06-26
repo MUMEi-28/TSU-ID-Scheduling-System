@@ -1,5 +1,4 @@
 import React from 'react';
-import jerseyEating from '../public/jerseyEating.jpg';
 import studentsBg from '../public/students-with-unif-tb.png';
 
 export default function NotFound() {

@@ -10,3 +10,17 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## Frontend Testing
+
+This project uses Jest and React Testing Library for unit/component tests.
+
+### How to Run Tests
+
+1. Install dependencies (if not already):
+   npm install
+
+2. Run all tests:
+   npm test
+
+Test files are located alongside components, e.g. `src/Components/Admin/AdminPage.test.jsx`.

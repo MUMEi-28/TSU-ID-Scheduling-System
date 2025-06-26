@@ -6,6 +6,26 @@ header("Content-Type: application/json");
 
 include 'config.php';
 
+// --- Rate Limiting ---
+$ip = $_SERVER['REMOTE_ADDR'];
+$rateFile = sys_get_temp_dir() . "/tsu_rate_" . md5($ip) . "_register";
+$limit = 10; // max requests
+$window = 300; // 5 minutes
+$now = time();
+$requests = [];
+if (file_exists($rateFile)) {
+    $requests = json_decode(file_get_contents($rateFile), true) ?: [];
+    $requests = array_filter($requests, function($t) use ($now, $window) { return $t > $now - $window; });
+}
+$requests[] = $now;
+file_put_contents($rateFile, json_encode($requests));
+if (count($requests) > $limit) {
+    http_response_code(429);
+    echo json_encode(["error" => "Rate limit exceeded. Please try again later."]);
+    error_log("[register.php] Rate limit exceeded for $ip", 3, __DIR__ . '/error_log.txt');
+    exit;
+}
+
 try {
     // Get raw input and decode JSON
     $json = file_get_contents('php://input');
@@ -14,27 +34,6 @@ try {
     // Validate JSON decoding
     if ($input === null) {
         throw new Exception("Invalid JSON data received");
-    }
-
-    // Admin login: check if credentials match student with id=1
-    if (
-        isset($input->fullname) && isset($input->student_number)
-    ) {
-        $adminCheckSql = "SELECT fullname, student_number FROM students WHERE id = 1 LIMIT 1";
-        $adminStmt = $conn->prepare($adminCheckSql);
-        $adminStmt->execute();
-        $admin = $adminStmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($admin && $input->fullname === $admin['fullname'] && $input->student_number === $admin['student_number']) {
-            $adminToken = bin2hex(random_bytes(16));
-            echo json_encode([
-                'status' => 1,
-                'message' => 'Admin login',
-                'admin_token' => $adminToken,
-                'is_admin' => true
-            ]);
-            exit;
-        }
     }
 
     // Check required fields
@@ -54,16 +53,17 @@ try {
         exit;
     }
 
-    // Check for duplicate student number
-    $checkSql = "SELECT COUNT(*) FROM students WHERE student_number = :student_number";
+    // Check for duplicate student (fullname + student_number)
+    $checkSql = "SELECT COUNT(*) FROM students WHERE fullname = :fullname AND student_number = :student_number";
     $checkStmt = $conn->prepare($checkSql);
+    $checkStmt->bindParam(':fullname', $input->fullname);
     $checkStmt->bindParam(':student_number', $input->student_number);
     $checkStmt->execute();
     $count = $checkStmt->fetchColumn();
     if ($count > 0) {
         echo json_encode([
             'status' => 0,
-            'message' => 'Student number already exists. Please go to the Business Center with your printed schedule.'
+            'message' => 'Student already exists. Please log in instead.'
         ]);
         exit;
     }
@@ -95,6 +95,7 @@ try {
 
     echo json_encode($response);
 } catch (Exception $e) {
+    error_log("[register.php] " . $e->getMessage() . "\n", 3, __DIR__ . '/error_log.txt');
     echo json_encode([
         'status' => 0,
         'message' => 'Error: ' . $e->getMessage(),

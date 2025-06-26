@@ -13,12 +13,11 @@ dayjs.extend(isToday);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(advancedFormat);
 
-export default function Calendar({ onDateSelect })
+export default function Calendar({ onDateSelect, onClose })
 {
     const today = dayjs();
     const [currentDate, setCurrentDate] = useState(dayjs());
     const [showMonthDropdown, setShowMonthDropdown] = useState(false);
-
 
     const currentMonth = currentDate.month();
     const currentYear = currentDate.year();
@@ -30,6 +29,13 @@ export default function Calendar({ onDateSelect })
         if (onDateSelect) {
             onDateSelect(date.format('YYYY-MM-DD'));
         }
+    };
+
+    const handlePrevMonth = () => {
+        setCurrentDate(currentDate.subtract(1, 'month'));
+    };
+    const handleNextMonth = () => {
+        setCurrentDate(currentDate.add(1, 'month'));
     };
 
     const generateCalendar = () =>
@@ -48,20 +54,20 @@ export default function Calendar({ onDateSelect })
             const isDisabled = isPast || isWeekend;
 
             days.push(
-                <div key={i} className="text-center">
+                <div key={i} className="flex items-center justify-center h-12 w-12 mx-auto">
                     {isDisabled ? (
                         isWeekend ?
-                            <div className={`p-2 text-red-400 cursor-not-allowed`}>
+                            <div className={`p-2 text-red-400 cursor-not-allowed w-full h-full flex items-center justify-center`}>
                                 {date.date()}
                             </div> :
-                            <div className={`p-2 text-gray-400 cursor-not-allowed`}>
+                            <div className={`p-2 text-gray-400 cursor-not-allowed w-full h-full flex items-center justify-center`}>
                                 {date.date()}
                             </div>
                     ) : (
                         <button
                             type="button"
                             onClick={() => handleDateClick(date)}
-                            className="block p-2 rounded-lg transition-all hover:bg-orange-500 hover:text-white"
+                            className="block p-2 rounded-lg transition-all hover:bg-orange-500 hover:text-white w-full h-full flex items-center justify-center"
                         >
                             {date.date()}
                         </button>
@@ -72,20 +78,47 @@ export default function Calendar({ onDateSelect })
         return days;
     };
 
-
     return (
-        <div className='flex flex-col w-full m-6 justify-center'>
+        <div className='flex flex-col w-full m-6 justify-center relative'>
+            {/* Close Button */}
+            {onClose && (
+                <button
+                    onClick={onClose}
+                    className="absolute top-0 right-0 mt-2 mr-2 text-4xl text-gray-500 hover:text-red-600 font-extrabold z-10 p-2"
+                    aria-label="Close calendar"
+                >
+                    ×
+                </button>
+            )}
             {/* Text above calendar */}
             <div className=''>
                 <h2
-                    className='bg-red-600 text-white p-4 font-semibold text-xl w-1/4 rounded-2xl mb-5'>{new Date().getFullYear()} Calendar</h2>
+                    className='bg-red-600 text-white p-4 font-semibold text-xl w-1/4 rounded-2xl mb-5'>{currentYear} Calendar</h2>
                 <p className='text-red-900 font-bold text-xl'>Pick a date</p>
             </div>
 
-
             {/* Calendar */}
             <div>
-                <h1 className='text-2xl'>{new Date().toLocaleString('default', { month: 'long' })}</h1>
+                {/* Month Navigation */}
+                <div className="flex items-center justify-center gap-4 mb-2">
+                    <button
+                        onClick={handlePrevMonth}
+                        className="px-5 py-2 rounded bg-gray-200 hover:bg-gray-400 text-3xl font-extrabold"
+                        aria-label="Previous month"
+                    >
+                        &#8592;
+                    </button>
+                    <span className='text-2xl font-semibold'>
+                        {currentDate.format('MMMM YYYY')}
+                    </span>
+                    <button
+                        onClick={handleNextMonth}
+                        className="px-5 py-2 rounded bg-gray-200 hover:bg-gray-400 text-3xl font-extrabold"
+                        aria-label="Next month"
+                    >
+                        &#8594;
+                    </button>
+                </div>
 
                 {/* Week */}
                 <div className='grid grid-cols-7 text-center'>
@@ -95,7 +128,6 @@ export default function Calendar({ onDateSelect })
                         </div>
                     ))}
                 </div>
-
 
                 <div className="grid grid-cols-7 gap-1 mt-2">
                     {generateCalendar()}

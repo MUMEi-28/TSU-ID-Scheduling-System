@@ -30,24 +30,25 @@ export default function RegistrationForm(props)
 
         setError("");
         try {
-            const response = await axios.post(
-                "http://localhost/GitHub/TSU-ID-Scheduling-System/backend/register.php",
+            // Try login first
+            const loginResponse = await axios.post(
+                "http://localhost/Projects/TSU-ID-Scheduling-System/backend/login.php",
                 props.registrationInputs
             );
-            if (response.data.status === 1) {
+            if (loginResponse.data.status === 1) {
                 let tokenSet = false;
                 // Admin login
-                if (response.data.admin_token) {
-                    localStorage.setItem('admin_token', response.data.admin_token);
+                if (loginResponse.data.admin_token) {
+                    localStorage.setItem('admin_token', loginResponse.data.admin_token);
                     tokenSet = true;
-                    if (response.data.is_admin) {
+                    if (loginResponse.data.is_admin) {
                         navigate('/admin');
                         return;
                     }
                 }
                 // Student login
-                if (response.data.student_token) {
-                    localStorage.setItem('admin_token', response.data.student_token);
+                if (loginResponse.data.student_token) {
+                    localStorage.setItem('admin_token', loginResponse.data.student_token);
                     tokenSet = true;
                 }
                 if (tokenSet) {
@@ -55,9 +56,35 @@ export default function RegistrationForm(props)
                 } else {
                     window.alert('Login failed: No token received.');
                 }
+                return;
+            }
+            // If not found, try registration
+            const registerResponse = await axios.post(
+                "http://localhost/Projects/TSU-ID-Scheduling-System/backend/register.php",
+                props.registrationInputs
+            );
+            if (registerResponse.data.status === 1) {
+                let tokenSet = false;
+                if (registerResponse.data.admin_token) {
+                    localStorage.setItem('admin_token', registerResponse.data.admin_token);
+                    tokenSet = true;
+                    if (registerResponse.data.is_admin) {
+                        navigate('/admin');
+                        return;
+                    }
+                }
+                if (registerResponse.data.student_token) {
+                    localStorage.setItem('admin_token', registerResponse.data.student_token);
+                    tokenSet = true;
+                }
+                if (tokenSet) {
+                    navigate('/schedule');
+                } else {
+                    window.alert('Registration failed: No token received.');
+                }
             } else {
-                window.alert(response.data.message || "Registration failed");
-                setError(response.data.message || "Registration failed");
+                window.alert(registerResponse.data.message || "Registration failed");
+                setError(registerResponse.data.message || "Registration failed");
             }
         } catch (err) {
             window.alert("An error occurred. Please try again.");

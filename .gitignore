@@ -60,3 +60,5 @@ Thumbs.db
 *.sublime-project
 .idea/
 .vscode/
+
+backend/error_log.txt

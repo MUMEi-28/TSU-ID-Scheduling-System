@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const ScheduleReceipt = (props) =>
@@ -8,8 +8,16 @@ const ScheduleReceipt = (props) =>
 
   const handleBack = () => {
     if (confirmed) {
-      localStorage.removeItem('admin_token');
-      navigate('/');
+      localStorage.removeItem('confirmedSlot');
+      if (props.handleLogout) {
+        props.handleLogout();
+      } else {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('registrationInputs');
+        localStorage.removeItem('selectedTime');
+        localStorage.removeItem('selectedDate');
+        navigate('/');
+      }
     } else {
       navigate('/schedule');
     }
@@ -17,8 +25,16 @@ const ScheduleReceipt = (props) =>
 
   const handleConfirm = () => {
     setConfirmed(true);
+    localStorage.setItem('confirmedSlot', 'true');
     // Optionally call props.handleSubmit();
   };
+
+  // Remove confirmedSlot flag when leaving the page or logging out
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem('confirmedSlot');
+    };
+  }, []);
 
   return (
     <div className="relative flex justify-center items-center h-screen bg-[url('Components\\public\\students-with-unif-tb.png')] bg-cover bg-center px-4">

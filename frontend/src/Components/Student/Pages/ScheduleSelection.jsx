@@ -8,8 +8,15 @@ export default function ScheduleSelection(props) {
   const navigate = useNavigate()
   const handleBack = () => {
     if (window.confirm('Are you sure you want to go back to the home page?')) {
-      localStorage.removeItem('admin_token')
-      navigate('/')
+      if (props.handleLogout) {
+        props.handleLogout();
+      } else {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('registrationInputs');
+        localStorage.removeItem('selectedTime');
+        localStorage.removeItem('selectedDate');
+        navigate('/');
+      }
     }
   }
   return (
