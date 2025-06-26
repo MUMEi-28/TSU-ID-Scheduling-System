@@ -13,6 +13,7 @@ const AdminPage = () =>
     const [placeHolderDate, setPlaceHolderDate] = useState("No Date Chosen");
     const [selectedTime, setSelectedTime] = useState("8:00 - 9:00am");
     const [students, setStudents] = useState([]); // 📌 This will hold the fetched data
+    const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
 
     // Fetch students from backend on mount
     useEffect(() =>
@@ -46,10 +47,8 @@ const AdminPage = () =>
     const HandleDateReplace = () =>
     {
         setShowCalendar(false);
-        const urlSegments = window.location.pathname.split('/');
-        const dateNumerical = urlSegments[urlSegments.length - 1];
-        const dateObject = new Date(dateNumerical);
-        const realDate = dateObject.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        if (!selectedCalendarDate) return;
+        const realDate = new Date(selectedCalendarDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         setCurrentScheduleDate(realDate);
     };
 
@@ -106,13 +105,13 @@ const AdminPage = () =>
                 {showCalendar && (
                     <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-20">
                         <div className="bg-white p-6 opacity-100 rounded-lg shadow-xl h-fit flex flex-col justify-center items-center text-2xl">
-                            <Calendar />
+                            <Calendar onDateSelect={setSelectedCalendarDate} />
                             <hr />
                             <button
                                 onClick={HandleDateReplace}
                                 className="w-full p-5 text-2xl bg-red-500 text-white rounded-md hover:bg-red-600"
                             >
-                                Change Date to: {placeHolderDate}
+                                Change Date to: {selectedCalendarDate ? new Date(selectedCalendarDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'No Date Selected'}
                             </button>
                         </div>
                     </div>
