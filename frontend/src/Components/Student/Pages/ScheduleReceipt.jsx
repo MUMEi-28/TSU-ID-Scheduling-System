@@ -1,8 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const ScheduleReceipt = (props) =>
 {
-
+  const navigate = useNavigate();
+  const handleBack = () => {
+    navigate('/schedule');
+  };
 
   return (
     <div className="relative flex justify-center items-center h-screen bg-[url('Components\public\students-with-unif-tb.png')] bg-cover bg-center px-4">
@@ -54,13 +58,21 @@ const ScheduleReceipt = (props) =>
           <h3 className="mb-2 font-light text-[#656565]">Student Number: {props.registrationInputs.fullname} </h3>
           <h3 className="mb-17 font-light text-[#656565]">Student Name: {props.registrationInputs.student_number}</h3>
 
-          <button
-            id="downloadBtn"
-            className=" px-6 rounded-lg' bg-[#CE9D31] hover:bg-[#5d4e2e] self-center w-8/12 sm:w-6/12 md:w-5/12 py-3 text-sm sm:text-base md:text-lg istok-font text-white font-bold rounded-xl shadow-lg mt-4"
-            onClick={props.handleSubmit}
-          >
-            Print
-          </button>
+          <div className="flex w-full justify-center gap-2 mb-2">
+            <button
+              onClick={handleBack}
+              className="bg-[#CE9D31] hover:bg-[#b88a1a] text-white font-bold py-2 px-4 rounded-xl shadow-lg"
+            >
+              Back
+            </button>
+            <button
+              id="downloadBtn"
+              className="px-6 rounded-lg' bg-[#CE9D31] hover:bg-[#5d4e2e] self-center py-3 text-sm sm:text-base md:text-lg istok-font text-white font-bold rounded-xl shadow-lg"
+              onClick={props.handleSubmit}
+            >
+              Confirm
+            </button>
+          </div>
         </div>
         <h1 className=" text-center italic poppins-font font-extralight text-[#D9D9D9] ">Note:  Please take a screenshot of the  receipt
           and close the website as soon as you finished your slot confirmation.</h1>

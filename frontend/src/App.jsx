@@ -5,7 +5,6 @@ import AdminPage from "./Components/Admin/AdminPage";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import QueryPanel from "./Components/Student/NewScheduleSelection/QueryPanel";
 import TimePicker from "./Components/Student/NewScheduleSelection/TimePicker";
-import NewScheduleSelection from "./Components/Student/Pages/NewScheduleSelection";
 import NotFound from "./Components/Error/NotFound";
 
 import axios from "axios";
@@ -19,13 +18,24 @@ function AdminRoute({ children }) {
   return children;
 }
 
+function StudentRoute({ children }) {
+  const token = localStorage.getItem('admin_token');
+  if (!token) {
+    return <NotFound />;
+  }
+  return children;
+}
+
 export default function App()
 {
   const navigate = useNavigate();
 
 
   // Submission 
-  const [registrationInputs, setRegistrationInputs] = useState({});
+  const [registrationInputs, setRegistrationInputs] = useState(() => {
+    const saved = localStorage.getItem('registrationInputs');
+    return saved ? JSON.parse(saved) : {};
+  });
   const [selectedTime, setSelectedTime] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
 
@@ -34,15 +44,18 @@ export default function App()
   {
     const name = event.target.name;
     const value = event.target.value;
-    setRegistrationInputs(values => ({ ...values, [name]: value }));
+    setRegistrationInputs(values => {
+      const updated = { ...values, [name]: value };
+      localStorage.setItem('registrationInputs', JSON.stringify(updated));
+      return updated;
+    });
     console.log(registrationInputs);
-
   }
 
   useEffect(() =>
   {
+    localStorage.setItem('registrationInputs', JSON.stringify(registrationInputs));
     console.log(registrationInputs);
-
   }, [registrationInputs])
 
   function handlingDataObjectsTest()
@@ -54,11 +67,19 @@ export default function App()
   {
     event.preventDefault();
 
-    axios.post(`http://localhost/GitHub/TSU-ID-Scheduling-System/backend/register.php`, registrationInputs)
+    axios.post(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/register.php`, registrationInputs)
       .then(() =>
       {
         console.log(registrationInputs);
       });
+  }
+
+  // Clear registrationInputs and token on logout
+  function handleLogout() {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('registrationInputs');
+    setRegistrationInputs({});
+    navigate('/');
   }
 
   return (
@@ -69,24 +90,30 @@ export default function App()
       />} />
 
 
-      <Route path='/schedule' element={<NewScheduleSelection
-        selectedTime={selectedTime}
-        setSelectedTime={setSelectedTime}
+      <Route path='/schedule' element={
+        <StudentRoute>
+          <ScheduleSelection
+            selectedTime={selectedTime}
+            setSelectedTime={setSelectedTime}
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+            registrationInputs={registrationInputs}
+            handlingDataObjectsTest={handlingDataObjectsTest}
+            setRegistrationInputs={setRegistrationInputs}
+            handleLogout={handleLogout}
+          />
+        </StudentRoute>
+      } />
 
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
-        registrationInputs={registrationInputs}
-
-
-        handlingDataObjectsTest={handlingDataObjectsTest}
-        setRegistrationInputs={setRegistrationInputs}
-      />} />
-
-      <Route path="/receipt" element={<ScheduleReceipt
-        registrationInputs={registrationInputs}
-        handleSubmit={handleSubmit}
-
-      />} />
+      <Route path="/receipt" element={
+        <StudentRoute>
+          <ScheduleReceipt
+            registrationInputs={registrationInputs}
+            handleSubmit={handleSubmit}
+            handleLogout={handleLogout}
+          />
+        </StudentRoute>
+      } />
 
       <Route path='/admin' element={
         <AdminRoute>

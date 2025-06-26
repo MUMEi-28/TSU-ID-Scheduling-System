@@ -72,10 +72,12 @@ try {
     $stmt->bindParam(':schedule_date', $input->schedule_date);
 
     if ($stmt->execute()) {
+        $studentToken = bin2hex(random_bytes(16));
         $response = [
             'status' => 1,
             'message' => 'Student Registered Successfully',
-            'student_id' => $conn->lastInsertId()
+            'student_id' => $conn->lastInsertId(),
+            'student_token' => $studentToken
         ];
     } else {
         $response = [

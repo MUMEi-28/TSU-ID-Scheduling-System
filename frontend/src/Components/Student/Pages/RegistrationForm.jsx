@@ -35,14 +35,26 @@ export default function RegistrationForm(props)
                 props.registrationInputs
             );
             if (response.data.status === 1) {
+                let tokenSet = false;
                 // Admin login
                 if (response.data.admin_token) {
                     localStorage.setItem('admin_token', response.data.admin_token);
-                    navigate('/admin');
-                    return;
+                    tokenSet = true;
+                    if (response.data.is_admin) {
+                        navigate('/admin');
+                        return;
+                    }
                 }
                 // Student login
-                navigate('/schedule');
+                if (response.data.student_token) {
+                    localStorage.setItem('admin_token', response.data.student_token);
+                    tokenSet = true;
+                }
+                if (tokenSet) {
+                    navigate('/schedule');
+                } else {
+                    window.alert('Login failed: No token received.');
+                }
             } else {
                 window.alert(response.data.message || "Registration failed");
                 setError(response.data.message || "Registration failed");
