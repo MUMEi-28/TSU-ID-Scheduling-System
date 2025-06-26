@@ -6,9 +6,18 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import QueryPanel from "./Components/Student/NewScheduleSelection/QueryPanel";
 import TimePicker from "./Components/Student/NewScheduleSelection/TimePicker";
 import NewScheduleSelection from "./Components/Student/Pages/NewScheduleSelection";
+import NotFound from "./Components/Error/NotFound";
 
 import axios from "axios";
 import { useEffect, useState } from "react";
+
+function AdminRoute({ children }) {
+  const token = localStorage.getItem('admin_token');
+  if (!token) {
+    return <NotFound />;
+  }
+  return children;
+}
 
 export default function App()
 {
@@ -45,7 +54,7 @@ export default function App()
   {
     event.preventDefault();
 
-    axios.post(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/register.php`, registrationInputs)
+    axios.post(`http://localhost/GitHub/TSU-ID-Scheduling-System/backend/register.php`, registrationInputs)
       .then(() =>
       {
         console.log(registrationInputs);
@@ -79,7 +88,12 @@ export default function App()
 
       />} />
 
-      <Route path='/admin' element={<AdminPage />} />
+      <Route path='/admin' element={
+        <AdminRoute>
+          <AdminPage />
+        </AdminRoute>
+      } />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   )
 }

@@ -21,9 +21,11 @@ try {
         isset($input->fullname) && isset($input->student_number) &&
         $input->fullname === 'admin' && $input->student_number === '1234512345'
     ) {
+        $adminToken = bin2hex(random_bytes(16));
         echo json_encode([
             'status' => 1,
-            'message' => 'Admin login bypass'
+            'message' => 'Admin login bypass',
+            'admin_token' => $adminToken
         ]);
         exit;
     }

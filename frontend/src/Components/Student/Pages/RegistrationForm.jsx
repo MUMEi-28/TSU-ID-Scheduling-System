@@ -35,6 +35,13 @@ export default function RegistrationForm(props)
                 props.registrationInputs
             );
             if (response.data.status === 1) {
+                // Admin login
+                if (response.data.admin_token) {
+                    localStorage.setItem('admin_token', response.data.admin_token);
+                    navigate('/admin');
+                    return;
+                }
+                // Student login
                 navigate('/schedule');
             } else {
                 window.alert(response.data.message || "Registration failed");
@@ -44,20 +51,6 @@ export default function RegistrationForm(props)
             window.alert("An error occurred. Please try again.");
             setError("An error occurred. Please try again.");
         }
-
-
-        // Admin check
-        if (
-            props.registrationInputs.fullname === 'admin' &&
-            props.registrationInputs.student_number === '1234512345'
-        ) {
-            navigate('/admin');
-            return;
-        }
-
-        console.log("SUBMMITED")
-        navigate('/schedule');
-
     }
 
 
