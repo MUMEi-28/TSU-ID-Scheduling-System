@@ -44,6 +44,7 @@ const TimePicker = (props) =>
     const getSlotAvailability = (time) =>
     {
 
+
         console.log(`✅ Slots Available: ${slotCounts[time]}/12`);
         return slotCounts[time];
     };
