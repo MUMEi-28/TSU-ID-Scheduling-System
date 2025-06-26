@@ -115,48 +115,46 @@ const TimePicker = (props) =>
 
     return (
         <div className='flex flex-col justify-evenly items-center h-6/12 w-fit md:mx-10'>
-            <h1 className='league-font text-[#686868] text-3xl font-medium'>
-                Choose your Availability
-            </h1>
-
-            <div className='flex h-fit league-font w-full justify-between text-sm sm:text-md'>
-                <button onClick={handleChangePeriod} className='bg-[#BDBDBD] flex transition-all duration-300 rounded-lg shadow-md'>
-                    <div className={`font-bold rounded-l-lg px-4 pt-2 ${isAM ? 'bg-[#CE9D31] text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]'}`}>AM</div>
-                    <div className={`font-bold rounded-r-lg px-4 pt-2 ${!isAM ? 'bg-purple-400 text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]'}`}>PM</div>
-                </button>
-
-                {/*  <div className='text-lg sm:text-2xl border rounded-lg border-[#A3A3A3] shadow-md flex justify-between w-fit'>
-                    <div className={`w-3 h-full rounded-l-lg ${getSlotAvailability(props.selectedTime) <= 4 ? 'bg-[#b11616]' : getSlotAvailability(props.selectedTime) <= 8 ? 'bg-[#d7e427]' : 'bg-[#27732A]'}`} />
-                    <h1 className='mx-2'>Slots {getSlotAvailability(props.selectedTime)}/12</h1>
-                </div> */}
-            </div>
-
-            <div className='flex-col flex gap-y-8 text-xs md:text-lg lg:text-xl'>
-                <div className='flex martian-font gap-x-8'>
-                    {renderButton(displayedTimes[0])}
-                    {renderButton(displayedTimes[1])}
-                </div>
-                <div className='flex martian-font gap-x-8'>
-                    {renderButton(displayedTimes[2])}
-                    {renderButton(displayedTimes[3])}
-                </div>
-            </div>
-
-            <button
-                className='bg-[#E1A500] border-[#C68C10] league-font text-lg sm:text-2xl px-13 py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200'
-                onClick={() =>
-                {
-                    props.setRegistrationInputs(prev => ({
-                        ...prev,
-                        schedule_time: props.selectedTime
-                    }));
-                    props.handlingDataObjectsTest();
-                    navigate('/receipt');
-                }}
-                disabled={!props.selectedTime}
-            >
-                Schedule
-            </button>
+            {props.selectedDate ? (
+                <>
+                    <h1 className='league-font text-[#686868] text-3xl font-medium'>
+                        Choose your Availability
+                    </h1>
+                    <div className='flex h-fit league-font w-full justify-between text-sm sm:text-md'>
+                        <button onClick={handleChangePeriod} className='bg-[#BDBDBD] flex transition-all duration-300 rounded-lg shadow-md'>
+                            <div className={`font-bold rounded-l-lg px-4 pt-2 ${isAM ? 'bg-[#CE9D31] text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]'}`}>AM</div>
+                            <div className={`font-bold rounded-r-lg px-4 pt-2 ${!isAM ? 'bg-purple-400 text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]'}`}>PM</div>
+                        </button>
+                    </div>
+                    <div className='flex-col flex gap-y-8 text-xs md:text-lg lg:text-xl'>
+                        <div className='flex martian-font gap-x-8'>
+                            {renderButton(displayedTimes[0])}
+                            {renderButton(displayedTimes[1])}
+                        </div>
+                        <div className='flex martian-font gap-x-8'>
+                            {renderButton(displayedTimes[2])}
+                            {renderButton(displayedTimes[3])}
+                        </div>
+                    </div>
+                    <button
+                        className='bg-[#E1A500] border-[#C68C10] league-font text-lg sm:text-2xl px-13 py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200'
+                        onClick={() =>
+                        {
+                            props.setRegistrationInputs(prev => ({
+                                ...prev,
+                                schedule_time: props.selectedTime
+                            }));
+                            props.handlingDataObjectsTest();
+                            navigate('/receipt');
+                        }}
+                        disabled={!props.selectedTime}
+                    >
+                        Schedule
+                    </button>
+                </>
+            ) : (
+                <h2 className='text-gray-500 text-lg mt-8'>Please select a date to view available slots.</h2>
+            )}
         </div>
     );
 };
