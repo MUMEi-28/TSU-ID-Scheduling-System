@@ -17,11 +17,15 @@ const NewScheduleSelection = (props) =>
         <DatePicker
           selectedDate={props.selectedDate}
           setSelectedDate={props.setSelectedDate}
+
           setRegistrationInputs={props.setRegistrationInputs}
+          registrationInputs={props.registrationInputs}
         />
         <TimePicker
           setSelectedTime={props.setSelectedTime}
           selectedTime={props.selectedTime}
+
+          selectedDate={props.selectedDate}
 
           handlingDataObjectsTest={props.handlingDataObjectsTest}
           setRegistrationInputs={props.setRegistrationInputs}

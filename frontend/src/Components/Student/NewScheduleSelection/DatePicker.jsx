@@ -55,19 +55,16 @@ function DatePicker(props)
 
   const handleDateSelect = (date) =>
   {
+    const dateAsString = format(date, "MMMM d, yyyy"); // don't change format if you're using this on backend
+    props.setSelectedDate(dateAsString); // this sets the selected date for other components
 
-    props.setSelectedDate(date);
-
-    props.setRegistrationInputs(prev => (
-      {
-        ...prev,
-        schedule_date: props.selectedDate ? format(props.selectedDate, "MMMM d, yyyy") : "No date selected"
-      }
-    ))
-
-    console.log(format(props.selectedDate, "MMMM d, yyyy"));
-
+    props.setRegistrationInputs(prev => ({
+      ...prev,
+      schedule_date: dateAsString
+    }));
+    //  console.log(props.registrationInputs.schedule_date);
   };
+
 
   return (
     <div className='flex-col flex justify-evenly items-center h-4/12 2xl:h-5/12 w-full lg:w-fit '>
