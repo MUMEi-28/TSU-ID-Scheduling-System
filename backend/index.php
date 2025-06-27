@@ -37,33 +37,21 @@ if (count($requests) > $limit) {
 
 switch ($method) {
     case "POST":
-        try {
-            $input = json_decode(file_get_contents('php://input'));
-            $sql = "INSERT INTO students (id, fullname, student_number, schedule_date, schedule_time, status) 
-                    VALUES (null, :fullname, :student_number, null, null, null)";
-
-            $stmt = $conn->prepare($sql);
-            // $date = date.js idk yet
-
-            $stmt->bindParam(':fullname', $input->fullname);
-            $stmt->bindParam(':student_number', $input->student_number);
-
-            if ($stmt->execute()) {
-                $response = ['status' => 1, 'messsage' => 'Student Registered Successfully'];
-            } else {
-                $response = ['status' => 0, 'message' => 'Failed to register student'];
-            }
-
-            echo (json_encode($response));
-            return (json_encode($response));
-        } catch (Exception $e) {
-            error_log("[index.php][POST] " . $e->getMessage() . "\n", 3, __DIR__ . '/error_log.txt');
-            echo json_encode(['status' => 0, 'message' => 'Internal server error']);
-        }
+        echo json_encode(['status' => 0, 'message' => 'Registration requires complete schedule information']);
         break;
     case "PUT":
         try {
             $input = json_decode(file_get_contents('php://input'));
+            
+            if (!isset($input->schedule_date) || empty($input->schedule_date)) {
+                echo json_encode(['status' => 0, 'message' => 'Schedule date is required']);
+                exit;
+            }
+            if (!isset($input->schedule_time) || empty($input->schedule_time)) {
+                echo json_encode(['status' => 0, 'message' => 'Schedule time is required']);
+                exit;
+            }
+            
             $sql = "UPDATE students SET fullname = :fullname, student_number = :student_number, schedule_date = :schedule_date, schedule_time = :schedule_time, status = :status WHERE id = :id";
             $stmt = $conn->prepare($sql);
             $stmt->bindParam(':fullname', $input->fullname);

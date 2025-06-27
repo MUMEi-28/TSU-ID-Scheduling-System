@@ -116,10 +116,10 @@ try {
         
         // For pending students, check if they already have a schedule
         if (strtolower($student['status']) === 'pending' && $student['schedule_date'] && $student['schedule_time']) {
-            // Pending student with existing schedule
+            // Pending student with existing schedule - show receipt only
             echo json_encode([
                 'status' => 2, // Special status for pending with schedule
-                'message' => 'You already have a scheduled appointment. You can view your details or reschedule if needed.',
+                'message' => 'You already have a scheduled appointment. You can view your details.',
                 'student_status' => 'pending_with_schedule',
                 'student_id' => $student['id'],
                 'student_data' => [
@@ -133,6 +133,7 @@ try {
             exit;
         }
         
+        // Pending student without schedule - can proceed to schedule
         $studentToken = bin2hex(random_bytes(16));
         echo json_encode([
             'status' => 1,
@@ -144,10 +145,14 @@ try {
         exit;
     }
 
-    // Not found
+    // Not found - create token for new user (no restrictions)
+    $studentToken = bin2hex(random_bytes(16));
     echo json_encode([
-        'status' => 0,
-        'message' => 'We couldn\'t find your account. Please register first or check your information.'
+        'status' => 1, // Same status as existing students
+        'message' => 'Student login',
+        'student_token' => $studentToken,
+        'student_id' => null, // No ID since they don't exist yet
+        'is_admin' => false
     ]);
 } catch (Exception $e) {
     error_log("[login.php] " . $e->getMessage() . "\n", 3, __DIR__ . '/error_log.txt');

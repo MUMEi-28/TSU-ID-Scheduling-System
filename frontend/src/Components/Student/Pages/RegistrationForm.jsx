@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios'
+import kuruKuru from '../../public/kurukuru-kururing.gif';
 
 export default function RegistrationForm(props)
 {
@@ -11,6 +12,7 @@ export default function RegistrationForm(props)
     const [doneStudentData, setDoneStudentData] = useState(null);
     const [showPendingMessage, setShowPendingMessage] = useState(false);
     const [pendingStudentData, setPendingStudentData] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     /*  const [registrationInputs, setRegistrationInputs] = useState({});
  
@@ -36,8 +38,12 @@ export default function RegistrationForm(props)
         setDoneStudentData(null);
         setShowPendingMessage(false);
         setPendingStudentData(null);
+        setIsLoading(true);
 
         try {
+            // Simulate processing delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
             // Try login first
             const loginResponse = await axios.post(
                 "http://localhost/Projects/TSU-ID-Scheduling-System/backend/login.php",
@@ -60,13 +66,20 @@ export default function RegistrationForm(props)
                     tokenSet = true;
                 }
                 if (tokenSet) {
+                    // Store user data for new users (those without student_id)
+                    if (!loginResponse.data.student_id) {
+                        localStorage.setItem('new_user_data', JSON.stringify(props.registrationInputs));
+                    } else {
+                        // Store student_id for existing users
+                        localStorage.setItem('student_id', loginResponse.data.student_id);
+                    }
                     navigate('/schedule');
                 } else {
                     setError('Login failed: No token received.');
                 }
                 return;
             } else if (loginResponse.data.status === 2) {
-                // Pending student with existing schedule
+                // Pending student with existing schedule - show receipt only
                 setPendingStudentData(loginResponse.data.student_data);
                 setShowPendingMessage(true);
                 return;
@@ -89,6 +102,8 @@ export default function RegistrationForm(props)
             } else {
                 setError("An error occurred. Please try again.");
             }
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -108,14 +123,6 @@ export default function RegistrationForm(props)
         navigate('/receipt');
     };
 
-    const handleReschedulePending = () => {
-        // Store student data and navigate to schedule with reschedule mode
-        localStorage.setItem('reschedule_student_data', JSON.stringify(pendingStudentData));
-        localStorage.setItem('reschedule_student_id', pendingStudentData.id);
-        localStorage.setItem('admin_token', 'reschedule_token'); // Special token for rescheduling
-        navigate('/schedule');
-    };
-
     const handleBackToHome = () => {
         setShowDoneMessage(false);
         setDoneStudentData(null);
@@ -128,6 +135,16 @@ export default function RegistrationForm(props)
 
     return (
         <div className='flex flex-col lg:flex-row bg-[url(./Components/public/students-with-unif-tb.png)] min-h-screen'>
+
+            {/* Loading Overlay */}
+            {isLoading && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-12 flex flex-col items-center shadow-xl">
+                        <img src={kuruKuru} alt="Loading..." className="w-24 h-24 mb-6" />
+                        <p className="text-2xl font-bold text-gray-700">Processing...</p>
+                    </div>
+                </div>
+            )}
 
             {/* Left Panel Form */}
             <div className='w-full lg:w-3/6 min-h-screen flex justify-center items-center px-6'>
@@ -178,7 +195,7 @@ export default function RegistrationForm(props)
                         <div className="flex flex-col gap-y-6 w-full px-6 sm:px-10 z-20">
                             <div className="text-center text-[#5B0000] mb-4">
                                 <p className="text-lg">
-                                    You already have a scheduled appointment. You can view your details or reschedule if needed.
+                                    You already have a scheduled appointment. You can view your details.
                                 </p>
                                 <div className="mt-4 p-4 bg-yellow-100 rounded-lg">
                                     <p className="text-sm font-semibold">Current Appointment:</p>
@@ -192,12 +209,6 @@ export default function RegistrationForm(props)
                                     className="bg-[#CE9D31] hover:bg-[#b88a1a] text-white font-bold py-3 px-6 rounded-xl shadow-lg"
                                 >
                                     View My Appointment
-                                </button>
-                                <button
-                                    onClick={handleReschedulePending}
-                                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg"
-                                >
-                                    Reschedule
                                 </button>
                                 <button
                                     onClick={handleBackToHome}

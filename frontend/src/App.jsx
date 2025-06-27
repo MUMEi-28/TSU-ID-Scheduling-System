@@ -23,7 +23,9 @@ function StudentRoute({ children }) {
   const token = localStorage.getItem('admin_token');
   const doneToken = localStorage.getItem('done_view_token');
   const pendingToken = localStorage.getItem('pending_view_token');
-  if (!token && !doneToken && !pendingToken) {
+  const existingUserToken = localStorage.getItem('existing_user_token');
+  
+  if (!token && !doneToken && !pendingToken && !existingUserToken) {
     return <NotFound />;
   }
   return children;
@@ -38,6 +40,16 @@ export default function App()
   const [globalLoading, setGlobalLoading] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
   const fadeTimeoutRef = useRef(null);
+
+  // Success animation state
+  const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+  const [showCheck, setShowCheck] = useState(false);
+  const [showSuccessText, setShowSuccessText] = useState(false);
+  const [successFadeOut, setSuccessFadeOut] = useState(false);
+
+  // Existing user modal state
+  const [showExistingModal, setShowExistingModal] = useState(false);
+  const [existingUserData, setExistingUserData] = useState(null);
 
   // Submission 
   const [registrationInputs, setRegistrationInputs] = useState(() => {
@@ -135,15 +147,56 @@ export default function App()
     /*  console.log(registrationInputs); */
   }
 
-  function handleSubmit(event)
-  {
+  function handleSubmit(event) {
     event.preventDefault();
 
-    axios.post(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/register.php`, registrationInputs)
-      .then(() =>
-      {
-        console.log(registrationInputs);
-      });
+    const completeRegistrationData = {
+      ...registrationInputs,
+      schedule_date: selectedDate || registrationInputs.schedule_date,
+      schedule_time: selectedTime || registrationInputs.schedule_time
+    };
+
+    axios.post(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/register.php`, 
+      completeRegistrationData,
+      { headers: { 'Content-Type': 'application/json' } }
+    )
+    .then((response) => {
+      if (response.data.status === 1) {
+        // Registration success: show animation
+        localStorage.setItem('student_id', response.data.student_id);
+        setShowSuccessOverlay(true);
+        setShowCheck(false);
+        setShowSuccessText(false);
+        setSuccessFadeOut(false);
+
+        setTimeout(() => setShowCheck(true), 200);      // Checkmark slides up
+        setTimeout(() => setShowSuccessText(true), 700); // Text slides up
+        setTimeout(() => setSuccessFadeOut(true), 2200); // Start fade out
+        setTimeout(() => {
+          setShowSuccessOverlay(false);
+          setShowCheck(false);
+          setShowSuccessText(false);
+          setSuccessFadeOut(false);
+          // Optionally, navigate or reset state here
+        }, 2800);
+      } else if (
+        response.data.message &&
+        response.data.message.toLowerCase().includes('already have an account')
+      ) {
+        setExistingUserData({
+          fullname: completeRegistrationData.fullname,
+          student_number: completeRegistrationData.student_number,
+          schedule_date: completeRegistrationData.schedule_date,
+          schedule_time: completeRegistrationData.schedule_time
+        });
+        setShowExistingModal(true);
+      } else {
+        alert('Registration failed: ' + (response.data.message || 'Unknown error'));
+      }
+    })
+    .catch((error) => {
+      alert('Registration failed: ' + (error.response?.data?.message || error.message || 'Unknown error'));
+    });
   }
 
   // Clear registrationInputs and token on logout
@@ -193,6 +246,77 @@ export default function App()
           <p className="text-lg text-gray-700 mt-4 font-bold">Loading...</p>
         </div>
       )}
+
+      {/* Registration Success Overlay */}
+      {showSuccessOverlay && (
+        <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-90 transition-opacity duration-700 ${successFadeOut ? 'opacity-0' : 'opacity-100'}`}>
+          <div className={`transition-all duration-700 ${showCheck ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+            <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mb-6">
+              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+          <div className={`transition-all duration-700 ${showSuccessText ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+            <h2 className="text-3xl font-bold text-gray-800 mb-2">Registration Successful!</h2>
+            <p className="text-xl text-gray-600">Your appointment has been scheduled.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Existing User Modal */}
+      {showExistingModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Existing Account Found</h2>
+              <p className="text-gray-600">You already have an account. Here's your current appointment:</p>
+            </div>
+            
+            {existingUserData && (
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 className="font-semibold text-gray-800 mb-3">Your Appointment Details:</h3>
+                <div className="space-y-2 text-sm">
+                  <p><span className="font-medium">Name:</span> {existingUserData.fullname}</p>
+                  <p><span className="font-medium">Student Number:</span> {existingUserData.student_number}</p>
+                  <p><span className="font-medium">Date:</span> {existingUserData.schedule_date}</p>
+                  <p><span className="font-medium">Time:</span> {existingUserData.schedule_time}</p>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowExistingModal(false);
+                  navigate('/');
+                }}
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setShowExistingModal(false);
+                  localStorage.setItem('viewing_student_data', JSON.stringify(existingUserData));
+                  localStorage.setItem('viewing_student_id', 'existing_user');
+                  localStorage.setItem('existing_user_token', 'temp_token');
+                  navigate('/receipt');
+                }}
+                className="flex-1 bg-[#CE9D31] hover:bg-[#b88a1a] text-white font-bold py-3 px-4 rounded-lg transition-colors"
+              >
+                View Full Receipt
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full bg-yellow-200 text-yellow-900 text-center py-2 font-bold fixed top-0 left-0 z-50 shadow-md" style={{fontSize: '0.95rem'}}>
         DEBUG: If you see this, please delete this debug bar if you're done debugging xD<br/>
         <span className="font-mono text-xs">{JSON.stringify(debugData, null, 2)}</span>

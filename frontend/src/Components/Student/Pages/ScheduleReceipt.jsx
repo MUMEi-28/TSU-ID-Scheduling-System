@@ -12,38 +12,63 @@ const ScheduleReceipt = (props) =>
   useEffect(() => {
     // Check if we're viewing existing student data
     const viewingData = localStorage.getItem('viewing_student_data');
+    const existingUserToken = localStorage.getItem('existing_user_token');
+    
     if (viewingData) {
-      setStudentData(JSON.parse(viewingData));
-      setIsViewingExisting(true);
-      setConfirmed(true); // Auto-confirm for viewing existing data
+        setStudentData(JSON.parse(viewingData));
+        setIsViewingExisting(true);
+        setConfirmed(true); // Auto-confirm for viewing existing data
+    }
+    
+    // Handle existing user token
+    if (existingUserToken) {
+        setIsViewingExisting(true);
+        setConfirmed(true);
     }
   }, []);
 
   const handleBack = () => {
     if (confirmed || isViewingExisting) {
-      localStorage.removeItem('confirmedSlot');
-      localStorage.removeItem('viewing_student_data');
-      localStorage.removeItem('viewing_student_id');
-      localStorage.removeItem('done_view_token');
-      localStorage.removeItem('pending_view_token');
-      if (props.handleLogout) {
-        props.handleLogout();
-      } else {
-        localStorage.removeItem('admin_token');
-        localStorage.removeItem('registrationInputs');
-        localStorage.removeItem('selectedTime');
-        localStorage.removeItem('selectedDate');
-        navigate('/');
-      }
+        localStorage.removeItem('confirmedSlot');
+        localStorage.removeItem('viewing_student_data');
+        localStorage.removeItem('viewing_student_id');
+        localStorage.removeItem('done_view_token');
+        localStorage.removeItem('pending_view_token');
+        localStorage.removeItem('existing_user_token');
+        if (props.handleLogout) {
+            props.handleLogout();
+        } else {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('registrationInputs');
+            localStorage.removeItem('selectedTime');
+            localStorage.removeItem('selectedDate');
+            navigate('/');
+        }
     } else {
-      navigate('/schedule');
+        navigate('/schedule');
     }
   };
 
   const handleConfirm = () => {
+    console.log('=== handleConfirm called ===');
+    console.log('isViewingExisting:', isViewingExisting);
+    console.log('props.handleSubmit exists:', !!props.handleSubmit);
+    
     setConfirmed(true);
     localStorage.setItem('confirmedSlot', 'true');
-    // Optionally call props.handleSubmit();
+    
+    // Only call handleSubmit for new users (not for viewing existing appointments)
+    if (props.handleSubmit && !isViewingExisting) {
+        console.log('✅ Calling handleSubmit...');
+        // Create a fake event object since handleSubmit expects one
+        const fakeEvent = { preventDefault: () => {} };
+        props.handleSubmit(fakeEvent);
+    } else {
+        console.log('❌ Not calling handleSubmit because:', {
+            hasHandleSubmit: !!props.handleSubmit,
+            isViewingExisting: isViewingExisting
+        });
+    }
   };
 
   // Remove confirmedSlot flag when leaving the page or logging out
