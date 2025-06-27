@@ -280,7 +280,7 @@ export default function RegistrationForm(props)
                     <div className='w-full flex items-start justify-start flex-col gap-y-2'>
                         <h1 className='text-3xl sm:text-2xl md:text-3xl tracking-[.001vw] mt-0 font-medium'>Notice</h1>
                         <p className='text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-[#AAAAAA]'>
-                            <strong>🎉 TSU ID Scheduling System is now live!</strong><br/>
+                            <strong>🎉 TSU ID Scheduling System is not live!</strong><br/>
                             We are excited to announce the official release of the TSU ID Scheduling System. Students can now book their ID appointment slots online, and admins can manage appointments with ease. Thank you for your support and we look forward to serving you better!
                         </p>
                         <p className='opacity-[.34] italic'>June 27, 2025</p>

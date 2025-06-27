@@ -6,33 +6,24 @@ function DatePicker(props)
 {
   const [currentWeekStart, setCurrentWeekStart] = useState(() =>
   {
-
     const today = new Date();
-    const dayOfWeek = today.getDay();
-
-
-    if (dayOfWeek === 2)
-    { // Tuesday
-      return today;
-    } else if (dayOfWeek < 2)
-    { // Monday or Sunday
-      return nextTuesday(today);
-    } else
-    { // Wednesday, Thursday, Friday, Saturday
-      return previousTuesday(today);
-    }
+    // Get the previous (or current) Sunday
+    const dayOfWeek = today.getDay(); // 0 (Sun) - 6 (Sat)
+    const sunday = new Date(today);
+    sunday.setDate(today.getDate() - dayOfWeek);
+    return sunday;
   });
 
   const [availableDates, setAvailableDates] = useState([]);
   const [fullDates, setFullDates] = useState([]);
 
-  // Function to calculate the four days (Tuesday to Friday)
+  // Function to calculate the seven days (Sunday to Saturday)
   const calculateWeekDays = useCallback(() =>
   {
     const dates = [];
     let currentDate = currentWeekStart;
-    for (let i = 0; i < 4; i++)
-    { // Loop 4 times 
+    for (let i = 0; i < 7; i++)
+    { // Loop 7 times for the whole week
       dates.push(currentDate);
       currentDate = addDays(currentDate, 1);
     }
@@ -64,7 +55,7 @@ function DatePicker(props)
         let allFull = true;
         for (const time of [
           "8:00am - 9:00am", "9:00am -10:00am",
-          "10:00am-11:00am", "11:00am-12:00am",
+          "10:00am-11:00am", "11:00am-12:00pm",
           "1:00pm - 2:00pm", "2:00pm - 3:00pm",
           "3:00pm - 4:00pm", "4:00pm - 5:00pm"
         ]) {
