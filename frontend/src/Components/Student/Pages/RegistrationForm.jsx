@@ -60,7 +60,7 @@ export default function RegistrationForm(props)
                         return;
                     }
                 }
-                // Student login
+                // Student login (including new users)
                 if (loginResponse.data.student_token) {
                     localStorage.setItem('admin_token', loginResponse.data.student_token);
                     tokenSet = true;
@@ -280,11 +280,10 @@ export default function RegistrationForm(props)
                     <div className='w-full flex items-start justify-start flex-col gap-y-2'>
                         <h1 className='text-3xl sm:text-2xl md:text-3xl tracking-[.001vw] mt-0 font-medium'>Notice</h1>
                         <p className='text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-[#AAAAAA]'>
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                            <u> I love Ju fufu, she the best Cat Thiren in ZZZ, smash must pull</u> et dolore magna aliqua.
-                            Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                            <strong>🎉 TSU ID Scheduling System is now live!</strong><br/>
+                            We are excited to announce the official release of the TSU ID Scheduling System. Students can now book their ID appointment slots online, and admins can manage appointments with ease. Thank you for your support and we look forward to serving you better!
                         </p>
-                        <p className='opacity-[.34] italic'>06-21-2025</p>
+                        <p className='opacity-[.34] italic'>June 27, 2025</p>
                     </div>
                 </div>
 
