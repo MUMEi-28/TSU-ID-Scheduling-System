@@ -290,7 +290,14 @@ const AdminPage = (props) =>
           action: async () => {
             setIsLoading(true);
             try {
-              await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', editData, {
+              // Only send editable fields (name and student number)
+              const updateData = {
+                id: editData.id,
+                fullname: editData.fullname,
+                student_number: editData.student_number
+              };
+              
+              await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', updateData, {
                 headers: { 'Content-Type': 'application/json' }
               });
               setEditRowId(null);
@@ -834,9 +841,17 @@ const AdminPage = (props) =>
                                             <>
                                                 <td className="py-2 border"><input name="fullname" value={editData.fullname} onChange={handleEditChange} className="border p-1 rounded w-full" /></td>
                                                 <td className="py-2 border"><input name="student_number" value={editData.student_number} onChange={handleEditChange} className="border p-1 rounded w-full" /></td>
-                                                <td className="py-2 border"><input name="schedule_date" value={editData.schedule_date} onChange={handleEditChange} className="border p-1 rounded w-full" /></td>
-                                                <td className="py-2 border"><input name="schedule_time" value={editData.schedule_time} onChange={handleEditChange} className="border p-1 rounded w-full" /></td>
-                                                <td className="py-2 border">{editData.status}</td>
+                                                <td className="py-2 border">{editData.schedule_date}</td>
+                                                <td className="py-2 border">{editData.schedule_time}</td>
+                                                <td className="py-2 border">
+                                                    <span className={
+                                                        editData.status === 'done' ? 'bg-green-200 text-green-800 px-2 py-1 rounded' : 
+                                                        editData.status === 'cancelled' ? 'bg-red-200 text-red-800 px-2 py-1 rounded' :
+                                                        'bg-yellow-200 text-yellow-800 px-2 py-1 rounded'
+                                                    }>
+                                                    {editData.status || 'pending'}
+                                                </span>
+                                                </td>
                                                 <td className="py-2 border flex gap-2 justify-center">
                                                     <button onClick={handleEditSave} className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-800">Save</button>
                                                     <button onClick={handleEditCancel} className="bg-gray-400 text-white px-2 py-1 rounded hover:bg-gray-600">Cancel</button>

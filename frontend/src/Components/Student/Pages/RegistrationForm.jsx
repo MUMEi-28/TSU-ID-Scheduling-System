@@ -230,7 +230,7 @@ export default function RegistrationForm(props)
                                     type="text"
                                     name="fullname"
                                     onChange={props.handleChange}
-                                    placeholder='Marc Jersey Castro'
+                                    placeholder='Juan Dela Cruz'
                                     className='p-4 bg-[#BABABA] w-full'
                                 />
                             </div>
@@ -242,7 +242,7 @@ export default function RegistrationForm(props)
                                     type="text"
                                     name="student_number"
                                     onChange={props.handleChange}
-                                    placeholder='2022300766'
+                                    placeholder='2025300000'
                                     className='p-4 bg-[#BABABA] w-full'
                                 /> </div>
 

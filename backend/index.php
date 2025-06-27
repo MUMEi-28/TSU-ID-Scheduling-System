@@ -43,23 +43,38 @@ switch ($method) {
         try {
             $input = json_decode(file_get_contents('php://input'));
             
-            if (!isset($input->schedule_date) || empty($input->schedule_date)) {
-                echo json_encode(['status' => 0, 'message' => 'Schedule date is required']);
-                exit;
-            }
-            if (!isset($input->schedule_time) || empty($input->schedule_time)) {
-                echo json_encode(['status' => 0, 'message' => 'Schedule time is required']);
-                exit;
+            // Check if this is a full update (with schedule info) or partial update (name/number/status only)
+            $isFullUpdate = isset($input->schedule_date) && isset($input->schedule_time);
+            
+            if ($isFullUpdate) {
+                // Full update - validate schedule fields
+                if (empty($input->schedule_date)) {
+                    echo json_encode(['status' => 0, 'message' => 'Schedule date is required']);
+                    exit;
+                }
+                if (empty($input->schedule_time)) {
+                    echo json_encode(['status' => 0, 'message' => 'Schedule time is required']);
+                    exit;
+                }
+                
+                $sql = "UPDATE students SET fullname = :fullname, student_number = :student_number, schedule_date = :schedule_date, schedule_time = :schedule_time, status = :status WHERE id = :id";
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam(':fullname', $input->fullname);
+                $stmt->bindParam(':student_number', $input->student_number);
+                $stmt->bindParam(':schedule_date', $input->schedule_date);
+                $stmt->bindParam(':schedule_time', $input->schedule_time);
+                $stmt->bindParam(':status', $input->status);
+                $stmt->bindParam(':id', $input->id);
+            } else {
+                // Partial update - only update name, number, and status
+                $sql = "UPDATE students SET fullname = :fullname, student_number = :student_number, status = :status WHERE id = :id";
+                $stmt = $conn->prepare($sql);
+                $stmt->bindParam(':fullname', $input->fullname);
+                $stmt->bindParam(':student_number', $input->student_number);
+                $stmt->bindParam(':status', $input->status);
+                $stmt->bindParam(':id', $input->id);
             }
             
-            $sql = "UPDATE students SET fullname = :fullname, student_number = :student_number, schedule_date = :schedule_date, schedule_time = :schedule_time, status = :status WHERE id = :id";
-            $stmt = $conn->prepare($sql);
-            $stmt->bindParam(':fullname', $input->fullname);
-            $stmt->bindParam(':student_number', $input->student_number);
-            $stmt->bindParam(':schedule_date', $input->schedule_date);
-            $stmt->bindParam(':schedule_time', $input->schedule_time);
-            $stmt->bindParam(':status', $input->status);
-            $stmt->bindParam(':id', $input->id);
             if ($stmt->execute()) {
                 $response = ['status' => 1, 'message' => 'Student updated successfully'];
             } else {
