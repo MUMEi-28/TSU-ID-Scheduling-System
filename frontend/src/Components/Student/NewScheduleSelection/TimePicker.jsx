@@ -151,7 +151,13 @@ const TimePicker = (props) =>
             setSlotCounts(counts);
             localStorage.setItem(`slot_counts_${props.selectedDate}`, JSON.stringify({ data: counts, timestamp: Date.now() }));
         } catch (err) {
-            setErrorMsg("An error occurred while scheduling. Please try again.");
+            if (err.response && err.response.data && err.response.data.message) {
+                setErrorMsg(err.response.data.message);
+            } else if (err.message) {
+                setErrorMsg(`Scheduling error: ${err.message}`);
+            } else {
+                setErrorMsg("An error occurred while scheduling. Please try again.");
+            }
         }
     };
 

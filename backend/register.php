@@ -21,7 +21,7 @@ $requests[] = $now;
 file_put_contents($rateFile, json_encode($requests));
 if (count($requests) > $limit) {
     http_response_code(429);
-    echo json_encode(["error" => "Rate limit exceeded. Please try again later."]);
+    echo json_encode(["error" => "Too many registration attempts. Please wait 5 minutes and try again."]);
     error_log("[register.php] Rate limit exceeded for $ip", 3, __DIR__ . '/error_log.txt');
     exit;
 }
@@ -33,22 +33,22 @@ try {
 
     // Validate JSON decoding
     if ($input === null) {
-        throw new Exception("Invalid JSON data received");
+        throw new Exception("Please check your information and try again.");
     }
 
     // Check required fields
     if (!isset($input->fullname)) {
-        throw new Exception("Full name is required");
+        throw new Exception("Please enter your full name.");
     }
     if (!isset($input->student_number)) {
-        throw new Exception("Student number is required");
+        throw new Exception("Please enter your student number.");
     }
 
     // Check if student_number is a 10-digit number
     if (!preg_match('/^\d{10}$/', $input->student_number)) {
         echo json_encode([
             'status' => 0,
-            'message' => 'Invalid student number format. Please try again!'
+            'message' => 'Your student number should be exactly 10 digits. Please check and try again.'
         ]);
         exit;
     }
@@ -63,7 +63,7 @@ try {
     if ($count > 0) {
         echo json_encode([
             'status' => 0,
-            'message' => 'Student already exists. Please log in instead.'
+            'message' => 'You already have an account! Please log in instead.'
         ]);
         exit;
     }
@@ -82,14 +82,14 @@ try {
         $studentToken = bin2hex(random_bytes(16));
         $response = [
             'status' => 1,
-            'message' => 'Student Registered Successfully',
+            'message' => 'Welcome! Your account has been created successfully.',
             'student_id' => $conn->lastInsertId(),
             'student_token' => $studentToken
         ];
     } else {
         $response = [
             'status' => 0,
-            'message' => 'Registration failed'
+            'message' => 'Sorry, we couldn\'t create your account right now. Please try again.'
         ];
     }
 
@@ -98,7 +98,7 @@ try {
     error_log("[register.php] " . $e->getMessage() . "\n", 3, __DIR__ . '/error_log.txt');
     echo json_encode([
         'status' => 0,
-        'message' => 'Error: ' . $e->getMessage(),
+        'message' => 'Something went wrong. Please check your information and try again.',
         'received_data' => $json ?? null
     ]);
 }

@@ -21,7 +21,9 @@ function AdminRoute({ children }) {
 
 function StudentRoute({ children }) {
   const token = localStorage.getItem('admin_token');
-  if (!token) {
+  const doneToken = localStorage.getItem('done_view_token');
+  const pendingToken = localStorage.getItem('pending_view_token');
+  if (!token && !doneToken && !pendingToken) {
     return <NotFound />;
   }
   return children;
@@ -232,8 +234,8 @@ export default function App()
             registrationInputs={registrationInputs}
             handleSubmit={handleSubmit}
             handleLogout={handleLogout}
-                selectedTime={selectedTime}
-                selectedDate={selectedDate}
+            selectedTime={selectedTime}
+            selectedDate={selectedDate}
           />
         </StudentRoute>
       } />

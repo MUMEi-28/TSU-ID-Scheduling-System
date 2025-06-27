@@ -21,17 +21,36 @@ $requests[] = $now;
 file_put_contents($rateFile, json_encode($requests));
 if (count($requests) > $limit) {
     http_response_code(429);
-    echo json_encode(["error" => "Rate limit exceeded. Please try again later."]);
+    echo json_encode(["error" => "Too many login attempts. Please wait 5 minutes and try again."]);
     error_log("[login.php] Rate limit exceeded for $ip", 3, __DIR__ . '/error_log.txt');
     exit;
 }
 
 try {
+    // Get raw input and decode JSON
     $json = file_get_contents('php://input');
     $input = json_decode($json);
 
-    if (!isset($input->fullname) || !isset($input->student_number)) {
-        throw new Exception("Full name and student number are required");
+    // Validate JSON decoding
+    if ($input === null) {
+        throw new Exception("Please check your information and try again.");
+    }
+
+    // Check required fields
+    if (!isset($input->fullname)) {
+        throw new Exception("Please enter your full name.");
+    }
+    if (!isset($input->student_number)) {
+        throw new Exception("Please enter your student number.");
+    }
+
+    // Check if student_number is a 10-digit number
+    if (!preg_match('/^\d{10}$/', $input->student_number)) {
+        echo json_encode([
+            'status' => 0,
+            'message' => 'Your student number should be exactly 10 digits. Please check and try again.'
+        ]);
+        exit;
     }
 
     // Check for admin (id=1)
@@ -50,14 +69,70 @@ try {
         exit;
     }
 
-    // Check for student
-    $studentSql = "SELECT id, fullname, student_number FROM students WHERE fullname = :fullname AND student_number = :student_number LIMIT 1";
+    // Check for duplicate students (same as register.php logic)
+    $checkSql = "SELECT COUNT(*) FROM students WHERE fullname = :fullname AND student_number = :student_number";
+    $checkStmt = $conn->prepare($checkSql);
+    $checkStmt->bindParam(':fullname', $input->fullname);
+    $checkStmt->bindParam(':student_number', $input->student_number);
+    $checkStmt->execute();
+    $count = $checkStmt->fetchColumn();
+    if ($count > 1) {
+        echo json_encode([
+            'status' => 0,
+            'message' => 'We found multiple students with your information. Please contact the Business Office for assistance.'
+        ]);
+        exit;
+    }
+
+    // Check for student with valid status
+    $studentSql = "SELECT id, fullname, student_number, status, schedule_date, schedule_time FROM students WHERE fullname = :fullname AND student_number = :student_number LIMIT 1";
     $studentStmt = $conn->prepare($studentSql);
     $studentStmt->bindParam(':fullname', $input->fullname);
     $studentStmt->bindParam(':student_number', $input->student_number);
     $studentStmt->execute();
     $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
     if ($student) {
+        // Only allow login if status is not 'done' or 'cancelled'
+        if (in_array(strtolower($student['status']), ['done', 'cancelled'])) {
+            $statusMessage = strtolower($student['status']) === 'done' 
+                ? 'Your ID has already been processed and completed. If you need assistance, please visit the Business Center.'
+                : 'Your ID request has been cancelled. Please contact the admin office if you need to reschedule.';
+            
+            echo json_encode([
+                'status' => 0,
+                'message' => $statusMessage,
+                'student_status' => strtolower($student['status']),
+                'student_id' => $student['id'],
+                'student_data' => [
+                    'id' => $student['id'],
+                    'fullname' => $student['fullname'],
+                    'student_number' => $student['student_number'],
+                    'schedule_date' => $student['schedule_date'],
+                    'schedule_time' => $student['schedule_time']
+                ]
+            ]);
+            exit;
+        }
+        
+        // For pending students, check if they already have a schedule
+        if (strtolower($student['status']) === 'pending' && $student['schedule_date'] && $student['schedule_time']) {
+            // Pending student with existing schedule
+            echo json_encode([
+                'status' => 2, // Special status for pending with schedule
+                'message' => 'You already have a scheduled appointment. You can view your details or reschedule if needed.',
+                'student_status' => 'pending_with_schedule',
+                'student_id' => $student['id'],
+                'student_data' => [
+                    'id' => $student['id'],
+                    'fullname' => $student['fullname'],
+                    'student_number' => $student['student_number'],
+                    'schedule_date' => $student['schedule_date'],
+                    'schedule_time' => $student['schedule_time']
+                ]
+            ]);
+            exit;
+        }
+        
         $studentToken = bin2hex(random_bytes(16));
         echo json_encode([
             'status' => 1,
@@ -72,12 +147,13 @@ try {
     // Not found
     echo json_encode([
         'status' => 0,
-        'message' => 'No matching user found. Please register first.'
+        'message' => 'We couldn\'t find your account. Please register first or check your information.'
     ]);
 } catch (Exception $e) {
+    error_log("[login.php] " . $e->getMessage() . "\n", 3, __DIR__ . '/error_log.txt');
     echo json_encode([
         'status' => 0,
-        'message' => 'Error: ' . $e->getMessage()
+        'message' => 'Something went wrong. Please check your information and try again.',
+        'received_data' => $json ?? null
     ]);
-    error_log("[login.php] " . $e->getMessage() . "\n", 3, __DIR__ . '/error_log.txt');
 }
