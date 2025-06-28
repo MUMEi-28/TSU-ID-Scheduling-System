@@ -1,8 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import checkImg from '../../public/check.png';
 import { buildApiUrl, API_ENDPOINTS } from '../../../config/api';
+
+const AnimatedOverlay = ({ type, show, appointment, onClose }) => {
+  // type: 'success' | 'existing'
+  // appointment: object with schedule info
+  return (
+    <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-60 transition-opacity duration-500 ${show ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className="bg-white rounded-2xl p-8 flex flex-col items-center shadow-2xl min-w-[300px] min-h-[220px] relative">
+        {/* Icon Animation */}
+        <div className={`transition-all duration-700 ${show ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`} style={{ transitionDelay: '0ms' }}>
+          {type === 'success' ? (
+            <svg className="w-20 h-20 mb-4" viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="32" r="30" fill="#22c55e"/>
+              <path d="M20 34l8 8 16-16" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          ) : (
+            <svg className="w-20 h-20 mb-4" viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="32" r="30" fill="#ef4444"/>
+              <path d="M24 24l16 16M40 24L24 40" stroke="#fff" strokeWidth="5" strokeLinecap="round"/>
+            </svg>
+          )}
+        </div>
+        {/* Text Animation */}
+        <div className={`transition-all duration-700 text-center ${show ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`} style={{ transitionDelay: '300ms' }}>
+          {type === 'success' ? (
+            <>
+              <h2 className="text-2xl font-bold text-green-700 mb-2">Slot Confirmed!</h2>
+              <p className="text-lg text-gray-700 mb-2">Your slot has been successfully confirmed.</p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-bold text-red-700 mb-2">Existing Appointment</h2>
+              <p className="text-lg text-gray-700 mb-4">You already have an existing appointment and cannot book another slot.</p>
+              {appointment && (
+                <div className="bg-gray-100 rounded-xl p-4 mb-4 text-center">
+                  <h3 className="font-semibold text-gray-800 mb-2">Your Appointment Details:</h3>
+                  <div className="space-y-1 text-sm">
+                    <p><span className="font-medium">Date:</span> {appointment.schedule_date}</p>
+                    <p><span className="font-medium">Time:</span> {appointment.schedule_time}</p>
+                    <p><span className="font-medium">Student Number:</span> {appointment.student_number}</p>
+                    <p><span className="font-medium">Name:</span> {appointment.fullname}</p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+        {type === 'existing' && (
+          <button onClick={onClose} className="mt-2 bg-[#E1A500] hover:bg-[#C68C10] text-white font-bold py-2 px-6 rounded-xl shadow-lg border-2 border-[#C68C10] transition-all duration-200">Close</button>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const ScheduleReceipt = (props) =>
 {
@@ -10,6 +62,8 @@ const ScheduleReceipt = (props) =>
   const [confirmed, setConfirmed] = useState(false);
   const [studentData, setStudentData] = useState(null);
   const [isViewingExisting, setIsViewingExisting] = useState(false);
+  const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+  const [showExistingModal, setShowExistingModal] = useState(false);
 
   useEffect(() => {
     // Check if we're viewing existing student data
@@ -19,13 +73,11 @@ const ScheduleReceipt = (props) =>
     if (viewingData) {
         setStudentData(JSON.parse(viewingData));
         setIsViewingExisting(true);
-        setConfirmed(true); // Auto-confirm for viewing existing data
     }
     
     // Handle existing user token
     if (existingUserToken) {
         setIsViewingExisting(true);
-        setConfirmed(true);
     }
   }, []);
 
@@ -76,6 +128,10 @@ const ScheduleReceipt = (props) =>
       if (response.data.status === 1) {
         setConfirmed(true);
         localStorage.setItem('confirmedSlot', 'true');
+        setShowSuccessOverlay(true);
+        setTimeout(() => setShowSuccessOverlay(false), 2000);
+      } else if (response.data.message && response.data.message.toLowerCase().includes('existing appointment')) {
+        setShowExistingModal(true);
       } else {
         alert(response.data.message || 'Failed to confirm slot');
       }
@@ -96,19 +152,26 @@ const ScheduleReceipt = (props) =>
 
   return (
     <div className="relative flex justify-center items-center min-h-screen bg-[url('Components\\public\\students-with-unif-tb.png')] bg-cover bg-center px-4 py-8">
+      {/* Animated Overlays */}
+      <AnimatedOverlay type="success" show={showSuccessOverlay} />
+      <AnimatedOverlay type="existing" show={showExistingModal} appointment={displayData} onClose={() => { setShowExistingModal(false); navigate('/'); }} />
       <div className="absolute inset-0 bg-black opacity-70 z-0"></div>
       <div className="relative flex flex-col items-center justify-center gap-4 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg z-10">
-        {(confirmed || isViewingExisting) && (
+        {(confirmed && !isViewingExisting) && (
           <div className="w-12 sm:w-14 md:w-16 lg:w-18">
-            <img src={checkImg} alt="check" className="w-full h-auto" />
+            <svg className="w-full h-auto" viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="32" r="30" fill="#22c55e"/>
+              <path d="M20 34l8 8 16-16" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
         )}
         <div className="poppins-font text-[#ECECEC] text-center font-medium text-lg sm:text-xl md:text-2xl lg:text-3xl px-4">
           {isViewingExisting ? 'Your Appointment Information' : 
            confirmed ? 'Your slot has been confirmed!' : 'Please confirm your slot to continue.'}
         </div>
-        <div className="poppins-font bg-gray-200 text-center rounded-3xl shadow-xl w-full max-w-sm sm:max-w-md md:max-w-lg px-4 pb-6 text-sm sm:text-base md:text-lg flex flex-col items-center justify-center overflow-hidden">
-          <div className="w-full h-6 bg-[#5C0101] text-[#ECECEC] flex items-center justify-center rounded-t-3xl text-sm sm:text-base font-semibold"></div>
+        <div className="poppins-font bg-gray-200 text-center rounded-3xl shadow-xl w-full max-w-sm sm:max-w-md md:max-w-lg pb-6 text-sm sm:text-base md:text-lg flex flex-col items-center justify-center overflow-hidden">
+          {/* Red bar flush with card */}
+          <div className="w-full h-6 bg-[#5C0101] text-[#ECECEC] flex items-center justify-center rounded-t-3xl text-sm sm:text-base font-semibold p-0 m-0" style={{marginBottom: 0}}></div>
           <div className="h-4" />
           <h1 className="text-2xl sm:text-3xl md:text-4xl tracking-tighter font-semibold underline text-[#5B0000]">Slot Information</h1>
           <div className="h-3" />

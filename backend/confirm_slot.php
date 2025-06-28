@@ -22,6 +22,18 @@ try {
         echo json_encode(['status' => 0, 'message' => 'Schedule date and time are required']);
         exit;
     }
+    // Check if the student already has a scheduled appointment
+    $checkSql = "SELECT schedule_date, schedule_time FROM students WHERE id = :id";
+    $checkStmt = $conn->prepare($checkSql);
+    $checkStmt->bindParam(':id', $input->id);
+    $checkStmt->execute();
+    $existing = $checkStmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($existing && !empty($existing['schedule_date']) && !empty($existing['schedule_time'])) {
+        echo json_encode(['status' => 0, 'message' => 'Existing appointment: You already have a scheduled slot.']);
+        exit;
+    }
+
     $sql = "UPDATE students SET schedule_date = :schedule_date, schedule_time = :schedule_time, status = :status"
         . (isset($input->email) ? ", email = :email" : "")
         . (isset($input->id_reason) ? ", id_reason = :id_reason" : "")
