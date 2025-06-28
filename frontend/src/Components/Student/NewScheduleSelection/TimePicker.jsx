@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { format } from 'date-fns';
 import kuruKuru from '../../public/kurukuru-kururing.gif';
+import { buildApiUrl, API_ENDPOINTS } from '../../../config/api';
 
 const TimePicker = (props) =>
 {
@@ -80,7 +81,7 @@ const TimePicker = (props) =>
                 const formattedDate = format(new Date(props.selectedDate), "MMMM d, yyyy");
                 for (const time of timeSlots) {
                     try {
-                        const res = await axios.get(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_slot_count.php`, {
+                        const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.getSlotCount)}`, {
                             params: {
                                 schedule_date: formattedDate,
                                 schedule_time: time
@@ -110,7 +111,7 @@ const TimePicker = (props) =>
             const counts = {};
             for (const time of timeSlots) {
                 try {
-                    const res = await axios.get(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_slot_count.php`, {
+                    const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.getSlotCount)}`, {
                         params: {
                             schedule_date: formattedDate,
                             schedule_time: time
@@ -137,7 +138,7 @@ const TimePicker = (props) =>
             const counts = {};
             for (const time of timeSlots) {
                 try {
-                    const res = await axios.get(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_slot_count.php`, {
+                    const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.getSlotCount)}`, {
                         params: {
                             schedule_date: formattedDate,
                             schedule_time: time

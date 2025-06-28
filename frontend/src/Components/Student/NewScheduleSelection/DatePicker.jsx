@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'; // Added useMemo
 import { addDays, subDays, format, nextTuesday, previousTuesday, isToday, isBefore, isEqual } from 'date-fns'; // Added isEqual, isBefore
+import axios from 'axios';
+import { buildApiUrl, API_ENDPOINTS } from '../../../config/api';
 
 function DatePicker(props) {
   // Normalize 'today' to the start of the day for consistent comparisons
@@ -78,7 +80,7 @@ function DatePicker(props) {
           "3:00pm - 4:00pm", "4:00pm - 5:00pm"
         ]) {
           try {
-            const res = await axios.get(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_slot_count.php`, {
+            const res = await axios.get(buildApiUrl(API_ENDPOINTS.GET_SLOT_COUNT), {
               params: {
                 schedule_date: formattedDate,
                 schedule_time: time

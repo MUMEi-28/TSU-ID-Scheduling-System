@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios'
 import kuruKuru from '../../public/kurukuru-kururing.gif';
+import { buildApiUrl, API_ENDPOINTS } from '../../../config/api';
 
 export default function RegistrationForm(props)
 {
@@ -26,7 +27,7 @@ export default function RegistrationForm(props)
      function handleSubmit(event)
      {
          event.preventDefault();
-         axios.post(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/register.php`, registrationInputs);
+         axios.post(buildApiUrl(API_ENDPOINTS.REGISTER), registrationInputs);
          console.log(registrationInputs);
      } */
 
@@ -46,7 +47,7 @@ export default function RegistrationForm(props)
 
             // Try login first
             const loginResponse = await axios.post(
-                "http://localhost/Projects/TSU-ID-Scheduling-System/backend/login.php",
+                buildApiUrl(API_ENDPOINTS.LOGIN),
                 props.registrationInputs
             );
             if (loginResponse.data.status === 1) {

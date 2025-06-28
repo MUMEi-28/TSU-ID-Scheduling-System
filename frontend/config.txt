@@ -1,0 +1,37 @@
+# TSU ID Scheduling System - Configuration Guide
+# =============================================
+
+# This file contains configuration instructions for setting up the API base URL
+# for different environments (development and production).
+
+## For Local Development:
+# Create a file named `.env` in the frontend directory with the following content:
+# VITE_API_BASE_URL=http://localhost/your-path-to-backend
+
+## For Production/Deployment:
+# Create a file named `.env.production` in the frontend directory with the following content:
+# VITE_API_BASE_URL=https://your-domain.com/backend
+
+## Example configurations:
+
+### Local Development Examples:
+# VITE_API_BASE_URL=http://localhost/Projects/TSU-ID-Scheduling-System/backend
+# VITE_API_BASE_URL=http://localhost:8080/backend
+# VITE_API_BASE_URL=http://127.0.0.1/tsu-scheduling/backend
+
+### Production Examples:
+# VITE_API_BASE_URL=https://your-domain.com/backend
+# VITE_API_BASE_URL=https://api.yourdomain.com
+# VITE_API_BASE_URL=https://tsu-scheduling.com/api
+
+## Instructions:
+1. Copy the appropriate URL above for your setup
+2. Create a `.env` file in the frontend directory
+3. Add the line: VITE_API_BASE_URL=your-url-here
+4. Restart your development server
+
+## Notes:
+- The URL should point to the directory containing your PHP backend files
+- Make sure the backend is accessible from the frontend
+- For production, ensure your domain has SSL (https://)
+- The backend directory should contain files like login.php, register.php, etc. 

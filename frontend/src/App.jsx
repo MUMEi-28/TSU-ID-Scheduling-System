@@ -7,6 +7,7 @@ import QueryPanel from "./Components/Student/NewScheduleSelection/QueryPanel";
 import TimePicker from "./Components/Student/NewScheduleSelection/TimePicker";
 import NotFound from "./Components/Error/NotFound";
 import kuruKuru from './Components/public/kurukuru-kururing.gif';
+import { buildApiUrl, API_ENDPOINTS } from './config/api';
 
 import axios from "axios";
 import { useEffect, useState, useRef } from "react";
@@ -156,7 +157,7 @@ export default function App()
       schedule_time: selectedTime || registrationInputs.schedule_time
     };
 
-    axios.post(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/register.php`, 
+    axios.post(buildApiUrl(API_ENDPOINTS.REGISTER), 
       completeRegistrationData,
       { headers: { 'Content-Type': 'application/json' } }
     )
