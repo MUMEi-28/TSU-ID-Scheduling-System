@@ -20,13 +20,13 @@ export default function ScheduleSelection(props) {
     }
   }
   return (
-    <div className="flex flex-col min-h-screen w-full bg-[#E7E7E7] overflow-x-hidden">
+    <div className="flex flex-col min-h-screen w-screen bg-[#E7E7E7] overflow-x-hidden">
       {/* QueryPanel: top on small screens */}
       <div className="block lg:hidden w-full">
         <QueryPanel handleBack={handleBack} mobile />
             </div>
       {/* Main area: row on desktop, col on mobile */}
-      <div className="flex-1 flex flex-col lg:flex-row w-full">
+      <div className=" flex w-screen">
         {/* Main content: center pickers, take all space except sidebar */}
         <div className="flex flex-col flex-1 items-center p-4 sm:p-6 w-full gap-8 lg:gap-8 lg:justify-center">
           <div className="w-full max-w-xl flex justify-center">
@@ -39,7 +39,7 @@ export default function ScheduleSelection(props) {
           </div>
           <div className="w-full max-w-xl flex justify-center">
             <TimePicker
-              setSelectedTime={props.setSelectedTime}
+              setSelectedTime={props.setSelectedTime}   
               selectedTime={props.selectedTime}
               selectedDate={props.selectedDate}
               handlingDataObjectsTest={props.handlingDataObjectsTest}
@@ -48,7 +48,7 @@ export default function ScheduleSelection(props) {
           </div>
         </div>
         {/* QueryPanel: fixed width, flush right on desktop */}
-        <div className="hidden lg:flex flex-col w-80 xl:w-[340px] 2xl:w-[400px] justify-start relative h-full" style={{marginRight: 0, paddingRight: 0}}>
+        <div className="hidden lg:block w-fit justify-start relative h-full ">
           <QueryPanel handleBack={handleBack} />
         </div>
       </div>
