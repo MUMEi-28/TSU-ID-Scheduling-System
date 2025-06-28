@@ -60,7 +60,8 @@ export default function RegistrationForm(props)
         setPendingStudentData(null);
         setIsLoading(true);
 
-        try {
+        try
+        {
             // Simulate processing delay
             await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -69,67 +70,84 @@ export default function RegistrationForm(props)
                 buildApiUrl(API_ENDPOINTS.LOGIN),
                 props.registrationInputs
             );
-            
-            if (loginResponse.data.status === 1) {
+
+            if (loginResponse.data.status === 1)
+            {
                 let tokenSet = false;
                 // Admin login
-                if (loginResponse.data.admin_token) {
+                if (loginResponse.data.admin_token)
+                {
                     localStorage.setItem('admin_token', loginResponse.data.admin_token);
                     tokenSet = true;
-                    if (loginResponse.data.is_admin) {
+                    if (loginResponse.data.is_admin)
+                    {
                         navigate('/admin');
                         return;
                     }
                 }
                 // Student login (including new users)
-                if (loginResponse.data.student_token) {
+                if (loginResponse.data.student_token)
+                {
                     localStorage.setItem('admin_token', loginResponse.data.student_token);
                     tokenSet = true;
                 }
-                if (tokenSet) {
+                if (tokenSet)
+                {
                     // Check if this is a new user (no student_id)
-                    if (!loginResponse.data.student_id) {
+                    if (!loginResponse.data.student_id)
+                    {
                         // New user - show additional info form
                         setShowAdditionalInfo(true);
                         setIsLoading(false);
                         return;
-                    } else {
+                    } else
+                    {
                         // Existing user - proceed to schedule
                         localStorage.setItem('student_id', loginResponse.data.student_id);
                         navigate('/schedule');
                     }
-                } else {
+                } else
+                {
                     setError('Login failed: No token received.');
                 }
                 return;
-            } else if (loginResponse.data.status === 2) {
+            } else if (loginResponse.data.status === 2)
+            {
                 // Pending student with existing schedule - show receipt only
                 setPendingStudentData(loginResponse.data.student_data);
                 setShowPendingMessage(true);
                 return;
-            } else {
+            } else
+            {
                 // Handle special cases for done/cancelled status
-                if (loginResponse.data.student_status === 'done') {
+                if (loginResponse.data.student_status === 'done')
+                {
                     setDoneStudentData(loginResponse.data.student_data);
                     setShowDoneMessage(true);
                     return;
                 }
                 setError(loginResponse.data.message);
             }
-        } catch (err) {
-            if (err.response && err.response.data && err.response.data.message) {
+        } catch (err)
+        {
+            if (err.response && err.response.data && err.response.data.message)
+            {
                 setError(err.response.data.message);
-            } else if (err.message) {
+            } else if (err.message)
+            {
                 setError(`Connection error: ${err.message}`);
-            } else {
+            } else
+            {
                 setError("An error occurred. Please try again.");
             }
-        } finally {
+        } finally
+        {
             setIsLoading(false);
         }
     }
 
-    const handleAdditionalInfoChange = (e) => {
+    const handleAdditionalInfoChange = (e) =>
+    {
         const { name, value, type, checked } = e.target;
         setAdditionalInfo(prev => ({
             ...prev,
@@ -137,23 +155,27 @@ export default function RegistrationForm(props)
         }));
     };
 
-    const handleAdditionalInfoSubmit = async (e) => {
+    const handleAdditionalInfoSubmit = async (e) =>
+    {
         e.preventDefault();
-        
+
         // Prevent double submission
-        if (isSubmitting) {
+        if (isSubmitting)
+        {
             return;
         }
-        
-        if (!additionalInfo.email || !additionalInfo.id_reason || !additionalInfo.data_privacy_agreed) {
+
+        if (!additionalInfo.email || !additionalInfo.id_reason || !additionalInfo.data_privacy_agreed)
+        {
             setError('Please fill in all required fields and agree to the data privacy terms.');
             return;
         }
 
         setIsSubmitting(true);
         setIsLoading(true);
-        
-        try {
+
+        try
+        {
             // Combine registration inputs with additional info
             const completeData = {
                 ...props.registrationInputs,
@@ -173,36 +195,45 @@ export default function RegistrationForm(props)
 
             console.log('Registration response:', registerResponse.data); // Debug log
 
-            if (registerResponse.data.status === 1) {
+            if (registerResponse.data.status === 1)
+            {
                 localStorage.setItem('student_id', registerResponse.data.student_id);
+                if (props.onRegistrationSuccess) {
+                  props.onRegistrationSuccess();
+                }
                 navigate('/schedule');
-            } else {
+            } else
+            {
                 setError(registerResponse.data.message || 'Registration failed');
             }
-        } catch (err) {
+        } catch (err)
+        {
             console.error('Registration error:', err); // Debug log
             setError(err.response?.data?.message || 'Registration failed');
-        } finally {
+        } finally
+        {
             setIsLoading(false);
             setIsSubmitting(false);
         }
     };
 
+
     const handleViewReceipt = () => {
-        localStorage.setItem('viewing_student_data', JSON.stringify(doneStudentData));
+        localStorage.setItem('viewing_student_data', JSON.stringify({ ...doneStudentData, id: doneStudentData.id }));
         localStorage.setItem('viewing_student_id', doneStudentData.id);
         localStorage.setItem('done_view_token', doneStudentData.id);
         navigate('/receipt');
     };
 
     const handleViewPendingReceipt = () => {
-        localStorage.setItem('viewing_student_data', JSON.stringify(pendingStudentData));
+        localStorage.setItem('viewing_student_data', JSON.stringify({ ...pendingStudentData, id: pendingStudentData.id }));
         localStorage.setItem('viewing_student_id', pendingStudentData.id);
         localStorage.setItem('pending_view_token', pendingStudentData.id);
         navigate('/receipt');
     };
 
-    const handleBackToHome = () => {
+    const handleBackToHome = () =>
+    {
         setShowDoneMessage(false);
         setDoneStudentData(null);
         setShowPendingMessage(false);
@@ -233,7 +264,7 @@ export default function RegistrationForm(props)
                 <div className="relative w-full max-w-md sm:max-w-lg md:max-w-xl rounded-xl flex flex-col justify-center items-center gap-y-6 px-6 sm:px-10 pt-16 pb-1">
                     <div className='w-full h-full bg-[#ECECEC] absolute z-10 rounded-xl opacity-[.83] pb-10'></div>
                     <div className="h-8 w-full bg-[#5C0101] rounded-t-xl absolute top-0 z-10 mt-3"></div>
-                    
+
                     {/* Title based on current state */}
                     {showDoneMessage ? (
                         <div className="poppins-font text-[#5B0000] text-2xl sm:text-3xl md:text-4xl font-medium tracking-tight z-20 text-center">
@@ -309,7 +340,7 @@ export default function RegistrationForm(props)
                         <form
                             onSubmit={handleAdditionalInfoSubmit}
                             className="flex flex-col gap-y-6 w-full px-6 sm:px-10 z-20">
-                            
+
                             <div className="text-center text-[#5B0000] mb-4">
                                 <p className="text-lg">
                                     Welcome! Please provide additional information to complete your registration.
@@ -361,9 +392,9 @@ export default function RegistrationForm(props)
                                         required
                                     />
                                     <label htmlFor="data_privacy_agreed" className='text-sm'>
-                                        I agree to the collection and processing of my personal data in accordance with the 
-                                        <strong> Data Privacy Act of 2012 (Republic Act No. 10173)</strong>. 
-                                        I understand that my information will be used solely for ID processing purposes and 
+                                        I agree to the collection and processing of my personal data in accordance with the
+                                        <strong> Data Privacy Act of 2012 (Republic Act No. 10173)</strong>.
+                                        I understand that my information will be used solely for ID processing purposes and
                                         will be handled with appropriate security measures.
                                     </label>
                                 </div>
@@ -452,7 +483,7 @@ export default function RegistrationForm(props)
                     <div className='w-full flex items-start justify-start flex-col gap-y-2'>
                         <h1 className='text-3xl sm:text-2xl md:text-3xl tracking-[.001vw] mt-0 font-medium'>Notice</h1>
                         <p className='text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-[#AAAAAA]'>
-                            <strong>🎉 TSU ID Scheduling System is now live!</strong><br/>
+                            <strong>🎉 TSU ID Scheduling System is now live!</strong><br />
                             We are excited to announce the official release of the TSU ID Scheduling System. Students can now book their ID appointment slots online, and admins can manage appointments with ease. Thank you for your support and we look forward to serving you better!
                         </p>
                         <p className='opacity-[.34] italic'>June 27, 2025</p>
