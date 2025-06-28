@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { buildApiUrl, API_ENDPOINTS } from '../../config/api';
 import CustomDropdown from './CustomDropdown';
+import AdjustmentCustomDropdown from './adjustmentSlotDropDown';
 import kuruKuru from '../public/kurukuru-kururing.gif';
 
 
@@ -41,7 +42,11 @@ const AdminPage = (props) =>
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
     const [editRowId, setEditRowId] = useState(null);
     const [editData, setEditData] = useState({});
-
+    const [slotAdjustmentPanel, setSlotAdjustmentPanel] = useState(false);
+    const [selectedTimeforAdjustment, setSelectedTimeForAdjustment] = useState("No Time Chosen");
+    const [slotAdjustmentDate, setSlotAdjustmentDate] = useState(null);
+    const [currentMaxCapacity, setCurrentMaxCapacity] = useState(null);
+    
     // New state for modals
     const [detailModal, setDetailModal] = useState({ show: false, student: null });
     const [editModal, setEditModal] = useState({ show: false, student: null, data: {} });
@@ -659,6 +664,83 @@ const AdminPage = (props) =>
       : paginatedStudents;
     const totalPagesToShow = showAllStudents ? totalAllPages : totalPages;
 
+    const handleOpenSlotAdjustmentPanel = () => {
+        setSlotAdjustmentPanel(true);
+    }
+
+    const handleCloseSlotAdjustmentPanel = () => {
+        setSlotAdjustmentDate(null);
+        setSelectedTimeForAdjustment("No Time Chosen");
+        setCurrentMaxCapacity(null);
+        setSlotAdjustmentPanel(false);
+    }
+    
+const formatDateLocal = (date) => {
+  if (typeof date === 'string') date = new Date(date);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const fetchMaxCapacity = async (slotAdjustmentDate, selectedTimeforAdjustment) => {
+    let formattedDate = slotAdjustmentDate;
+    if (slotAdjustmentDate instanceof Date || (typeof slotAdjustmentDate === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(slotAdjustmentDate))) {
+      formattedDate = formatDateLocal(slotAdjustmentDate);
+    }
+    // Remove last 5 characters from selectedTimeforAdjustment if it exists and is a string
+    let trimmedTime = selectedTimeforAdjustment;
+    if (typeof selectedTimeforAdjustment === 'string' && selectedTimeforAdjustment.length > 5) {
+      trimmedTime = selectedTimeforAdjustment.slice(0, -5);
+    }
+    console.log('Calling API with:', formattedDate, trimmedTime);
+  try {
+    const response = await axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_max_slot_count.php', {
+      params: {
+        schedule_date: formattedDate,
+        schedule_time: trimmedTime
+      }
+    });
+    setCurrentMaxCapacity(response.data.max_capacity); // <-- set state here
+    return response.data.max_capacity;
+  } catch (error) {
+    setCurrentMaxCapacity(null); // clear on error
+    return null;
+  }
+};
+
+    const handleSlotAdjustment = async (action) => {
+        if (!slotAdjustmentDate || !selectedTimeforAdjustment || selectedTimeforAdjustment === 'No Time Chosen') {
+            setToast({ show: true, message: 'Please select both date and time', type: 'error' });
+            return;
+        }
+        let formattedDate = slotAdjustmentDate;
+        if (slotAdjustmentDate instanceof Date || (typeof slotAdjustmentDate === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(slotAdjustmentDate))) {
+            formattedDate = formatDateLocal(slotAdjustmentDate);
+        }
+        // Remove last 5 characters from selectedTimeforAdjustment if needed
+        let trimmedTime = selectedTimeforAdjustment;
+        if (typeof selectedTimeforAdjustment === 'string' && selectedTimeforAdjustment.length > 5) {
+            trimmedTime = selectedTimeforAdjustment.slice(0, -5);
+        }
+        try {
+            const response = await axios.post('http://localhost/Projects/TSU-ID-Scheduling-System/backend/adjustLimitofSlots.php', {
+                schedule_date: formattedDate,
+                schedule_time: trimmedTime,
+                action: action // 'increase' or 'decrease'
+            });
+            if (response.data.success) {
+                // Refetch the new max capacity
+                fetchMaxCapacity(formattedDate, selectedTimeforAdjustment);
+                setToast({ show: true, message: `Slot capacity ${action === 'increase' ? 'increased' : 'decreased'}!`, type: 'success' });
+            } else {
+                setToast({ show: true, message: response.data.error || 'Failed to update slot capacity', type: 'error' });
+            }
+        } catch (error) {
+            setToast({ show: true, message: 'Server error adjusting slot capacity', type: 'error' });
+        }
+    };
+
     return (
         <div className="min-h-screen w-full overflow-x-hidden flex flex-col">
             {/* Header */}
@@ -1000,6 +1082,33 @@ const AdminPage = (props) =>
                 </div>
             )}
 
+            {slotAdjustmentPanel && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] ">
+                    <div className="bg-white rounded-lg p-10 max-w-md w-full mx-4 relative flex-col">
+                        <h2 className="text-xl font-bold mb-4">Adjust Slots</h2>
+                        <div className="mb-4 absolute top-4 right-4">
+                            <button onClick={handleCloseSlotAdjustmentPanel} className="block text-xl  rounded font-medium  text-gray-700 "> ✕ </button>
+                    </div>
+
+                   <button className='w-full border rounded py-1 font-medium bg-gray-200 border-gray-300 text-gray-700' onClick={() => setShowCalendar(true)}>Choose Date</button>
+                    <div className='my-2 w-full text-center mt-2'>Date: <b className='text-lg text-center'>{slotAdjustmentDate}</b></div>
+                    <AdjustmentCustomDropdown 
+                        selectedTime={selectedTimeforAdjustment}
+                        setSelectedTime={setSelectedTimeForAdjustment}
+                        getTime={fetchMaxCapacity}
+                        date={slotAdjustmentDate}
+                 />
+                 <div className='w-full text-center mt-2'>Time: <b className='text-lg text-center'>{selectedTimeforAdjustment}</b></div>
+                 <div className='mt-4 text-center' >Current Maximum Slots:</div>
+                 <div className='flex w-full justify-between md:justify-evenly  mt-4'>
+                    <button className='text-4xl border-2 border-gray-300 rounded-full p-1 pb-3' onClick={() => handleSlotAdjustment('decrease')}> - </button>
+                    <div className='text-3xl font-bold text-gray-700'>{currentMaxCapacity !== null ? currentMaxCapacity : 'Loading...'}</div>
+                    <button className='text-2xl border-2 border-gray-300 rounded-full p-1 pb-3' onClick={() => handleSlotAdjustment('increase')}>+</button>
+                    </div>
+                </div>
+            </div>
+            )}
+
             {/* Reschedule Modal */}
             {showRescheduleModal && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
@@ -1064,6 +1173,12 @@ const AdminPage = (props) =>
                         <Suspense fallback={<div className='text-xl font-bold text-gray-600'>Loading calendar...</div>}>
                             <Calendar 
                                 onDateSelect={date => {
+                                      const formatted = new Date(date).toLocaleDateString('en-US', {
+                                        month: 'long',
+                                        day: 'numeric',
+                                        year: 'numeric'
+                                    });
+                                    setSlotAdjustmentDate(formatted);
                                     setShowCalendar(false);
                                 }}
                                 onClose={() => setShowCalendar(false)}
@@ -1092,7 +1207,12 @@ const AdminPage = (props) =>
             {/* Main content */}
             <div className="flex-1 p-6">
                 {/* Move the Show All Students button above the filters */}
-                <div className="flex justify-end mb-4">
+                <div className="flex flex-col sm:flex-row justify-end mb-4">
+                    <button  onClick={handleOpenSlotAdjustmentPanel}
+                        className="bg-blue-300 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold border-2 border-blue-600 transition-all duration-150 mb-2 sm:mb-0 sm:mr-2"> 
+                        
+                        Adjust Slots
+                    </button>
                     <button
                         onClick={() => {
                             setCurrentScheduleMonth(new Date().getMonth());
