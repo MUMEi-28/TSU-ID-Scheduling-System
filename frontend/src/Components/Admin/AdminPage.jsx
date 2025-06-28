@@ -4,7 +4,6 @@ import axios from 'axios';
 import CustomDropdown from './CustomDropdown';
 import checkImg from '../public/check.png';
 import kuruKuru from '../public/kurukuru-kururing.gif';
-import { buildApiUrl, API_ENDPOINTS } from '../../config/api';
 
 // Toast component
 function Toast({ message, type, onClose }) {
@@ -72,7 +71,7 @@ const AdminPage = (props) =>
         }
         
       if (shouldFetch) {
-        axios.get(buildApiUrl(API_ENDPOINTS.getStudents))
+        axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
           .then(response => {
                 setStudents(response.data);
             localStorage.setItem(cacheKey, JSON.stringify({ data: response.data, timestamp: Date.now() }));
@@ -244,7 +243,7 @@ const AdminPage = (props) =>
         e.preventDefault();
         setChangeStatus("");
         try {
-            const response = await axios.post(buildApiUrl(API_ENDPOINTS.updateAdmin), {
+            const response = await axios.post('http://localhost/Projects/TSU-ID-Scheduling-System/backend/update_admin.php', {
                 fullname: adminFullname,
                 student_number: adminStudentNumber
             });
@@ -298,13 +297,13 @@ const AdminPage = (props) =>
                 student_number: editData.student_number
               };
               
-              await axios.put(buildApiUrl(API_ENDPOINTS.updateStudent), updateData, {
+              await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', updateData, {
                 headers: { 'Content-Type': 'application/json' }
               });
               setEditRowId(null);
               setToast({ show: true, message: 'Student updated successfully!', type: 'success' });
               invalidateStudentCache();
-              axios.get(buildApiUrl(API_ENDPOINTS.getStudents))
+              axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
                 .then(response => {
                   setStudents(response.data);
                   localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
@@ -329,13 +328,13 @@ const AdminPage = (props) =>
           action: async () => {
             setIsLoading(true);
             try {
-              await axios.delete(buildApiUrl(API_ENDPOINTS.deleteStudent), {
+              await axios.delete('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', {
                 data: { id },
                 headers: { 'Content-Type': 'application/json' }
               });
               setToast({ show: true, message: 'Student deleted successfully!', type: 'success' });
               invalidateStudentCache();
-              axios.get(buildApiUrl(API_ENDPOINTS.getStudents))
+              axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
                 .then(response => {
                   setStudents(response.data);
                   localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
@@ -352,11 +351,11 @@ const AdminPage = (props) =>
     };
     const handleToggleStatus = async (student) => {
         const newStatus = student.status === 'done' ? 'pending' : 'done';
-        await axios.put(buildApiUrl(API_ENDPOINTS.updateStudent), { ...student, status: newStatus }, {
+        await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', { ...student, status: newStatus }, {
             headers: { 'Content-Type': 'application/json' }
         });
         invalidateStudentCache();
-        axios.get(buildApiUrl(API_ENDPOINTS.getStudents))
+        axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
             .then(response => {
               setStudents(response.data);
               localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
@@ -369,12 +368,12 @@ const AdminPage = (props) =>
           show: true,
           action: async () => {
             try {
-              await axios.put(buildApiUrl(API_ENDPOINTS.updateStudent), { ...student, status: 'cancelled' }, {
+              await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', { ...student, status: 'cancelled' }, {
                 headers: { 'Content-Type': 'application/json' }
               });
               setToast({ show: true, message: 'Student marked as cancelled', type: 'success' });
               invalidateStudentCache();
-              axios.get(buildApiUrl(API_ENDPOINTS.getStudents))
+              axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
                 .then(response => {
                   setStudents(response.data);
                   localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
@@ -402,7 +401,7 @@ const AdminPage = (props) =>
         }
 
         try {
-            await axios.put(buildApiUrl(API_ENDPOINTS.updateStudent), {
+            await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', {
                 ...rescheduleStudent,
                 schedule_date: rescheduleDate,
                 schedule_time: rescheduleTime,
@@ -418,7 +417,7 @@ const AdminPage = (props) =>
             setRescheduleTime('8:00am - 9:00am');
             
             invalidateStudentCache();
-            axios.get(buildApiUrl(API_ENDPOINTS.getStudents))
+            axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
                 .then(response => {
                     setStudents(response.data);
                     localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
@@ -494,7 +493,8 @@ const AdminPage = (props) =>
     };
 
     return (
-        <div className="w-screen h-screen flex">
+        <div className="min-h-screen w-full overflow-x-hidden flex flex-col lg:flex-row">
+
             {/* Loading Overlay - Initial Load */}
             {isLoading && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -711,22 +711,28 @@ const AdminPage = (props) =>
                 </div>
             )}
             {/* Sidebar */}
-            <div className="w-3/12 h-screen relative flex flex-col justify-center items-center gap-5">
-                <h1 className="absolute border-2 left-0 top-10 text-2xl px-14 py-1 bg-[#971212] text-white">Admin</h1>
-                <h1 className="text-3xl ml-12 font-bold">Scheduled Time</h1>
+            <div className="hidden lg:flex w-3/12 h-screen relative flex-col justify-center items-center gap-5">
+                <h1 className="hidden lg:block absolute border-2 left-0 top-6 sm:top-10 text-[clamp(1.25rem,3cqw,2rem)] px-6 sm:px-14 py-1 bg-[#971212] text-white">
+  Admin
+</h1>
+
+
+                    <h1 className="text-[clamp(1.25rem,3cqw,2rem)] ml-4 sm:ml-14 mt-24 font-bold">Scheduled Time</h1>
                 <CustomDropdown selectedTime={selectedTime} setSelectedTime={handleTimeChange} />
 
                 {/* Change Date Button */}
-                <div className="flex flex-col items-center gap-2 mt-45 ml-12">
-                    <p className="text-xl">Change Date</p>
+                <div className="flex flex-col items-center gap-2 mt-8 sm:mt-10 ml-4 sm:ml-14">
+                    <p className="text-[clamp(1rem,2.5cqw,1.25rem)]">Change Date</p>
                     <button
                         onClick={HandleChangeDate}
-                        className="w-fit text-center duration-150 border-2 text-white bg-[#AC0000] hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] 
-                        px-25 py-2 text-lg rounded-md"
+                        className="w-[200px] sm:w-[250px] text-center duration-150 border-2 text-white bg-[#AC0000] hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] 
+                            px-4 py-2 text-[clamp(1rem,2.5cqw,1.25rem)] rounded-md"
+
                     >
                         {currentScheduleDate}
                     </button>
                 </div>
+
 
                 {/* Show All Students Button */}
                 <div className="flex flex-col items-center gap-2 mt-4 ml-12">
@@ -737,9 +743,9 @@ const AdminPage = (props) =>
                             setSelectedTime("No Time Chosen");
                             setTimeout(() => setIsFiltering(false), 2000);
                         }}
-                        className="w-fit text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:text-bold
-                         hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-25 py-2 text-lg"
-                    >
+                        className="w-[200px] sm:w-[250px] text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:font-bold 
+                        hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-4 py-2 text-[clamp(1rem,2.5cqw,1.25rem)]">
+                    
                         Show All Students
                     </button>
                 </div>
@@ -748,9 +754,8 @@ const AdminPage = (props) =>
                 <div className="flex flex-col items-center gap-2 mt-4 ml-12">
                     <button
                         onClick={HandleShowList}
-                        className="w-fit text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:text-bold
-                         hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-25 py-2 text-lg"
-                    >
+                        className="w-[200px] sm:w-[250px] text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:font-bold 
+                        hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-4 py-2 text-[clamp(1rem,2.5cqw,1.25rem)]">
                         Generate List
                     </button>
                 </div>
@@ -759,9 +764,8 @@ const AdminPage = (props) =>
                 <div className="flex flex-col items-center gap-2 mt-0 ml-12">
                     <button
                         onClick={handleOpenChangeCredentials}
-                        className="w-fit text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:text-bold
-                         hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-25 py-2 text-lg"
-                    >
+                        className="w-[200px] sm:w-[250px] text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:font-bold 
+                        hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-4 py-2 text-[clamp(1rem,2.5cqw,1.25rem)]">
                         Change Admin Credentials
                     </button>
                 </div>
@@ -770,9 +774,8 @@ const AdminPage = (props) =>
                 <div className="flex flex-col items-center gap-2 mt-0 ml-12">
                     <button
                         onClick={handleLogoutClick}
-                        className="w-fit text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:text-bold
-                         hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-25 py-2 text-lg"
-                    >
+                        className="w-[200px] sm:w-[250px] text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:font-bold 
+                        hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-4 py-2 text-[clamp(1rem,2.5cqw,1.25rem)]">
                         Logout
                     </button>
                 </div>
@@ -780,10 +783,9 @@ const AdminPage = (props) =>
 
             {/* Main Content Area */}
             <div className="w-9/12 h-screen flex flex-col">
-                {/* Table Container - Fixed height with scroll */}
-                <div className="flex-1 flex flex-col p-6">
-                    {/* Filter Status Indicator */}
-                    <div className="mb-4 p-3 bg-gray-100 rounded-lg">
+                
+                {/* Filter Status Indicator */}
+                    <div className="ml-6 mt-6 mr-6 mb-4 p-3 bg-gray-100 rounded-lg text-[clamp(0.8rem,2cqw,1rem)]">
                         <p className="text-sm text-gray-600">
                             <strong>Current Filter:</strong> 
                             {currentScheduleDate === "No Date Chosen" 
@@ -800,7 +802,7 @@ const AdminPage = (props) =>
                     </div>
 
                     {/* Search and Filter Controls */}
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
+                    <div className="flex flex-row md:items-center md:justify-between ml-6 mt-3 mb-2 mr-6 sm:mr-0 gap-4">
                         <input
                             type="text"
                             placeholder="Search by name or student number..."
@@ -811,8 +813,7 @@ const AdminPage = (props) =>
                         <select
                             value={filterStatus}
                             onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
-                            className="border border-gray-400 rounded-lg px-4 py-2 w-full md:w-1/5"
-                        >
+                            className="lg:w-75 w-82 sm:w-[250px] sm:mr-6 px-4 py-2 bg-white text-gray-700 rounded-md font-semibold text-sm border-2 border-gray-300 hover:border-gray-400 focus:outline-none focus:border-[#AC0000]">
                             <option value="all">All Status</option>
                             <option value="pending">Pending</option>
                             <option value="done">Done</option>
@@ -820,9 +821,13 @@ const AdminPage = (props) =>
                         </select>
                     </div>
 
+                        
+                {/* Table Container - Fixed height with scroll */}
+                <div className="flex-1 p-6 flex flex-col-reverse lg:flex-col gap-4">
+                    
                     {/* Table with fixed height and scroll */}
                     <div className="flex-1 overflow-hidden flex flex-col">
-                        <div className="flex-1 overflow-y-auto">
+                        <div className="flex-1 overflow-x-auto overflow-y-auto lg:overflow-x-visible">
                     <table className="w-full text-center border border-gray-300">
                                 <thead className="bg-[#971212] text-white text-lg sticky top-0">
                             <tr>
@@ -987,11 +992,57 @@ const AdminPage = (props) =>
                                 </div>
                         </div>
                     )}
+
+                    {/* Mobile Bottom Controls */}
+                        <div className="lg:hidden w-full px-4 py-6 bg-white border-t border-gray-200 mt-auto flex flex-col gap-4">
+                        <div>
+                            <p className="text-sm font-semibold mb-2">Scheduled Time</p>
+                            <CustomDropdown selectedTime={selectedTime} setSelectedTime={handleTimeChange} />
+                        </div>
+                        <button
+                            onClick={HandleChangeDate}
+                            className="w-full text-white bg-[#AC0000] hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] border-2 px-4 py-2 rounded-md text-sm font-semibold"
+                        >
+                            {currentScheduleDate}
+                        </button>
+                        <button
+                            onClick={() => {
+                            setIsFiltering(true);
+                            setCurrentScheduleDate("No Date Chosen");
+                            setSelectedTime("No Time Chosen");
+                            setTimeout(() => setIsFiltering(false), 2000);
+                            }}
+                            className="w-full text-white bg-[#AC0000] hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] border-2 px-4 py-2 rounded-md text-sm font-semibold"
+                        >
+                            Show All Students
+                        </button>
+                        <button
+                            onClick={HandleShowList}
+                            className="w-full text-white bg-[#AC0000] hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] border-2 px-4 py-2 rounded-md text-sm font-semibold"
+                        >
+                            Generate List
+                        </button>
+                        <button
+                            onClick={handleOpenChangeCredentials}
+                            className="w-full text-white bg-[#AC0000] hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] border-2 px-4 py-2 rounded-md text-sm font-semibold"
+                        >
+                            Change Admin
+                        </button>
+                        <button
+                            onClick={handleLogoutClick}
+                            className="w-full text-white bg-[#AC0000] hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] border-2 px-4 py-2 rounded-md text-sm font-semibold"
+                        >
+                            Logout
+                        </button>
+                        </div>
+
                     </div>
+
+                    
                 </div>
             </div>
+
         </div>
     );
 };
-
 export default AdminPage;
