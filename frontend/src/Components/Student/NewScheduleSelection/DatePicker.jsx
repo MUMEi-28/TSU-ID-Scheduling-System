@@ -3,19 +3,32 @@ import { addDays, subDays, format, isToday, isBefore } from 'date-fns';
 import axios from 'axios';
 
 function DatePicker(props) {
-  // windowStartDate is the first date shown in the 4-day window
   const [windowStartDate, setWindowStartDate] = useState(() => {
-    const today = new Date();
-    // Start from today or the previous Sunday if you want, but here we use today
-    return today;
+    return new Date(); // Always start with a fresh, valid date
   });
   const [fullDates, setFullDates] = useState([]);
-  // Memoize availableDates so it doesn't change on every render
-  const availableDates = useMemo(() => Array.from({ length: 4 }, (_, i) => addDays(windowStartDate, i)), [windowStartDate]);
+
+  // Define today's date for comparison - ensure it's stable and normalized
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0); // Normalize to start of day for accurate comparison
+    return d;
+  }, []);
+
+  const availableDates = useMemo(() => {
+    // Ensure windowStartDate is valid before deriving dates
+    if (!(windowStartDate instanceof Date) || isNaN(windowStartDate.getTime())) {
+        console.error("Invalid windowStartDate detected, resetting to today.", windowStartDate);
+        return Array.from({ length: 4 }, (_, i) => addDays(today, i)); // Fallback to valid dates
+    }
+    return Array.from({ length: 4 }, (_, i) => addDays(windowStartDate, i));
+  }, [windowStartDate, today]);
 
   useEffect(() => {
     // Check which dates are fully booked
-    const cacheKey = `full_dates_${availableDates.map(d => format(d, 'yyyy-MM-dd')).join('_')}`;
+    // Add a check to ensure availableDates are valid before mapping for cacheKey
+    const validDatesForCache = availableDates.filter(d => d instanceof Date && !isNaN(d.getTime()));
+    const cacheKey = `full_dates_${validDatesForCache.map(d => format(d, 'yyyy-MM-dd')).join('_')}`;
     const cache = localStorage.getItem(cacheKey);
     let shouldFetch = true;
     if (cache) {
@@ -28,6 +41,11 @@ function DatePicker(props) {
     const checkFullDates = async () => {
       const results = [];
       for (const date of availableDates) {
+        // Add a check here for debugging before formatting
+        if (!(date instanceof Date) || isNaN(date.getTime())) {
+          console.error("Skipping invalid date in checkFullDates loop:", date);
+          continue; // Skip invalid dates to prevent further errors
+        }
         const formattedDate = format(date, 'MMMM d,PPPP');
         let allFull = true;
         for (const time of [
@@ -58,28 +76,41 @@ function DatePicker(props) {
       localStorage.setItem(cacheKey, JSON.stringify({ data: results, timestamp: Date.now() }));
     };
     if (availableDates.length > 0 && shouldFetch) checkFullDates();
-  }, [windowStartDate, availableDates]);
+  }, [windowStartDate, availableDates, today]); // Added today to dependencies
 
-  // Define today's date for comparison
-  const today = useMemo(() => new Date(), []);
-
-  // Move window forward/backward by 4 days
   const handleNextWindow = () => {
-    setWindowStartDate(prev => addDays(prev, 4));
+    setWindowStartDate(prev => {
+      if (!(prev instanceof Date) || isNaN(prev.getTime())) {
+        console.error("Invalid 'prev' date in handleNextWindow, using 'today' as base:", prev);
+        return addDays(today, 4); // Use a valid base if 'prev' is invalid
+      }
+      return addDays(prev, 4);
+    });
   };
+
   const handlePrevWindow = () => {
-    // Calculate the potential new start date
-    const newStartDate = subDays(windowStartDate, 4); // Changed from 1 to 4
-    // Only allow going back if the new start date is not before today
-    if (!isBefore(newStartDate, today)) {
-      setWindowStartDate(newStartDate);
-    } else {
-        // If going back by 4 days would go before today, go back to today's start date
-        setWindowStartDate(today);
-    }
+    setWindowStartDate(prev => {
+      if (!(prev instanceof Date) || isNaN(prev.getTime())) {
+        console.error("Invalid 'prev' date in handlePrevWindow, using 'today' as base:", prev);
+        return today; // Use a valid base if 'prev' is invalid
+      }
+      const newStartDate = subDays(prev, 4);
+      // Use the normalized 'today' for accurate comparison
+      if (!isBefore(newStartDate, today)) {
+        return newStartDate;
+      } else {
+          // If going back by 4 days would go before today, go back to today's start date
+          return today;
+      }
+    });
   };
 
   const handleDateSelect = (date) => {
+    // Add validation here as well
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+        console.error("Attempted to select an invalid date:", date);
+        return; // Prevent further execution with invalid date
+    }
     const dateAsString = format(date, "MMMM d,PPPP");
     if (props.selectedDate === dateAsString) {
       props.setSelectedDate(null);
@@ -97,8 +128,13 @@ function DatePicker(props) {
   };
 
   // Determine if the previous button should be disabled
-  // It should be disabled if windowStartDate is today or before today
-  const isPrevDisabled = isBefore(windowStartDate, addDays(today, 1));
+  // It should be disabled if windowStartDate is today or before today (normalized)
+  const isPrevDisabled = useMemo(() => {
+    // Normalize windowStartDate for comparison to avoid time component issues
+    const normalizedWindowStartDate = new Date(windowStartDate.getFullYear(), windowStartDate.getMonth(), windowStartDate.getDate());
+    return isBefore(normalizedWindowStartDate, addDays(today, 1));
+  }, [windowStartDate, today]);
+
 
   return (
     <div className='flex-col flex justify-bet items-center h-4/12 w-full lg:w-fit '>
@@ -120,6 +156,12 @@ function DatePicker(props) {
         {/* Date Display (4 at a time) */}
         <div className="flex flex-wrap justify-center sm:justify-start shadow-lg shadow-gray-300 w-full sm:w-full xl:h-4/4 ">
           {availableDates.map((date) => {
+            // Add validation here as well, right before formatting for display
+            if (!(date instanceof Date) || isNaN(date.getTime())) {
+                console.error("Invalid date found in availableDates map during render:", date);
+                return null; // Skip rendering this invalid date entry
+            }
+
             const dayOfWeek = format(date, 'EEE');
             const dayOfMonth = format(date, 'dd');
             const month = format(date, 'MMM');
