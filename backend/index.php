@@ -56,11 +56,14 @@ switch ($method) {
                     echo json_encode(['status' => 0, 'message' => 'Schedule time is required']);
                     exit;
                 }
-                
-                $sql = "UPDATE students SET fullname = :fullname, student_number = :student_number, schedule_date = :schedule_date, schedule_time = :schedule_time, status = :status WHERE id = :id";
+                // Update all relevant fields
+                $sql = "UPDATE students SET fullname = :fullname, student_number = :student_number, email = :email, id_reason = :id_reason, data_privacy_agreed = :data_privacy_agreed, schedule_date = :schedule_date, schedule_time = :schedule_time, status = :status WHERE id = :id";
                 $stmt = $conn->prepare($sql);
                 $stmt->bindParam(':fullname', $input->fullname);
                 $stmt->bindParam(':student_number', $input->student_number);
+                $stmt->bindParam(':email', $input->email);
+                $stmt->bindParam(':id_reason', $input->id_reason);
+                $stmt->bindParam(':data_privacy_agreed', $input->data_privacy_agreed);
                 $stmt->bindParam(':schedule_date', $input->schedule_date);
                 $stmt->bindParam(':schedule_time', $input->schedule_time);
                 $stmt->bindParam(':status', $input->status);
