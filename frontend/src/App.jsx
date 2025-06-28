@@ -6,9 +6,10 @@ import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import QueryPanel from "./Components/Student/NewScheduleSelection/QueryPanel";
 import TimePicker from "./Components/Student/NewScheduleSelection/TimePicker";
 import NotFound from "./Components/Error/NotFound";
+import ApiModeToggle from "./Components/DevTools/ApiModeToggle";
 import kuruKuru from './Components/public/kurukuru-kururing.gif';
 
-import axios from "axios";
+import apiService from "./services/apiService";
 import { useEffect, useState, useRef } from "react";
 
 function AdminRoute({ children }) {
@@ -156,14 +157,11 @@ export default function App()
       schedule_time: selectedTime || registrationInputs.schedule_time
     };
 
-    axios.post(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/register.php`, 
-      completeRegistrationData,
-      { headers: { 'Content-Type': 'application/json' } }
-    )
+    apiService.register(completeRegistrationData)
     .then((response) => {
-      if (response.data.status === 1) {
+      if (response.status === 1) {
         // Registration success: show animation
-        localStorage.setItem('student_id', response.data.student_id);
+        localStorage.setItem('student_id', response.student_id);
         setShowSuccessOverlay(true);
         setShowCheck(false);
         setShowSuccessText(false);
@@ -180,8 +178,8 @@ export default function App()
           // Optionally, navigate or reset state here
         }, 2800);
       } else if (
-        response.data.message &&
-        response.data.message.toLowerCase().includes('already have an account')
+        response.message &&
+        response.message.toLowerCase().includes('already have an account')
       ) {
         setExistingUserData({
           fullname: completeRegistrationData.fullname,
@@ -191,7 +189,7 @@ export default function App()
         });
         setShowExistingModal(true);
       } else {
-        alert('Registration failed: ' + (response.data.message || 'Unknown error'));
+        alert('Registration failed: ' + (response.message || 'Unknown error'));
       }
     })
     .catch((error) => {
@@ -361,6 +359,9 @@ export default function App()
       <Route path="*" element={<NotFound />} />
     </Routes>
       </div>
+
+      {/* Development Tools */}
+      <ApiModeToggle />
     </>
   )
 }

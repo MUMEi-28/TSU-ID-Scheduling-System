@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import apiService from '../../../services/apiService';
 import { format } from 'date-fns';
 import kuruKuru from '../../public/kurukuru-kururing.gif';
 
@@ -80,13 +80,8 @@ const TimePicker = (props) =>
                 const formattedDate = format(new Date(props.selectedDate), "MMMM d, yyyy");
                 for (const time of timeSlots) {
                     try {
-                        const res = await axios.get(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_slot_count.php`, {
-                            params: {
-                                schedule_date: formattedDate,
-                                schedule_time: time
-                            }
-                        });
-                        counts[time] = res.data.count || 0;
+                        const res = await apiService.getSlotCount(formattedDate, time);
+                        counts[time] = res.count || 0;
                     } catch (e) {
                         counts[time] = 0;
                     }
@@ -110,13 +105,8 @@ const TimePicker = (props) =>
             const counts = {};
             for (const time of timeSlots) {
                 try {
-                    const res = await axios.get(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_slot_count.php`, {
-                        params: {
-                            schedule_date: formattedDate,
-                            schedule_time: time
-                        }
-                    });
-                    counts[time] = res.data.count || 0;
+                    const res = await apiService.getSlotCount(formattedDate, time);
+                    counts[time] = res.count || 0;
                 } catch (e) {
                     counts[time] = 0;
                 }
@@ -137,13 +127,8 @@ const TimePicker = (props) =>
             const counts = {};
             for (const time of timeSlots) {
                 try {
-                    const res = await axios.get(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_slot_count.php`, {
-                        params: {
-                            schedule_date: formattedDate,
-                            schedule_time: time
-                        }
-                    });
-                    counts[time] = res.data.count || 0;
+                    const res = await apiService.getSlotCount(formattedDate, time);
+                    counts[time] = res.count || 0;
                 } catch (e) {
                     counts[time] = 0;
                 }

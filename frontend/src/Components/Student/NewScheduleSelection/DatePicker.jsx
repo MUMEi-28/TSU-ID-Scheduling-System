@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { addDays, subDays, format, isToday, isBefore } from 'date-fns';
-import axios from 'axios';
+import apiService from '../../../services/apiService';
 
 function DatePicker(props) {
   // windowStartDate is the first date shown in the 4-day window
@@ -37,13 +37,8 @@ function DatePicker(props) {
           "3:00pm - 4:00pm", "4:00pm - 5:00pm"
         ]) {
           try {
-            const res = await axios.get(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_slot_count.php`, {
-              params: {
-                schedule_date: formattedDate,
-                schedule_time: time
-              }
-            });
-            if ((res.data.count || 0) < 12) {
+            const res = await apiService.getSlotCount(formattedDate, time);
+            if ((res.count || 0) < 12) {
               allFull = false;
               break;
             }

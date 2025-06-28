@@ -1,6 +1,6 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
-import axios from 'axios';
+import apiService from '../../services/apiService';
 import CustomDropdown from './CustomDropdown';
 import checkImg from '../public/check.png';
 import kuruKuru from '../public/kurukuru-kururing.gif';
@@ -71,10 +71,10 @@ const AdminPage = (props) =>
         }
         
       if (shouldFetch) {
-        axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
+        apiService.getStudents()
           .then(response => {
-                setStudents(response.data);
-            localStorage.setItem(cacheKey, JSON.stringify({ data: response.data, timestamp: Date.now() }));
+                setStudents(response);
+            localStorage.setItem(cacheKey, JSON.stringify({ data: response, timestamp: Date.now() }));
                     // Show loading for 5 seconds
                     setTimeout(() => setIsLoading(false), 5000);
             })
@@ -243,11 +243,11 @@ const AdminPage = (props) =>
         e.preventDefault();
         setChangeStatus("");
         try {
-            const response = await axios.post('http://localhost/Projects/TSU-ID-Scheduling-System/backend/update_admin.php', {
+            const response = await apiService.updateAdmin({
                 fullname: adminFullname,
                 student_number: adminStudentNumber
             });
-            if (response.data.status === 1) {
+            if (response.status === 1) {
                 setChangeStatus("Credentials updated successfully!");
                 setShowSuccessPopup(true);
                 setTimeout(() => {
@@ -256,8 +256,8 @@ const AdminPage = (props) =>
                 }, 2000);
                 setToast({ show: true, message: 'Admin credentials updated!', type: 'success' });
             } else {
-                setChangeStatus(response.data.message || "Failed to update credentials.");
-                setToast({ show: true, message: response.data.message || 'Failed to update credentials', type: 'error' });
+                setChangeStatus(response.message || "Failed to update credentials.");
+                setToast({ show: true, message: response.message || 'Failed to update credentials', type: 'error' });
             }
         } catch (err) {
             setChangeStatus("Error updating credentials.");
@@ -297,16 +297,14 @@ const AdminPage = (props) =>
                 student_number: editData.student_number
               };
               
-              await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', updateData, {
-                headers: { 'Content-Type': 'application/json' }
-              });
+              const response = await apiService.updateStudent(updateData);
               setEditRowId(null);
               setToast({ show: true, message: 'Student updated successfully!', type: 'success' });
               invalidateStudentCache();
-              axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
+              apiService.getStudents()
                 .then(response => {
-                  setStudents(response.data);
-                  localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+                  setStudents(response);
+                  localStorage.setItem('admin_students_cache', JSON.stringify({ data: response, timestamp: Date.now() }));
                   setTimeout(() => setIsLoading(false), 2000); // 2 seconds for updates
                 });
             } catch (err) {
@@ -328,16 +326,13 @@ const AdminPage = (props) =>
           action: async () => {
             setIsLoading(true);
             try {
-              await axios.delete('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', {
-                data: { id },
-                headers: { 'Content-Type': 'application/json' }
-              });
+              const response = await apiService.deleteStudent(id);
               setToast({ show: true, message: 'Student deleted successfully!', type: 'success' });
               invalidateStudentCache();
-              axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
+              apiService.getStudents()
                 .then(response => {
-                  setStudents(response.data);
-                  localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+                  setStudents(response);
+                  localStorage.setItem('admin_students_cache', JSON.stringify({ data: response, timestamp: Date.now() }));
                   setTimeout(() => setIsLoading(false), 2000);
                 });
             } catch (err) {
@@ -351,14 +346,12 @@ const AdminPage = (props) =>
     };
     const handleToggleStatus = async (student) => {
         const newStatus = student.status === 'done' ? 'pending' : 'done';
-        await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', { ...student, status: newStatus }, {
-            headers: { 'Content-Type': 'application/json' }
-        });
+        const response = await apiService.updateStudent({ ...student, status: newStatus });
         invalidateStudentCache();
-        axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
+        apiService.getStudents()
             .then(response => {
-              setStudents(response.data);
-              localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+              setStudents(response);
+              localStorage.setItem('admin_students_cache', JSON.stringify({ data: response, timestamp: Date.now() }));
             });
         setToast({ show: true, message: `Student marked as ${newStatus}`, type: 'success' });
     };
@@ -368,15 +361,13 @@ const AdminPage = (props) =>
           show: true,
           action: async () => {
             try {
-              await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', { ...student, status: 'cancelled' }, {
-                headers: { 'Content-Type': 'application/json' }
-              });
+              const response = await apiService.updateStudent({ ...student, status: 'cancelled' });
               setToast({ show: true, message: 'Student marked as cancelled', type: 'success' });
               invalidateStudentCache();
-              axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
+              apiService.getStudents()
                 .then(response => {
-                  setStudents(response.data);
-                  localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+                  setStudents(response);
+                  localStorage.setItem('admin_students_cache', JSON.stringify({ data: response, timestamp: Date.now() }));
                 });
             } catch (err) {
               setToast({ show: true, message: 'Failed to mark student as cancelled', type: 'error' });
@@ -401,13 +392,11 @@ const AdminPage = (props) =>
         }
 
         try {
-            await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', {
+            const response = await apiService.rescheduleStudent({
                 ...rescheduleStudent,
                 schedule_date: rescheduleDate,
                 schedule_time: rescheduleTime,
                 status: 'pending'
-            }, {
-                headers: { 'Content-Type': 'application/json' }
             });
             
             setToast({ show: true, message: 'Student rescheduled successfully', type: 'success' });
@@ -417,10 +406,10 @@ const AdminPage = (props) =>
             setRescheduleTime('8:00am - 9:00am');
             
             invalidateStudentCache();
-            axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
+            apiService.getStudents()
                 .then(response => {
-                    setStudents(response.data);
-                    localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+                    setStudents(response);
+                    localStorage.setItem('admin_students_cache', JSON.stringify({ data: response, timestamp: Date.now() }));
                 });
         } catch (err) {
             setToast({ show: true, message: 'Failed to reschedule student', type: 'error' });

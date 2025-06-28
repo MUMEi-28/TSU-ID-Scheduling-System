@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios'
+import apiService from '../../../services/apiService';
 import kuruKuru from '../../public/kurukuru-kururing.gif';
 
 export default function RegistrationForm(props)
@@ -45,53 +45,50 @@ export default function RegistrationForm(props)
             await new Promise(resolve => setTimeout(resolve, 2000));
 
             // Try login first
-            const loginResponse = await axios.post(
-                "http://localhost/Projects/TSU-ID-Scheduling-System/backend/login.php",
-                props.registrationInputs
-            );
-            if (loginResponse.data.status === 1) {
+            const loginResponse = await apiService.login(props.registrationInputs);
+            if (loginResponse.status === 1) {
                 let tokenSet = false;
                 // Admin login
-                if (loginResponse.data.admin_token) {
-                    localStorage.setItem('admin_token', loginResponse.data.admin_token);
+                if (loginResponse.admin_token) {
+                    localStorage.setItem('admin_token', loginResponse.admin_token);
                     tokenSet = true;
-                    if (loginResponse.data.is_admin) {
+                    if (loginResponse.is_admin) {
                         navigate('/admin');
                         return;
                     }
                 }
                 // Student login (including new users)
-                if (loginResponse.data.student_token) {
-                    localStorage.setItem('admin_token', loginResponse.data.student_token);
+                if (loginResponse.student_token) {
+                    localStorage.setItem('admin_token', loginResponse.student_token);
                     tokenSet = true;
                 }
                 if (tokenSet) {
                     // Store user data for new users (those without student_id)
-                    if (!loginResponse.data.student_id) {
+                    if (!loginResponse.student_id) {
                         localStorage.setItem('new_user_data', JSON.stringify(props.registrationInputs));
                     } else {
                         // Store student_id for existing users
-                        localStorage.setItem('student_id', loginResponse.data.student_id);
+                        localStorage.setItem('student_id', loginResponse.student_id);
                     }
                     navigate('/schedule');
                 } else {
                     setError('Login failed: No token received.');
                 }
                 return;
-            } else if (loginResponse.data.status === 2) {
+            } else if (loginResponse.status === 2) {
                 // Pending student with existing schedule - show receipt only
-                setPendingStudentData(loginResponse.data.student_data);
+                setPendingStudentData(loginResponse.student_data);
                 setShowPendingMessage(true);
                 return;
             } else {
                 // Handle special cases for done/cancelled status
-                if (loginResponse.data.student_status === 'done') {
+                if (loginResponse.student_status === 'done') {
                     // Show message with button instead of auto-redirecting
-                    setDoneStudentData(loginResponse.data.student_data);
+                    setDoneStudentData(loginResponse.student_data);
                     setShowDoneMessage(true);
                     return;
                 }
-                setError(loginResponse.data.message);
+                setError(loginResponse.message);
             }
         } catch (err) {
             // Handle network errors or server errors
