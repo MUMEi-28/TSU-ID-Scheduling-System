@@ -8,6 +8,7 @@ import TimePicker from "./Components/Student/NewScheduleSelection/TimePicker";
 import NotFound from "./Components/Error/NotFound";
 import kuruKuru from './Components/public/kurukuru-kururing.gif';
 import { buildApiUrl, API_ENDPOINTS } from './config/api';
+import checkImg from './Components/public/check.png';
 
 import axios from "axios";
 import { useEffect, useState, useRef } from "react";
@@ -146,6 +147,24 @@ export default function App()
     /*  console.log(registrationInputs); */
   }
 
+  function handleRegistrationSuccess() {
+    setShowSuccessOverlay(true);
+    setShowCheck(false);
+    setShowSuccessText(false);
+    setSuccessFadeOut(false);
+
+    setTimeout(() => setShowCheck(true), 200);
+    setTimeout(() => setShowSuccessText(true), 700);
+    setTimeout(() => setSuccessFadeOut(true), 2200);
+    setTimeout(() => {
+      setShowSuccessOverlay(false);
+      setShowCheck(false);
+      setShowSuccessText(false);
+      setSuccessFadeOut(false);
+      // Optionally, navigate or reset state here
+    }, 2800);
+  }
+
   function handleSubmit(event) {
     event.preventDefault();
 
@@ -163,21 +182,7 @@ export default function App()
       if (response.data.status === 1) {
         // Registration success: show animation
         localStorage.setItem('student_id', response.data.student_id);
-        setShowSuccessOverlay(true);
-        setShowCheck(false);
-        setShowSuccessText(false);
-        setSuccessFadeOut(false);
-
-        setTimeout(() => setShowCheck(true), 200);      // Checkmark slides up
-        setTimeout(() => setShowSuccessText(true), 700); // Text slides up
-        setTimeout(() => setSuccessFadeOut(true), 2200); // Start fade out
-        setTimeout(() => {
-          setShowSuccessOverlay(false);
-          setShowCheck(false);
-          setShowSuccessText(false);
-          setSuccessFadeOut(false);
-          // Optionally, navigate or reset state here
-        }, 2800);
+        handleRegistrationSuccess();
       } else if (
         response.data.message &&
         response.data.message.toLowerCase().includes('already have an account')
@@ -243,10 +248,8 @@ export default function App()
       {showSuccessOverlay && (
         <div className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-white bg-opacity-90 transition-opacity duration-700 ${successFadeOut ? 'opacity-0' : 'opacity-100'}`}>
           <div className={`transition-all duration-700 ${showCheck ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
-            <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mb-6">
-              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
+            <div className="w-24 h-24 flex items-center justify-center mb-6">
+              <img src={checkImg} alt="Success" className="w-full h-auto" />
             </div>
           </div>
           <div className={`transition-all duration-700 ${showSuccessText ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
@@ -261,10 +264,8 @@ export default function App()
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
+              <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <img src={checkImg} alt="Existing User" className="w-full h-auto" />
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Existing Account Found</h2>
               <p className="text-gray-600">You already have an account. Here's your current appointment:</p>
@@ -314,12 +315,13 @@ export default function App()
       <Route path='/' element={<RegistrationForm
         registrationInputs={registrationInputs}
         handleChange={handleStudentInfoChange}
-            selectedTime={selectedTime}
-            setSelectedTime={setSelectedTime}
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            handleUnselectDate={handleUnselectDate}
-            handleUnselectTime={handleUnselectTime}
+        selectedTime={selectedTime}
+        setSelectedTime={setSelectedTime}
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+        handleUnselectDate={handleUnselectDate}
+        handleUnselectTime={handleUnselectTime}
+        onRegistrationSuccess={handleRegistrationSuccess}
       />} />
 
       <Route path='/schedule' element={
@@ -333,8 +335,8 @@ export default function App()
             handlingDataObjectsTest={handlingDataObjectsTest}
             setRegistrationInputs={setRegistrationInputs}
             handleLogout={handleLogout}
-                handleUnselectDate={handleUnselectDate}
-                handleUnselectTime={handleUnselectTime}
+            handleUnselectDate={handleUnselectDate}
+            handleUnselectTime={handleUnselectTime}
           />
         </StudentRoute>
       } />

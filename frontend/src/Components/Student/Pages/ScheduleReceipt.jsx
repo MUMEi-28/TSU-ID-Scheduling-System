@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import checkImg from '../../public/check.png';
+import { buildApiUrl, API_ENDPOINTS } from '../../../config/api';
 
 const ScheduleReceipt = (props) =>
 {
@@ -49,9 +51,37 @@ const ScheduleReceipt = (props) =>
     }
   };
 
-  const handleConfirm = () => {
-    setConfirmed(true);
-    localStorage.setItem('confirmedSlot', 'true');
+  const handleConfirm = async () => {
+    try {
+      let id = displayData.id;
+      if (!id) {
+        const storedId = localStorage.getItem('student_id');
+        id = storedId ? parseInt(storedId, 10) : undefined;
+      }
+      const payload = {
+        id,
+        fullname: displayData.fullname,
+        student_number: displayData.student_number,
+        schedule_date: displayData.schedule_date,
+        schedule_time: displayData.schedule_time,
+        email: displayData.email,
+        id_reason: displayData.id_reason,
+        data_privacy_agreed: displayData.data_privacy_agreed,
+        status: 'pending',
+      };
+      console.log('Payload sent to confirm_slot:', payload);
+      const response = await axios.put(buildApiUrl(API_ENDPOINTS.CONFIRM_SLOT), JSON.stringify(payload), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (response.data.status === 1) {
+        setConfirmed(true);
+        localStorage.setItem('confirmedSlot', 'true');
+      } else {
+        alert(response.data.message || 'Failed to confirm slot');
+      }
+    } catch (err) {
+      alert('Error confirming slot: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   // Remove confirmedSlot flag when leaving the page or logging out
@@ -65,39 +95,39 @@ const ScheduleReceipt = (props) =>
   const displayData = studentData || props.registrationInputs;
 
   return (
-    <div className="relative flex justify-center items-center h-screen bg-[url('Components\\public\\students-with-unif-tb.png')] bg-cover bg-center px-4">
+    <div className="relative flex justify-center items-center min-h-screen bg-[url('Components\\public\\students-with-unif-tb.png')] bg-cover bg-center px-4 py-8">
       <div className="absolute inset-0 bg-black opacity-70 z-0"></div>
-      <div className="relative flex flex-col items-center justify-center gap-6 w-full max-w-sm shm:max-w-sm md:max-w-sm lg:max-w-sm xl:max-w-md 2xl:max-w-md z-10">
+      <div className="relative flex flex-col items-center justify-center gap-4 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg z-10">
         {(confirmed || isViewingExisting) && (
-          <div className="w-14 sm:w-11 md:w-13 lg:w-14">
-            <img src="src\\Components\\public\\check.png" alt="check" className="w-full h-auto" />
+          <div className="w-12 sm:w-14 md:w-16 lg:w-18">
+            <img src={checkImg} alt="check" className="w-full h-auto" />
           </div>
         )}
-        <div className="poppins-font text-[#ECECEC] text-center font-medium text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-3xl px-4 whitespace-nowrap">
+        <div className="poppins-font text-[#ECECEC] text-center font-medium text-lg sm:text-xl md:text-2xl lg:text-3xl px-4">
           {isViewingExisting ? 'Your Appointment Information' : 
            confirmed ? 'Your slot has been confirmed!' : 'Please confirm your slot to continue.'}
         </div>
-        <div className="poppins-font bg-gray-200 text-center rounded-4xl shadow-xl w-85 max-w-md px-0 pb-6 text-sm sm:text-base md:text-lg lg:text-xl flex flex-col items-center justify-center overflow-hidden">
-          <div className="w-full h-8 bg-[#5C0101] text-[#ECECEC] flex items-center justify-center rounded-t-4xl text-lg font-semibold"></div>
-          <div className="h-6" />
-          <h1 className="text-4xl tracking-tighter font-semibold underline text-[#5B0000] ">Slot Information</h1>
-          <br></br>
-          <h2 className="mt-2 mb-3 font-medium underline text-[#656565]">Date and Time:</h2>
-          <h3 className="mb-6 font-light text-[#656565]">{displayData.schedule_date},<br></br>{displayData.schedule_time}</h3>
-          <h2 className="mb-3 font-medium underline text-[#656565]">Your Details:</h2>
-          <h3 className="mb-2 font-light text-[#656565]">Student Number: {displayData.student_number} </h3>
-          <h3 className="mb-17 font-light text-[#656565]">Student Name: {displayData.fullname}</h3>
+        <div className="poppins-font bg-gray-200 text-center rounded-3xl shadow-xl w-full max-w-sm sm:max-w-md md:max-w-lg px-4 pb-6 text-sm sm:text-base md:text-lg flex flex-col items-center justify-center overflow-hidden">
+          <div className="w-full h-6 bg-[#5C0101] text-[#ECECEC] flex items-center justify-center rounded-t-3xl text-sm sm:text-base font-semibold"></div>
+          <div className="h-4" />
+          <h1 className="text-2xl sm:text-3xl md:text-4xl tracking-tighter font-semibold underline text-[#5B0000]">Slot Information</h1>
+          <div className="h-3" />
+          <h2 className="mt-2 mb-2 font-medium underline text-[#656565] text-sm sm:text-base">Date and Time:</h2>
+          <h3 className="mb-4 font-light text-[#656565] text-sm sm:text-base">{displayData.schedule_date},<br></br>{displayData.schedule_time}</h3>
+          <h2 className="mb-2 font-medium underline text-[#656565] text-sm sm:text-base">Your Details:</h2>
+          <h3 className="mb-2 font-light text-[#656565] text-sm sm:text-base">Student Number: {displayData.student_number} </h3>
+          <h3 className="mb-6 font-light text-[#656565] text-sm sm:text-base">Student Name: {displayData.fullname}</h3>
           <div className="flex w-full justify-center gap-2 mb-2">
             <button
               onClick={handleBack}
-              className="bg-[#E1A500] hover:bg-[#C68C10] text-white font-bold py-2 px-4 rounded-xl shadow-lg border-2 border-[#C68C10] transition-all duration-200"
+              className="bg-[#E1A500] hover:bg-[#C68C10] text-white font-bold py-2 px-3 sm:px-4 rounded-lg shadow-lg border-2 border-[#C68C10] transition-all duration-200 text-xs sm:text-sm"
             >
               {confirmed || isViewingExisting ? 'Back to Home' : 'Back'}
             </button>
             {!confirmed && !isViewingExisting && (
               <button
                 id="downloadBtn"
-                className="px-6 rounded-lg bg-[#E1A500] hover:bg-[#C68C10] self-center py-3 text-sm sm:text-base md:text-lg istok-font text-white font-bold rounded-xl shadow-lg border-2 border-[#C68C10] transition-all duration-200"
+                className="px-4 sm:px-6 rounded-lg bg-[#E1A500] hover:bg-[#C68C10] self-center py-2 sm:py-3 text-xs sm:text-sm md:text-base istok-font text-white font-bold rounded-lg shadow-lg border-2 border-[#C68C10] transition-all duration-200"
                 onClick={handleConfirm}
               >
                 Confirm
@@ -105,7 +135,7 @@ const ScheduleReceipt = (props) =>
             )}
           </div>
         </div>
-        <h1 className=" text-center italic poppins-font font-extralight text-[#D9D9D9] ">
+        <h1 className="text-center italic poppins-font font-extralight text-[#D9D9D9] text-xs sm:text-sm md:text-base px-4">
           {isViewingExisting ? 'Note: This is your current appointment information.' : 
            'Note: Please take a screenshot of the receipt and close the website as soon as you finished your slot confirmation.'}
         </h1>

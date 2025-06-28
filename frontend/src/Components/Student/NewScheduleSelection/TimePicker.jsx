@@ -186,7 +186,7 @@ const TimePicker = (props) =>
                 disabled={isFull}
                 className={`
                     ${isFull ? 'opacity-50 cursor-not-allowed' : ''}
-                    shadow-md rounded-lg transition-all py-5 p-2 sm:px-10 duration-200 border-2
+                    shadow-md rounded-lg transition-all py-2 p-2 sm:px-10 duration-200 border-2 text-base
                     ${isSelected
                         ? isAM
                             ? 'bg-[#E1A500] border-[#C68C10] text-white'
@@ -194,7 +194,7 @@ const TimePicker = (props) =>
                         : 'bg-[#EBEBEB] text-[#7B7B7B] border-[#D4D4D4]'
                     }`}
             >
-                <p className='pointer-events-none'>{time}</p>
+                <p className='pointer-events-none text-base'>{time}</p>
                 {isFull ? (
                     <p className='pointer-events-none text-red-600 font-bold text-sm mt-1'>Slots are Full!</p>
                 ) : (
@@ -217,27 +217,27 @@ const TimePicker = (props) =>
                 </div>
             ) : props.selectedDate ? (
                 <>
-                    <h1 className='league-font text-[#686868] text-2xl sm:text-3xl font-medium mb-6'>
+                    <h1 className='league-font text-[#686868] text-2xl sm:text-3xl font-medium mb-1 mt-4'>
                         Choose your Availability
                     </h1>
                     {errorMsg ? (
-                        <div className="text-red-600 font-semibold text-center mb-4">
+                        <div className="text-red-600 font-semibold text-center mb-2 mt-1 text-base">
                             {errorMsg}
                         </div>
                     ) :
                         !props.selectedTime && (
-                            <div className="text-red-600 font-semibold text-center mb-4">
+                            <div className="text-red-600 font-semibold text-center mb-2 mt-1 text-base">
                                 Please select a slot before scheduling.
                             </div>
                         )
                     }
-                    <div className='flex h-fit league-font w-full justify-center text-sm sm:text-md mb-6'>
+                    <div className='flex h-fit league-font w-full justify-center text-sm sm:text-md mb-3'>
                         <button onClick={handleChangePeriod} className='bg-[#BDBDBD] flex transition-all duration-300 rounded-lg shadow-md'>
                             <div className={`font-bold rounded-l-lg px-4 pt-2 ${isAM ? 'bg-[#E1A500] text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]'}`}>AM</div>
                             <div className={`font-bold rounded-r-lg px-4 pt-2 ${!isAM ? 'bg-purple-400 text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]'}`}>PM</div>
                         </button>
                     </div>
-                    <div className='flex-col flex gap-y-6 text-xs md:text-lg lg:text-xl mb-6'>
+                    <div className='flex-col flex gap-y-3 text-xs md:text-lg lg:text-xl mb-3'>
                         <div className='flex martian-font gap-x-4 sm:gap-x-8'>
                             {renderButton(displayedTimes[0])}
                             {renderButton(displayedTimes[1])}
@@ -248,7 +248,7 @@ const TimePicker = (props) =>
                         </div>
                     </div>
                     <button
-                        className='bg-[#E1A500] border-[#C68C10] league-font text-lg sm:text-2xl px-8 sm:px-13 py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200'
+                        className='bg-[#E1A500] border-[#C68C10] league-font text-base px-6 py-2 font-bold border-2 text-white rounded-md hover:bg-amber-600 duration-200 mt-2'
                         onClick={handleSchedule}
                         disabled={!props.selectedTime}
                     >

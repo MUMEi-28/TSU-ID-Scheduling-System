@@ -34,6 +34,7 @@ export const API_ENDPOINTS = {
   BOOKING: 'booking.php',
   UPDATE_ADMIN: 'update_admin.php',
   INDEX: 'index.php',
+  CONFIRM_SLOT: 'confirm_slot.php',
 };
 
 export default apiConfig; 

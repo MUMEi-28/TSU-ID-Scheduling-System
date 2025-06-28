@@ -198,6 +198,9 @@ export default function RegistrationForm(props)
             if (registerResponse.data.status === 1)
             {
                 localStorage.setItem('student_id', registerResponse.data.student_id);
+                if (props.onRegistrationSuccess) {
+                  props.onRegistrationSuccess();
+                }
                 navigate('/schedule');
             } else
             {
@@ -214,17 +217,16 @@ export default function RegistrationForm(props)
         }
     };
 
-    const handleViewReceipt = () =>
-    {
-        localStorage.setItem('viewing_student_data', JSON.stringify(doneStudentData));
+
+    const handleViewReceipt = () => {
+        localStorage.setItem('viewing_student_data', JSON.stringify({ ...doneStudentData, id: doneStudentData.id }));
         localStorage.setItem('viewing_student_id', doneStudentData.id);
         localStorage.setItem('done_view_token', doneStudentData.id);
         navigate('/receipt');
     };
 
-    const handleViewPendingReceipt = () =>
-    {
-        localStorage.setItem('viewing_student_data', JSON.stringify(pendingStudentData));
+    const handleViewPendingReceipt = () => {
+        localStorage.setItem('viewing_student_data', JSON.stringify({ ...pendingStudentData, id: pendingStudentData.id }));
         localStorage.setItem('viewing_student_id', pendingStudentData.id);
         localStorage.setItem('pending_view_token', pendingStudentData.id);
         navigate('/receipt');
