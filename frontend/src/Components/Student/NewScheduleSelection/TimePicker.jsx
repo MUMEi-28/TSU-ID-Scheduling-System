@@ -66,7 +66,7 @@ const TimePicker = (props) =>
                 const formattedDate = format(new Date(props.selectedDate), "MMMM d, yyyy");
                 for (const time of timeSlots) {
                     try {
-                        const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.getSlotCount)}`, {
+                        const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.GET_SLOT_COUNT)}`, {
                             params: {
                                 schedule_date: formattedDate,
                                 schedule_time: time
@@ -96,7 +96,7 @@ const TimePicker = (props) =>
             const counts = {};
             for (const time of timeSlots) {
                 try {
-                    const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.getSlotCount)}`, {
+                    const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.GET_SLOT_COUNT)}`, {
                         params: {
                             schedule_date: formattedDate,
                             schedule_time: time
@@ -123,7 +123,7 @@ const TimePicker = (props) =>
             const counts = {};
             for (const time of timeSlots) {
                 try {
-                    const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.getSlotCount)}`, {
+                    const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.GET_SLOT_COUNT)}`, {
                         params: {
                             schedule_date: formattedDate,
                             schedule_time: time
