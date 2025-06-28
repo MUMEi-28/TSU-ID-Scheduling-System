@@ -15,9 +15,9 @@ function DatePicker(props) {
 
     if (dayOfWeek === 2) { // Tuesday (Tarlac City might have different start of week, but JS getDay() is consistent)
       return todayNormalized;
-    } else if (dayOfWeek < 2) { // Monday (1) or Sunday (0)
+    } else if (dayOfWeek < 2 || dayOfWeek === 6) { // Monday (1) or Sunday (0) or Saturday (6)
       return nextTuesday(todayNormalized);
-    } else { // Wednesday (3), Thursday (4), Friday (5), Saturday (6)
+    } else { // Wednesday (3), Thursday (4), Friday (5)
       return previousTuesday(todayNormalized);
     }
   }, [todayNormalized]);
