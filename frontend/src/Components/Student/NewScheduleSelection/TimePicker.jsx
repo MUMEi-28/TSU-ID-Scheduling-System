@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { format } from 'date-fns';
+import kuruKuru from '../../public/kurukuru-kururing.gif';
+import { buildApiUrl, API_ENDPOINTS } from '../../../config/api';
 
 const TimePicker = (props) =>
 {
@@ -9,10 +11,11 @@ const TimePicker = (props) =>
     const [isAM, setIsAm] = useState(true);
     const [slotCounts, setSlotCounts] = useState({});
     const [loading, setLoading] = useState(true);
+    const [errorMsg, setErrorMsg] = useState("");
 
     const timeSlots = [
         "8:00am - 9:00am", "9:00am -10:00am",
-        "10:00am-11:00am", "11:00am-12:00am",
+        "10:00am-11:00am", "11:00am-12:00pm",
         "1:00pm - 2:00pm", "2:00pm - 3:00pm",
         "3:00pm - 4:00pm", "4:00pm - 5:00pm"
     ];
@@ -26,7 +29,11 @@ const TimePicker = (props) =>
     const handleChooseTime = (e) =>
     {
         const selected = e.target.value;
-        props.setSelectedTime(selected);
+        if (props.selectedTime === selected) {
+            props.setSelectedTime(null);
+        } else {
+            props.setSelectedTime(selected);
+        }
 
         const dateFormatted = props.selectedDate
             ? format(new Date(props.selectedDate), "MMMM d, yyyy")
@@ -49,52 +56,126 @@ const TimePicker = (props) =>
         return slotCounts[time];
     };
 
-    useEffect(() =>
-    {
-        if (!props.selectedDate) return;
+    useEffect(() => {
+        if (!props.selectedDate) {
+            props.setSelectedTime(null);
+            setLoading(false);
+            return;
+        }
+        setErrorMsg("");
+        setLoading(true);
+        const cacheKey = `slot_counts_${props.selectedDate}`;
+        const cache = localStorage.getItem(cacheKey);
+        let shouldFetch = true;
+        if (cache) {
+            const { data, timestamp } = JSON.parse(cache);
+            if (Date.now() - timestamp < 30000) { // 30 seconds
+                setSlotCounts(data);
+                setLoading(false);
+                shouldFetch = false;
+            }
+        }
+        if (shouldFetch) {
+            const fetchCounts = async () => {
+                const counts = {};
+                const formattedDate = format(new Date(props.selectedDate), "MMMM d, yyyy");
+                for (const time of timeSlots) {
+                    try {
+                        const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.getSlotCount)}`, {
+                            params: {
+                                schedule_date: formattedDate,
+                                schedule_time: time
+                            }
+                        });
+                        counts[time] = res.data.count || 0;
+                    } catch (e) {
+                        counts[time] = 0;
+                    }
+                }
+                setSlotCounts(counts);
+                localStorage.setItem(cacheKey, JSON.stringify({ data: counts, timestamp: Date.now() }));
+                setLoading(false);
+            };
+            fetchCounts();
+        }
+    }, [props.selectedDate]);
 
-        const fetchCounts = async () =>
-        {
-            const counts = {};
+    const handleSchedule = async () => {
+        if (!props.selectedTime) {
+            return;
+        }
+        const slotsLeft = getSlotAvailability(props.selectedTime);
+        if (slotsLeft >= 12) {
+            setErrorMsg('Selected slot is already full. Please choose another slot.');
             const formattedDate = format(new Date(props.selectedDate), "MMMM d, yyyy");
-
-            for (const time of timeSlots)
-            {
-                try
-                {
-                    const res = await axios.get(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_slot_count.php`, {
+            const counts = {};
+            for (const time of timeSlots) {
+                try {
+                    const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.getSlotCount)}`, {
                         params: {
                             schedule_date: formattedDate,
                             schedule_time: time
                         }
                     });
                     counts[time] = res.data.count || 0;
-                } catch (e)
-                {
+                } catch (e) {
                     counts[time] = 0;
                 }
             }
-
             setSlotCounts(counts);
-            setLoading(false);
-        };
-
-        fetchCounts();
-    }, [props.selectedDate]);
+            localStorage.setItem(`slot_counts_${props.selectedDate}`, JSON.stringify({ data: counts, timestamp: Date.now() }));
+            return;
+        }
+        setErrorMsg("");
+        try {
+            props.setRegistrationInputs(prev => ({
+                ...prev,
+                schedule_time: props.selectedTime
+            }));
+            props.handlingDataObjectsTest();
+            navigate('/receipt');
+            const formattedDate = format(new Date(props.selectedDate), "MMMM d, yyyy");
+            const counts = {};
+            for (const time of timeSlots) {
+                try {
+                    const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.getSlotCount)}`, {
+                        params: {
+                            schedule_date: formattedDate,
+                            schedule_time: time
+                        }
+                    });
+                    counts[time] = res.data.count || 0;
+                } catch (e) {
+                    counts[time] = 0;
+                }
+            }
+            setSlotCounts(counts);
+            localStorage.setItem(`slot_counts_${props.selectedDate}`, JSON.stringify({ data: counts, timestamp: Date.now() }));
+        } catch (err) {
+            if (err.response && err.response.data && err.response.data.message) {
+                setErrorMsg(err.response.data.message);
+            } else if (err.message) {
+                setErrorMsg(`Scheduling error: ${err.message}`);
+            } else {
+                setErrorMsg("An error occurred while scheduling. Please try again.");
+            }
+        }
+    };
 
     const renderButton = (time) =>
     {
         const slotsLeft = getSlotAvailability(time);
         const isSelected = props.selectedTime === time;
+        const isFull = slotsLeft >= 12;
 
         return (
             <button
                 key={time}
                 value={time}
                 onClick={handleChooseTime}
-                disabled={slotsLeft >= 12}
+                disabled={isFull}
                 className={`
-                    ${slotsLeft >= 12 ? 'opacity-50 cursor-not-allowed' : ''}
+                    ${isFull ? 'opacity-50 cursor-not-allowed' : ''}
                     shadow-md rounded-lg transition-all py-5 p-2 sm:px-10 duration-200 border-2
                     ${isSelected
                         ? isAM
@@ -104,7 +185,11 @@ const TimePicker = (props) =>
                     }`}
             >
                 <p className='pointer-events-none'>{time}</p>
-                <p className={` pointer-events-none  ${getSlotAvailability(props.selectedTime) >= 8 ? 'text-[#b11616]' : getSlotAvailability(props.selectedTime) >= 4 ? 'text-[#d7e427]' : isSelected ? 'text-white' : 'text-[#27732A]'} text-sm mt-1`}>Slots: {slotsLeft}/12</p>
+                {isFull ? (
+                    <p className='pointer-events-none text-red-600 font-bold text-sm mt-1'>Slots are Full!</p>
+                ) : (
+                    <p className={`pointer-events-none  ${getSlotAvailability(props.selectedTime) >= 8 ? 'text-[#b11616]' : getSlotAvailability(props.selectedTime) >= 4 ? 'text-[#d7e427]' : isSelected ? 'text-white' : 'text-[#27732A]'} text-sm mt-1`}>Slots: {slotsLeft}/12</p>
+                )}
             </button >
         );
     };
@@ -115,48 +200,54 @@ const TimePicker = (props) =>
 
     return (
         <div className='flex flex-col justify-evenly items-center h-6/12 w-fit md:mx-10'>
-            <h1 className='league-font text-[#686868] text-3xl font-medium'>
-                Choose your Availability
-            </h1>
-
-            <div className='flex h-fit league-font w-full justify-between text-sm sm:text-md'>
-                <button onClick={handleChangePeriod} className='bg-[#BDBDBD] flex transition-all duration-300 rounded-lg shadow-md'>
-                    <div className={`font-bold rounded-l-lg px-4 pt-2 ${isAM ? 'bg-[#CE9D31] text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]'}`}>AM</div>
-                    <div className={`font-bold rounded-r-lg px-4 pt-2 ${!isAM ? 'bg-purple-400 text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]'}`}>PM</div>
-                </button>
-
-                {/*  <div className='text-lg sm:text-2xl border rounded-lg border-[#A3A3A3] shadow-md flex justify-between w-fit'>
-                    <div className={`w-3 h-full rounded-l-lg ${getSlotAvailability(props.selectedTime) <= 4 ? 'bg-[#b11616]' : getSlotAvailability(props.selectedTime) <= 8 ? 'bg-[#d7e427]' : 'bg-[#27732A]'}`} />
-                    <h1 className='mx-2'>Slots {getSlotAvailability(props.selectedTime)}/12</h1>
-                </div> */}
-            </div>
-
-            <div className='flex-col flex gap-y-8 text-xs md:text-lg lg:text-xl'>
-                <div className='flex martian-font gap-x-8'>
-                    {renderButton(displayedTimes[0])}
-                    {renderButton(displayedTimes[1])}
+            {loading ? (
+                <div className="flex flex-col items-center justify-center h-80 w-80">
+                    <img src={kuruKuru} alt="Loading..." className="w-32 h-32 mx-auto" />
+                    <p className="text-lg text-gray-500 mt-4 font-bold">Loading slots...</p>
                 </div>
-                <div className='flex martian-font gap-x-8'>
-                    {renderButton(displayedTimes[2])}
-                    {renderButton(displayedTimes[3])}
-                </div>
-            </div>
-
-            <button
-                className='bg-[#E1A500] border-[#C68C10] league-font text-lg sm:text-2xl px-13 py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200'
-                onClick={() =>
-                {
-                    props.setRegistrationInputs(prev => ({
-                        ...prev,
-                        schedule_time: props.selectedTime
-                    }));
-                    props.handlingDataObjectsTest();
-                    navigate('/receipt');
-                }}
-                disabled={!props.selectedTime}
-            >
-                Schedule
-            </button>
+            ) : props.selectedDate ? (
+                <>
+                    <h1 className='league-font text-[#686868] text-3xl font-medium mb-0'>
+                        Choose your Availability
+                    </h1>
+                    {errorMsg ? (
+                        <div className="text-red-600 font-semibold text-center mt-0">
+                            {errorMsg}
+                        </div>
+                    ) :
+                        !props.selectedTime && (
+                            <div className="text-red-600 font-semibold text-center mt-0">
+                                Please select a slot before scheduling.
+                            </div>
+                        )
+                    }
+                    <div className='flex h-fit league-font w-full justify-between text-sm sm:text-md'>
+                        <button onClick={handleChangePeriod} className='bg-[#BDBDBD] flex transition-all duration-300 rounded-lg shadow-md'>
+                            <div className={`font-bold rounded-l-lg px-4 pt-2 ${isAM ? 'bg-[#CE9D31] text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]'}`}>AM</div>
+                            <div className={`font-bold rounded-r-lg px-4 pt-2 ${!isAM ? 'bg-purple-400 text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]'}`}>PM</div>
+                        </button>
+                    </div>
+                    <div className='flex-col flex gap-y-8 text-xs md:text-lg lg:text-xl'>
+                        <div className='flex martian-font gap-x-8'>
+                            {renderButton(displayedTimes[0])}
+                            {renderButton(displayedTimes[1])}
+                        </div>
+                        <div className='flex martian-font gap-x-8'>
+                            {renderButton(displayedTimes[2])}
+                            {renderButton(displayedTimes[3])}
+                        </div>
+                    </div>
+                    <button
+                        className='bg-[#E1A500] border-[#C68C10] league-font text-lg sm:text-2xl px-13 py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200'
+                        onClick={handleSchedule}
+                        disabled={!props.selectedTime}
+                    >
+                        Schedule
+                    </button>
+                </>
+            ) : (
+                <h2 className='text-gray-500 text-lg mt-8'>Please select a date to view available slots.</h2>
+            )}
         </div>
     );
 };

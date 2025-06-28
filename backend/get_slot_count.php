@@ -9,7 +9,8 @@ $time = $_GET['schedule_time'] ?? '';
 if ($date && $time) {
     $stmt = $conn->prepare("SELECT COUNT(*) as count FROM students 
         WHERE TRIM(schedule_date) = TRIM(:schedule_date) 
-          AND TRIM(schedule_time) = TRIM(:schedule_time)");
+          AND TRIM(schedule_time) = TRIM(:schedule_time)
+          AND (status IS NULL OR status = 'pending')");
 
     error_log("📅 DATE: " . $date);
     error_log("🕒 TIME: " . $time);

@@ -11,22 +11,20 @@ try {
     $json = file_get_contents('php://input');
     $input = json_decode($json);
 
+    // Add debugging
+    error_log("[register.php] Received data: " . $json . "\n", 3, __DIR__ . '/error_log.txt');
+
     // Validate JSON decoding
     if ($input === null) {
-        throw new Exception("Invalid JSON data received"); // To prevent Uncaught Error: Attempt to modify property &quot;fullname&quot; on null
+        throw new Exception("Invalid JSON data received");
     }
 
-    // Check required fields
-    if (!isset($input->fullname)) {
-        throw new Exception("Full name is required");
-    }
-    if (!isset($input->student_number)) {
-        throw new Exception("Student number is required");
-    }
+    // Add more debugging
+    error_log("[register.php] Validated data - fullname: {$input->fullname}, student_number: {$input->student_number}, schedule_date: {$input->schedule_date}, schedule_time: {$input->schedule_time}\n", 3, __DIR__ . '/error_log.txt');
 
-    // Prepare and execute SQL
-    $sql = "INSERT INTO students (fullname, student_number, schedule_time, schedule_date) 
-            VALUES (:fullname, :student_number, :schedule_time, :schedule_date)";
+    // Prepare and execute SQL - save the confirmed slot data
+    $sql = "INSERT INTO students (fullname, student_number, schedule_time, schedule_date, status) 
+            VALUES (:fullname, :student_number, :schedule_time, :schedule_date, 'pending')";
 
     $stmt = $conn->prepare($sql);
     $stmt->bindParam(':fullname', $input->fullname);
@@ -35,23 +33,28 @@ try {
     $stmt->bindParam(':schedule_date', $input->schedule_date);
 
     if ($stmt->execute()) {
+        $studentToken = bin2hex(random_bytes(16));
         $response = [
             'status' => 1,
-            'message' => 'Student Registered Successfully',
-            'student_id' => $conn->lastInsertId()
+            'message' => 'Welcome! Your slot has been created successfully.',
+            'student_id' => $conn->lastInsertId(),
+            'student_token' => $studentToken
         ];
+        error_log("[register.php] Successfully inserted student with ID: " . $conn->lastInsertId() . "\n", 3, __DIR__ . '/error_log.txt');
     } else {
         $response = [
             'status' => 0,
-            'message' => 'Registration failed'
+            'message' => 'Sorry, we couldn\'t create your slot right now. Please try again.'
         ];
+        error_log("[register.php] Failed to insert student\n", 3, __DIR__ . '/error_log.txt');
     }
 
     echo json_encode($response);
 } catch (Exception $e) {
+    error_log("[register.php] " . $e->getMessage() . "\n", 3, __DIR__ . '/error_log.txt');
     echo json_encode([
         'status' => 0,
-        'message' => 'Error: ' . $e->getMessage(),
+        'message' => 'Something went wrong. Please check your information and try again.',
         'received_data' => $json ?? null
     ]);
 }

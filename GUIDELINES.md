@@ -1,6 +1,6 @@
 # 🚀 Project Workflow Guidelines
 
-This guide helps all contributors to properly **run, edit, push, pull, and collaborate** on the RFID Scheduling System using **GitHub Desktop** and **VS Code**.
+This guide helps all contributors to properly **run, edit, push, pull, and collaborate** on the TSU ID Scheduling System using **GitHub Desktop** and **VS Code**.
 
 ---
 
@@ -9,8 +9,9 @@ This guide helps all contributors to properly **run, edit, push, pull, and colla
 - [🛠 Tools You Need](#-tools-you-need)
 - [📁 Project Structure](#-project-structure)
 - [🌱 Initial Setup](#-initial-setup)
+- [⚙️ Environment Configuration](#️-environment-configuration)
 - [🔧 Running the Frontend (React)](#-running-the-frontend-react)
-- [🔧 Running the Backend (PHP--MySQL)](#-running-the-backend-php--mysql)
+- [🔧 Running the Backend (PHP + MySQL)](#-running-the-backend-php--mysql)
 - [🌿 Branching Guidelines](#-branching-guidelines)
 - [🔄 Pulling & Syncing Updates](#-pulling--syncing-updates)
 - [🧼 Code Guidelines](#-code-guidelines)
@@ -25,7 +26,7 @@ Install the following:
 
 - [GitHub Desktop](https://desktop.github.com/)
 - [Visual Studio Code](https://code.visualstudio.com/)
-- [Node.js](https://nodejs.org/en) (For React)
+- [Node.js](https://nodejs.org/en) (v16 or higher for React)
 - [XAMPP](https://www.apachefriends.org/index.html) (Apache + MySQL)
 - A modern browser (Chrome, Edge, etc.)
 
@@ -34,11 +35,18 @@ Install the following:
 ## 📁 Project Structure
 
 ```
-rfid-scheduling-system/
-├── frontend/        # React + Tailwind
+TSU-ID-Scheduling-System/
+├── frontend/        # React + Vite + Tailwind
+│   ├── src/
+│   │   ├── Components/  # React components
+│   │   └── config/      # API configuration
+│   ├── .env             # Development environment variables
+│   └── setup.js         # Setup wizard
 ├── backend/         # PHP + MySQL
-├── docs/            # README, Guidelines, Screenshots
-├── .env             # Local secrets (DO NOT push this)
+│   ├── database/    # Database schema
+│   └── config.php   # Database configuration
+├── DEPLOYMENT_GUIDE.md  # Deployment instructions
+└── GUIDELINES.md    # This file
 ```
 
 ---
@@ -48,25 +56,71 @@ rfid-scheduling-system/
 ### Step 1: Clone the Repository
 
 - Open [Repository](https://github.com/MUMEi-28/TSU-ID-Scheduling-System)
-  
-![image](https://github.com/user-attachments/assets/5cb5daa6-7cb1-4c66-bd34-f2ba577a4069)
 - Go to `File > Clone Repository`
 - Choose a local folder to save it
-
----
 
 ### Step 2: Open in VS Code
 
 - In GitHub Desktop, click `Open in Visual Studio Code`
-![image](https://github.com/user-attachments/assets/52310414-9603-406b-94a4-3a8e690e4b80)
+
+---
+
+## ⚙️ Environment Configuration
+
+> **IMPORTANT**: Before running the frontend, you must configure the API base URL for your environment.
+
+### Quick Setup (Recommended)
+
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+
+2. Run the setup wizard:
+   ```bash
+   npm run setup
+   ```
+
+3. Follow the interactive prompts to configure your environment.
+
+### Manual Setup
+
+If you prefer manual configuration, create a `.env` file in the `frontend` directory:
+
+#### For XAMPP (Windows):
+```env
+VITE_API_BASE_URL=http://localhost/Projects/TSU-ID-Scheduling-System/backend
+```
+
+#### For WAMP (Windows):
+```env
+VITE_API_BASE_URL=http://localhost/tsu-scheduling/backend
+```
+
+#### For MAMP (Mac):
+```env
+VITE_API_BASE_URL=http://localhost:8888/tsu-scheduling/backend
+```
+
+#### For Linux Apache:
+```env
+VITE_API_BASE_URL=http://localhost/tsu-scheduling/backend
+```
+
+### Configuration Notes
+
+- The system automatically detects your environment (development/production)
+- For production deployment, create a `.env.production` file instead
+- The API base URL should point to the directory containing your PHP backend files
+- Restart the development server after changing environment variables
 
 ---
 
 ## 🔧 Running the Frontend (React)
 
-1. In VS Code terminal:
+1. **Configure your environment first** (see [Environment Configuration](#️-environment-configuration) above)
 
-   -Open terminal using `ctrl + backtick` (ctrl + `)
+2. In VS Code terminal (open using `Ctrl + `` `):
 
    ```bash
    cd frontend
@@ -76,10 +130,10 @@ rfid-scheduling-system/
 
 3. Open your browser and visit:
    ```
-   http://localhost:5173
+   http://localhost:3000
    ```
 
-![image](https://github.com/user-attachments/assets/7aa266cb-33af-4d99-9b18-22082a127f01)
+> **Note**: The default port is now 3000 (updated from 5173)
 
 ---
 
@@ -89,21 +143,25 @@ rfid-scheduling-system/
    - Apache
    - MySQL
 
-🖼️ ![XAMPP Screenshot](<insert-your-screenshot-url-here>)
-
-2. Place the backend folder in:
+2. Place the backend folder in your web server directory:
    ```
-   C:/xampp/htdocs/rfid-scheduling-system/backend
+   C:/xampp/htdocs/Projects/TSU-ID-Scheduling-System/backend
    ```
+   
+   > **Note**: The path should match your frontend configuration
 
 3. Import the database:
    - Open `http://localhost/phpmyadmin`
-   - Create database: `rfid_system`
+   - Create database: `tsu_scheduling_system` (or your preferred name)
    - Import `schema.sql` from `backend/database/`
 
-4. Access the backend APIs:
+4. Configure database connection:
+   - Edit `backend/config.php` with your database credentials
+   - Ensure the database name matches what you created
+
+5. Test backend access:
    ```
-   http://localhost/rfid-scheduling-system/backend/api/login.php
+   http://localhost/Projects/TSU-ID-Scheduling-System/backend/login.php
    ```
 
 ---
@@ -124,21 +182,14 @@ rfid-scheduling-system/
      docs/update-readme
      ```
 
-🖼️ ![Branching Screenshot](<insert-your-screenshot-url-here>)
-
----
-
 ### Committing Your Code
 
 Write clear, meaningful commit messages:
 ```bash
 feat: add calendar slot selection
 fix: correct invalid input warning
+docs: update configuration guide
 ```
-
-🖼️ ![Commit Screenshot](<insert-your-screenshot-url-here>)
-
----
 
 ### Pushing Your Work
 
@@ -164,8 +215,6 @@ git checkout your-branch-name
 git merge main
 ```
 
-🖼️ ![Pulling Screenshot](<insert-your-screenshot-url-here>)
-
 ---
 
 ## 🧼 Code Guidelines
@@ -174,14 +223,22 @@ git merge main
 - Use `const`, `let`, arrow functions
 - Use meaningful component/variable names
 - Keep files modular and reusable
+- Use the centralized API configuration system
+- Import API functions from `src/config/api.js`
 
 ### PHP
 - Use `filter_input()` or similar for validation
 - Organize logic in separate files/functions
+- Include proper CORS headers for cross-origin requests
 
 ### MySQL
 - Use clear table/column names
 - Index important fields (e.g., student number)
+
+### API Configuration
+- Never hardcode URLs in components
+- Use the `buildApiUrl()` function from `src/config/api.js`
+- Use `API_ENDPOINTS` constants for endpoint names
 
 ---
 
@@ -189,11 +246,13 @@ git merge main
 
 These are already in `.gitignore`, but double-check before committing:
 
-- `.env`
+- `.env` (development environment variables)
+- `.env.production` (production environment variables)
 - `node_modules/`
 - `*.log`
 - `.vscode/`
 - `*.DS_Store`
+- `dist/` (build output)
 
 ---
 
@@ -201,12 +260,45 @@ These are already in `.gitignore`, but double-check before committing:
 
 | Problem                        | Solution                                           |
 |-------------------------------|----------------------------------------------------|
-| Port 5173 already in use       | Close other projects or change port in `vite.config.js` |
-| API returns error              | Check Apache & MySQL are running                  |
-| Cannot connect to DB          | Check DB credentials and `.env` file              |
+| Port 3000 already in use       | Close other projects or change port in `vite.config.js` |
+| "Network Error" in frontend    | Check `.env` file configuration and backend URL    |
+| API returns CORS error         | Check CORS headers in backend PHP files           |
+| Cannot connect to DB          | Check DB credentials in `backend/config.php`      |
+| Environment not detected      | Restart dev server after changing `.env` file     |
 | Conflicts when pushing        | Pull first, resolve, then push                    |
 | Changes not showing           | Restart `npm run dev` or refresh browser          |
+| Setup wizard not working      | Ensure Node.js is installed and run `npm install` first |
+
+### Troubleshooting Network Errors
+
+If you encounter network errors:
+
+1. **Check your `.env` file**:
+   - Verify the `VITE_API_BASE_URL` is correct
+   - Ensure the URL points to your backend directory
+
+2. **Test backend accessibility**:
+   - Open the backend URL in your browser
+   - Check if Apache and MySQL are running
+
+3. **Verify file paths**:
+   - Ensure backend files are in the correct web server directory
+   - Check file permissions
+
+4. **Check CORS configuration**:
+   - Ensure backend PHP files include proper CORS headers
+   - For production, ensure frontend and backend are on same domain
 
 ---
+
+## 📚 Additional Resources
+
+- [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) - Comprehensive deployment instructions
+- [frontend/README.md](./frontend/README.md) - Frontend-specific documentation
+- [frontend/config.txt](./frontend/config.txt) - Configuration examples
+
+---
+
+**Happy Coding! 🚀**
 
 
