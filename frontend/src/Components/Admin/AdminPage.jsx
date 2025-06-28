@@ -131,7 +131,8 @@ const AdminPage = (props) => {
                 fullname: student.fullname,
                 student_number: student.student_number,
                 email: student.email || '',
-                id_reason: student.id_reason || 're_id'
+                id_reason: student.id_reason || 're_id',
+                status: student.status || 'pending'
             }
         });
     };
@@ -155,7 +156,8 @@ const AdminPage = (props) => {
                 fullname: editModal.data.fullname,
                 student_number: editModal.data.student_number,
                 email: editModal.data.email,
-                id_reason: editModal.data.id_reason
+                id_reason: editModal.data.id_reason,
+                status: editModal.data.status
             };
             
             await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), updateData, {
@@ -672,7 +674,7 @@ const AdminPage = (props) => {
 
             {/* Detail Modal */}
             {detailModal.show && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
                     <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold">Student Details</h2>
@@ -728,7 +730,7 @@ const AdminPage = (props) => {
 
             {/* Edit Modal */}
             {editModal.show && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
                     <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold">Edit Student</h2>
@@ -816,22 +818,82 @@ const AdminPage = (props) => {
                 </div>
             )}
 
-            {/* Calendar Modal */}
+            {/* Calendar Modal (reworked for both normal and reschedule usage) */}
             {showCalendar && (
-                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-20">
-                    <div className="bg-white p-6 opacity-100 rounded-lg shadow-xl h-fit flex flex-col justify-center items-center text-2xl">
+                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999]">
+                    <div className="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center max-w-md w-full mx-4">
                         <Suspense fallback={<div className='text-xl font-bold text-gray-600'>Loading calendar...</div>}>
-                            <Calendar onDateSelect={setSelectedCalendarDate} onClose={() => setShowCalendar(false)} />
+                            <Calendar 
+                                onDateSelect={date => {
+                                    const formattedDate = new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                                    if (showRescheduleModal) {
+                                        setRescheduleDate(formattedDate);
+                                        setShowCalendar(false);
+                                    } else {
+                                        setSelectedCalendarDate(date);
+                                        setShowCalendar(false);
+                                    }
+                                }}
+                                onClose={() => setShowCalendar(false)}
+                            />
                         </Suspense>
-                        <hr />
-                    <button
-                            onClick={HandleDateReplace}
-                            className="w-full p-5 text-2xl bg-red-500 text-white rounded-md hover:bg-red-600"
+                        <button
+                            onClick={() => setShowCalendar(false)}
+                            className="mt-4 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-bold border-2 border-gray-600"
                         >
-                            Change Date to: {selectedCalendarDate ? new Date(selectedCalendarDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'No Date Selected'}
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Reschedule Modal */}
+            {showRescheduleModal && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+                <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                  <h2 className="text-xl font-bold mb-4">Reschedule Student</h2>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                    <input
+                      type="date"
+                      value={rescheduleDate}
+                      onChange={e => setRescheduleDate(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                    <select
+                      value={rescheduleTime}
+                      onChange={e => setRescheduleTime(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 font-bold focus:outline-none focus:ring-2 focus:ring-gray-400"
+                    >
+                      <option value="8:00am - 9:00am">8:00am - 9:00am</option>
+                      <option value="9:00am -10:00am">9:00am -10:00am</option>
+                      <option value="10:00am-11:00am">10:00am-11:00am</option>
+                      <option value="11:00am-12:00pm">11:00am-12:00pm</option>
+                      <option value="1:00pm - 2:00pm">1:00pm - 2:00pm</option>
+                      <option value="2:00pm - 3:00pm">2:00pm - 3:00pm</option>
+                      <option value="3:00pm - 4:00pm">3:00pm - 4:00pm</option>
+                      <option value="4:00pm - 5:00pm">4:00pm - 5:00pm</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      onClick={handleRescheduleCancel}
+                      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-bold border-2 border-gray-600"
+                    >
+                      Cancel
                     </button>
+                    <button
+                      onClick={handleRescheduleSave}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-bold border-2 border-yellow-600"
+                    >
+                      Save
+                    </button>
+                  </div>
                 </div>
-                </div>
+              </div>
             )}
 
             {/* Main content */}
@@ -866,9 +928,12 @@ const AdminPage = (props) => {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Current Date</label>
-                            <div className="p-2 bg-gray-100 rounded-lg">
-                                {currentScheduleDate}
-                            </div>
+                            <button
+                                onClick={HandleChangeDate}
+                                className="w-full p-2 bg-gray-100 text-gray-700 rounded-lg font-bold border-2 border-gray-300 hover:bg-gray-200 transition-all duration-150 shadow-sm"
+                            >
+                                {currentScheduleDate === 'No Date Chosen' ? 'No Date Chosen (Click to select)' : currentScheduleDate}
+                            </button>
                         </div>
                         
                         <div>
@@ -893,150 +958,148 @@ const AdminPage = (props) => {
                 </div>
 
                 {/* Table */}
-                <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="py-3 px-4 text-left font-semibold text-gray-700">Name</th>
-                                    <th className="py-3 px-4 text-left font-semibold text-gray-700">Student Number</th>
-                                    <th className="py-3 px-4 text-left font-semibold text-gray-700">Schedule Date</th>
-                                    <th className="py-3 px-4 text-left font-semibold text-gray-700">Schedule Time</th>
-                                    <th className="py-3 px-4 text-left font-semibold text-gray-700">Status</th>
-                                    <th className="py-3 px-4 text-left font-semibold text-gray-700">Actions</th>
+                <div className="bg-white border border-gray-200 overflow-x-auto">
+                    <table className="table-auto w-full">
+                        <thead className="bg-gray-100 border-b border-gray-300">
+                            <tr>
+                                <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Name</th>
+                                <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Student Number</th>
+                                <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Schedule Date</th>
+                                <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Schedule Time</th>
+                                <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Status</th>
+                                <th className="py-2 px-2 text-left font-semibold text-gray-700">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                                {paginatedStudents.map((student, index) => (
-                                    <tr 
-                                        key={student.id} 
-                                        className="border-b hover:bg-gray-50 cursor-pointer"
-                                        onClick={() => showStudentDetails(student)}
-                                    >
-                                        <td className="py-3 px-4">{student.fullname}</td>
-                                        <td className="py-3 px-4">{student.student_number}</td>
-                                        <td className="py-3 px-4">{student.schedule_date || 'Not scheduled'}</td>
-                                        <td className="py-3 px-4">{student.schedule_time || 'Not scheduled'}</td>
-                                        <td className="py-3 px-4">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                                student.status === 'done' ? 'bg-green-100 text-green-800' :
-                                                student.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                                'bg-yellow-100 text-yellow-800'
-                                            }`}>
-                                                {student.status}
-                                                </span>
-                                                </td>
-                                        <td className="py-3 px-4">
-                                            <div className="flex flex-wrap gap-1">
+                            {paginatedStudents.map((student) => (
+                                <tr 
+                                    key={student.id} 
+                                    className="border-b hover:bg-gray-50 cursor-pointer"
+                                    onClick={() => showStudentDetails(student)}
+                                >
+                                    <td className="py-2 px-2 border-r">{student.fullname}</td>
+                                    <td className="py-2 px-2 border-r">{student.student_number}</td>
+                                    <td className="py-2 px-2 border-r">{student.schedule_date || 'Not scheduled'}</td>
+                                    <td className="py-2 px-2 border-r">{student.schedule_time || 'Not scheduled'}</td>
+                                    <td className="py-2 px-2 border-r">
+                                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                                            student.status === 'done' ? 'bg-green-100 text-green-800' :
+                                            student.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                            'bg-yellow-100 text-yellow-800'
+                                        }`}>
+                                            {student.status}
+                                        </span>
+                                    </td>
+                                    <td className="py-2 px-2">
+                                        <div className="flex space-x-2">
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    showEditModal(student);
+                                                }}
+                                                className="flex items-center bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150"
+                                                title="Edit"
+                                            >
+                                                <span className="mr-1">✏️</span> Edit
+                                            </button>
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDelete(student.id);
+                                                }}
+                                                className="flex items-center bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150"
+                                                title="Delete"
+                                            >
+                                                <span className="mr-1">🗑️</span> Delete
+                                            </button>
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleToggleStatus(student);
+                                                }}
+                                                className={`flex items-center px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150 ${
+                                                    student.status === 'done' 
+                                                        ? 'bg-gray-400 hover:bg-gray-500 text-white' 
+                                                        : 'bg-green-500 hover:bg-green-600 text-white'
+                                                }`}
+                                                title={student.status === 'done' ? 'Mark Pending' : 'Mark Done'}
+                                            >
+                                                <span className="mr-1">{student.status === 'done' ? '⏳' : '✅'}</span> {student.status === 'done' ? 'Pending' : 'Done'}
+                                            </button>
+                                            {student.status !== 'cancelled' && (
                                                 <button 
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        showEditModal(student);
+                                                        handleMarkCancelled(student);
                                                     }}
-                                                    className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-2 py-1 rounded text-xs border border-[#C68C10] transition-all duration-200"
-                                                    title="Edit"
+                                                    className="flex items-center bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150"
+                                                    title="Mark Cancelled"
                                                 >
-                                                    ✏️
+                                                    <span className="mr-1">❌</span> Cancel
                                                 </button>
+                                            )}
+                                            {student.status === 'cancelled' && (
                                                 <button 
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        handleDelete(student.id);
+                                                        handleReschedule(student);
                                                     }}
-                                                    className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs"
-                                                    title="Delete"
+                                                    className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150"
+                                                    title="Reschedule"
                                                 >
-                                                    🗑️
+                                                    <span className="mr-1">📅</span> Resched
                                                 </button>
-                                                <button 
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleToggleStatus(student);
-                                                    }}
-                                                    className={`px-2 py-1 rounded text-xs ${
-                                                        student.status === 'done' 
-                                                            ? 'bg-yellow-500 hover:bg-yellow-600 text-white' 
-                                                            : 'bg-green-500 hover:bg-green-600 text-white'
-                                                    }`}
-                                                    title={student.status === 'done' ? 'Mark Pending' : 'Mark Done'}
-                                                >
-                                                    {student.status === 'done' ? '⏳' : '✅'}
-                                                    </button>
-                                                        {student.status !== 'cancelled' && (
-                                                    <button 
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleMarkCancelled(student);
-                                                        }}
-                                                        className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs"
-                                                        title="Mark Cancelled"
-                                                    >
-                                                        ❌
-                                                            </button>
-                                                        )}
-                                                        {student.status === 'cancelled' && (
-                                                    <button 
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleReschedule(student);
-                                                        }}
-                                                        className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-2 py-1 rounded text-xs border border-[#C68C10] transition-all duration-200"
-                                                        title="Reschedule"
-                                                    >
-                                                        📅
-                                                            </button>
-                                                        )}
-                                            </div>
-                                                </td>
-                                    </tr>
-                                ))}
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
-                        </div>
+                </div>
 
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                        <div className="px-4 py-3 border-t border-gray-200">
-                            <div className="flex items-center justify-between">
-                                <div className="text-sm text-gray-700">
-                                    Showing {startIndex + 1} to {Math.min(startIndex + perPage, filteredStudents.length)} of {filteredStudents.length} results
-                                    </div>
-                                <div className="flex space-x-2">
-                            <button
-                                onClick={() => setPage(page - 1)}
-                                disabled={page === 1}
-                                        className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                            >
-                                        Previous
-                            </button>
-                                        
-                                    {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map(pageNum => (
-                                                <button
-                                                    key={pageNum}
-                                                    onClick={() => setPage(pageNum)}
-                                            className={`px-3 py-1 border rounded-md text-sm transition-all duration-200 ${
-                                                pageNum === page
-                                                    ? 'bg-[#E1A500] text-white border-[#C68C10]'
-                                                    : 'border-gray-300 hover:bg-gray-50'
-                                                    }`}
-                                                >
-                                                    {pageNum}
-                                                </button>
-                                    ))}
-                                    
-                            <button
-                                onClick={() => setPage(page + 1)}
-                                disabled={page === totalPages}
-                                        className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                            >
-                                        Next
-                            </button>
-                                    </div>
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="px-4 py-3 border-t border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <div className="text-sm text-gray-700">
+                                Showing {startIndex + 1} to {Math.min(startIndex + perPage, filteredStudents.length)} of {filteredStudents.length} results
                                 </div>
+                            <div className="flex space-x-2">
+                        <button
+                            onClick={() => setPage(page - 1)}
+                            disabled={page === 1}
+                                    className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        >
+                                    Previous
+                            </button>
+                                    
+                                {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map(pageNum => (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => setPage(pageNum)}
+                                        className={`px-3 py-1 border rounded-md text-sm transition-all duration-200 ${
+                                            pageNum === page
+                                                ? 'bg-[#E1A500] text-white border-[#C68C10]'
+                                                : 'border-gray-300 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        ))}
+                                        
+                                <button
+                                    onClick={() => setPage(page + 1)}
+                                    disabled={page === totalPages}
+                                    className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                                >
+                                    Next
+                                </button>
+                            </div>
                         </div>
-                    )}
-                        </div>
-                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

@@ -49,6 +49,7 @@ export default function Calendar({ onDateSelect, onClose })
             const isCurrentMonth = date.month() === currentMonth;
             const isPast = date.isBefore(today, 'day');
             const isWeekend = date.day() === 0 || date.day() === 6;
+            const isTodayDate = date.isToday();
 
             // Only disable if it's past date or weekend
             const isDisabled = isPast || isWeekend;
@@ -56,45 +57,44 @@ export default function Calendar({ onDateSelect, onClose })
             days.push(
                 <div key={i} className="flex items-center justify-center h-12 w-12 mx-auto">
                     {isDisabled ? (
-                        isWeekend ?
-                            <div className={`p-2 text-red-400 cursor-not-allowed w-full h-full flex items-center justify-center`}>
-                                {date.date()}
-                            </div> :
-                            <div className={`p-2 text-gray-400 cursor-not-allowed w-full h-full flex items-center justify-center`}>
-                                {date.date()}
-                            </div>
+                        <div className={`p-2 w-full h-full flex items-center justify-center rounded-lg ${isWeekend ? 'text-red-300 bg-gray-50' : 'text-gray-400 bg-gray-50'} cursor-not-allowed`}>
+                            {date.date()}
+                        </div>
                     ) : (
                         <button
                             type="button"
                             onClick={() => handleDateClick(date)}
-                            className="block p-2 rounded-lg transition-all hover:bg-orange-500 hover:text-white w-full h-full flex items-center justify-center"
+                            className={`block p-2 rounded-lg w-full h-full flex items-center justify-center font-semibold transition-all
+                                ${isTodayDate ? 'border-2 border-yellow-500 bg-yellow-100 text-yellow-900' : 'bg-white text-gray-700'}
+                                hover:bg-yellow-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400`}
                         >
                             {date.date()}
                         </button>
                     )}
-                </div >
+                </div>
             );
         }
         return days;
     };
 
     return (
-        <div className='flex flex-col w-full m-6 justify-center relative'>
+        <div className="flex flex-col w-full max-w-md m-6 justify-center relative bg-white rounded-2xl shadow-2xl p-6 border border-gray-200">
             {/* Close Button */}
             {onClose && (
                 <button
                     onClick={onClose}
-                    className="absolute top-0 right-0 mt-2 mr-2 text-4xl text-gray-500 hover:text-red-600 font-extrabold z-10 p-2"
+                    className="absolute top-3 right-3 text-2xl text-gray-400 hover:text-red-600 font-extrabold z-10 p-2 bg-white rounded-full shadow"
                     aria-label="Close calendar"
                 >
                     ×
                 </button>
             )}
             {/* Text above calendar */}
-            <div className=''>
-                <h2
-                    className='bg-red-600 text-white p-4 font-semibold text-xl w-1/4 rounded-2xl mb-5'>{currentYear} Calendar</h2>
-                <p className='text-red-900 font-bold text-xl'>Pick a date</p>
+            <div className="flex flex-col items-center mb-2">
+                <div className="flex items-center gap-2 mb-2">
+                    <span className="bg-yellow-500 text-white px-4 py-2 font-bold text-lg rounded-xl shadow">{currentYear} Calendar</span>
+                </div>
+                <p className="text-yellow-900 font-bold text-lg mb-2">Pick a date</p>
             </div>
 
             {/* Calendar */}
@@ -103,17 +103,17 @@ export default function Calendar({ onDateSelect, onClose })
                 <div className="flex items-center justify-center gap-4 mb-2">
                     <button
                         onClick={handlePrevMonth}
-                        className="px-5 py-2 rounded bg-gray-200 hover:bg-gray-400 text-3xl font-extrabold"
+                        className="h-10 w-10 flex items-center justify-center rounded-full bg-gray-200 hover:bg-yellow-400 text-2xl font-bold transition-all border border-gray-300"
                         aria-label="Previous month"
                     >
                         &#8592;
                     </button>
-                    <span className='text-2xl font-semibold'>
+                    <span className="text-xl font-bold text-gray-700">
                         {currentDate.format('MMMM YYYY')}
                     </span>
                     <button
                         onClick={handleNextMonth}
-                        className="px-5 py-2 rounded bg-gray-200 hover:bg-gray-400 text-3xl font-extrabold"
+                        className="h-10 w-10 flex items-center justify-center rounded-full bg-gray-200 hover:bg-yellow-400 text-2xl font-bold transition-all border border-gray-300"
                         aria-label="Next month"
                     >
                         &#8594;
@@ -121,9 +121,9 @@ export default function Calendar({ onDateSelect, onClose })
                 </div>
 
                 {/* Week */}
-                <div className='grid grid-cols-7 text-center'>
-                    {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day) => (
-                        <div key={day} className="text-gray-400 border">
+                <div className="grid grid-cols-7 text-center mb-1">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                        <div key={day} className="text-gray-500 font-semibold bg-gray-100 py-1 rounded">
                             {day}
                         </div>
                     ))}
@@ -133,7 +133,6 @@ export default function Calendar({ onDateSelect, onClose })
                     {generateCalendar()}
                 </div>
             </div>
-
         </div>
     )
 }
