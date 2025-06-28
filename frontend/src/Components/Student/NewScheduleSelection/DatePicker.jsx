@@ -1,40 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { addDays, subDays, format, nextTuesday, previousTuesday, isToday } from 'date-fns';
+import React, { useState, useEffect, useMemo } from 'react';
+import { addDays, subDays, format, isToday, isBefore } from 'date-fns'; // Added isBefore
 import axios from 'axios';
 
-function DatePicker(props)
-{
-  const [currentWeekStart, setCurrentWeekStart] = useState(() =>
-  {
+function DatePicker(props) {
+  // windowStartDate is the first date shown in the 4-day window
+  const [windowStartDate, setWindowStartDate] = useState(() => {
     const today = new Date();
-    // Get the previous (or current) Sunday
-    const dayOfWeek = today.getDay(); // 0 (Sun) - 6 (Sat)
-    const sunday = new Date(today);
-    sunday.setDate(today.getDate() - dayOfWeek);
-    return sunday;
+    // Start from today or the previous Sunday if you want, but here we use today
+    return today;
   });
-
-  const [availableDates, setAvailableDates] = useState([]);
   const [fullDates, setFullDates] = useState([]);
-
-  // Function to calculate the seven days (Sunday to Saturday)
-  const calculateWeekDays = useCallback(() =>
-  {
-    const dates = [];
-    let currentDate = currentWeekStart;
-    for (let i = 0; i < 7; i++)
-    { // Loop 7 times for the whole week
-      dates.push(currentDate);
-      currentDate = addDays(currentDate, 1);
-    }
-    setAvailableDates(dates);
-  }, [currentWeekStart, props.selectedDate]);
-
-  // Recalculate dates whenever currentWeekStart changes
-  useEffect(() =>
-  {
-    calculateWeekDays();
-  }, [currentWeekStart, calculateWeekDays]);
+  // Memoize availableDates so it doesn't change on every render
+  const availableDates = useMemo(() => Array.from({ length: 4 }, (_, i) => addDays(windowStartDate, i)), [windowStartDate]);
 
   useEffect(() => {
     // Check which dates are fully booked
@@ -81,22 +58,27 @@ function DatePicker(props)
       localStorage.setItem(cacheKey, JSON.stringify({ data: results, timestamp: Date.now() }));
     };
     if (availableDates.length > 0 && shouldFetch) checkFullDates();
-  }, [availableDates]);
+  }, [windowStartDate, availableDates]);
 
-  const handleNextWeek = () =>
-  {
-    setCurrentWeekStart(prevDate => addDays(prevDate, 7)); // Add 7 days 
+  // Define today's date for comparison
+  const today = useMemo(() => new Date(), []);
+
+  // Move window forward/backward by 1 day
+  const handleNextWindow = () => {
+    setWindowStartDate(prev => addDays(prev, 1));
   };
-
-  const handlePrevWeek = () =>
-  {
-    setCurrentWeekStart(prevDate => subDays(prevDate, 7)); // Subtract 7 days 
+  const handlePrevWindow = () => {
+    // Calculate the potential new start date
+    const newStartDate = subDays(windowStartDate, 1);
+    // Only allow going back if the new start date is not before today
+    if (!isBefore(newStartDate, today)) {
+      setWindowStartDate(newStartDate);
+    }
   };
 
   const handleDateSelect = (date) => {
     const dateAsString = format(date, "MMMM d, yyyy");
     if (props.selectedDate === dateAsString) {
-      // If already selected, unselect
       props.setSelectedDate(null);
       props.setRegistrationInputs(prev => ({
         ...prev,
@@ -111,42 +93,38 @@ function DatePicker(props)
     }
   };
 
+  // Determine if the previous button should be disabled
+  // It should be disabled if windowStartDate is today or before today
+  const isPrevDisabled = isBefore(windowStartDate, addDays(today, 1)); // isBefore(windowStartDate, today + 1 day) effectively means windowStartDate is today or before
 
   return (
     <div className='flex-col flex justify-bet items-center h-4/12 w-full lg:w-fit '>
-
       <h1 className='font-bold text-4xl text-gray-600 league-font'>
         Pick a date
       </h1>
-
       <div className="flex items-center justify-center space-x-2 sm:space-x-4 w-full lg:w-fit">
-
+        {/* Prev Window Button */}
         <button
-          onClick={handlePrevWeek}
-          className="p-2 sm:p-3 text-gray-500 hover:text-gray-700 
-        transition-colors duration-200 ease-in-out rounded-full hover:bg-gray-200 
-        focus:outline-none focus:ring-2 focus:ring-gray-300">
-
+          onClick={handlePrevWindow}
+          className={`p-2 sm:p-3 text-gray-500 transition-colors duration-200 ease-in-out rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300
+                    ${isPrevDisabled ? 'opacity-30 cursor-not-allowed' : 'hover:text-gray-700 hover:bg-gray-200'}`}
+          disabled={isPrevDisabled} // Disable the button based on the condition
+        >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-
         </button>
-
-        {/* Date Display */}
+        {/* Date Display (4 at a time) */}
         <div className="flex flex-wrap justify-center sm:justify-start shadow-lg shadow-gray-300 w-full sm:w-full xl:h-4/4 ">
-          {availableDates.map((date) => 
-          {
+          {availableDates.map((date) => {
             const dayOfWeek = format(date, 'EEE');
             const dayOfMonth = format(date, 'dd');
             const month = format(date, 'MMM');
-
-            const year = format(date, "yyyy")
+            const year = format(date, "yyyy");
             const isSelected = props.selectedDate && format(props.selectedDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
             const isCurrentDay = isToday(date);
             const formattedDate = format(date, 'MMMM d, yyyy');
             const isFull = fullDates.includes(formattedDate);
-
             return (
               <button
                 key={format(date, 'yyyy-MM-dd')}
@@ -174,10 +152,9 @@ function DatePicker(props)
             );
           })}
         </div>
-
-        {/* Next Week Button */}
+        {/* Next Window Button */}
         <button
-          onClick={handleNextWeek}
+          onClick={handleNextWindow}
           className="p-2 sm:p-3 text-gray-500 hover:text-gray-700 transition-colors duration-200 ease-in-out rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
