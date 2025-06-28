@@ -34,25 +34,10 @@ const TimePicker = (props) =>
         } else {
             props.setSelectedTime(selected);
         }
-
-        const dateFormatted = props.selectedDate
-            ? format(new Date(props.selectedDate), "MMMM d, yyyy")
-            : "No date selected";
-
-
-        const slotsLeft = getSlotAvailability(selected);
-
-        console.log(`📅 Date: ${dateFormatted}`);
-        console.log(`🕒 Time: ${selected}`);
-        console.log(`✅ Slots Available: ${slotsLeft}/12`);
     };
-
 
     const getSlotAvailability = (time) =>
     {
-
-
-        console.log(`✅ Slots Available: ${slotCounts[time]}/12`);
         return slotCounts[time];
     };
 
@@ -199,46 +184,46 @@ const TimePicker = (props) =>
         : timeSlots.slice(4, 8);
 
     return (
-        <div className='flex flex-col justify-evenly items-center h-6/12 w-fit md:mx-10'>
+        <div className='flex flex-col justify-center items-center w-full'>
             {loading ? (
-                <div className="flex flex-col items-center justify-center h-80 w-80">
-                    <img src={kuruKuru} alt="Loading..." className="w-32 h-32 mx-auto" />
+                <div className="flex flex-col items-center justify-center py-12">
+                    <img src={kuruKuru} alt="Loading..." className="w-24 h-24 mx-auto" />
                     <p className="text-lg text-gray-500 mt-4 font-bold">Loading slots...</p>
                 </div>
             ) : props.selectedDate ? (
                 <>
-                    <h1 className='league-font text-[#686868] text-3xl font-medium mb-0'>
+                    <h1 className='league-font text-[#686868] text-2xl sm:text-3xl font-medium mb-6'>
                         Choose your Availability
                     </h1>
                     {errorMsg ? (
-                        <div className="text-red-600 font-semibold text-center mt-0">
+                        <div className="text-red-600 font-semibold text-center mb-4">
                             {errorMsg}
                         </div>
                     ) :
                         !props.selectedTime && (
-                            <div className="text-red-600 font-semibold text-center mt-0">
+                            <div className="text-red-600 font-semibold text-center mb-4">
                                 Please select a slot before scheduling.
                             </div>
                         )
                     }
-                    <div className='flex h-fit league-font w-full justify-between text-sm sm:text-md'>
+                    <div className='flex h-fit league-font w-full justify-center text-sm sm:text-md mb-6'>
                         <button onClick={handleChangePeriod} className='bg-[#BDBDBD] flex transition-all duration-300 rounded-lg shadow-md'>
-                            <div className={`font-bold rounded-l-lg px-4 pt-2 ${isAM ? 'bg-[#CE9D31] text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]'}`}>AM</div>
+                            <div className={`font-bold rounded-l-lg px-4 pt-2 ${isAM ? 'bg-[#E1A500] text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]'}`}>AM</div>
                             <div className={`font-bold rounded-r-lg px-4 pt-2 ${!isAM ? 'bg-purple-400 text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]'}`}>PM</div>
                         </button>
                     </div>
-                    <div className='flex-col flex gap-y-8 text-xs md:text-lg lg:text-xl'>
-                        <div className='flex martian-font gap-x-8'>
+                    <div className='flex-col flex gap-y-6 text-xs md:text-lg lg:text-xl mb-6'>
+                        <div className='flex martian-font gap-x-4 sm:gap-x-8'>
                             {renderButton(displayedTimes[0])}
                             {renderButton(displayedTimes[1])}
                         </div>
-                        <div className='flex martian-font gap-x-8'>
+                        <div className='flex martian-font gap-x-4 sm:gap-x-8'>
                             {renderButton(displayedTimes[2])}
                             {renderButton(displayedTimes[3])}
                         </div>
                     </div>
                     <button
-                        className='bg-[#E1A500] border-[#C68C10] league-font text-lg sm:text-2xl px-13 py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200'
+                        className='bg-[#E1A500] border-[#C68C10] league-font text-lg sm:text-2xl px-8 sm:px-13 py-3 font-bold border-2 text-white rounded-lg hover:bg-amber-600 duration-200'
                         onClick={handleSchedule}
                         disabled={!props.selectedTime}
                     >
@@ -246,7 +231,9 @@ const TimePicker = (props) =>
                     </button>
                 </>
             ) : (
-                <h2 className='text-gray-500 text-lg mt-8'>Please select a date to view available slots.</h2>
+                <div className="text-center py-12">
+                    <h2 className='text-gray-500 text-lg'>Please select a date to view available slots.</h2>
+                </div>
             )}
         </div>
     );

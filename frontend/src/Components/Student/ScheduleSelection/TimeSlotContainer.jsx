@@ -6,8 +6,6 @@ export default function TimeSlotContainer()
 {
     const { date, timePeriod } = useParams();
 
-    const [morningSlot, setMorningSlot] = useState({})
-
     return (
         <div className="p-4 w-full flex items-center justify-center">
             {/*   <h1 className="text-xl font-bold mb-4">Available Time Slots</h1> */}

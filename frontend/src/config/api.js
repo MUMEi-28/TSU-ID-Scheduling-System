@@ -33,11 +33,6 @@ export const API_ENDPOINTS = {
   BOOKING: 'booking.php',
   UPDATE_ADMIN: 'update_admin.php',
   INDEX: 'index.php',
-  // Aliases for backward compatibility
-  getStudents: 'get_students.php',
-  updateAdmin: 'update_admin.php',
-  updateStudent: 'index.php',
-  deleteStudent: 'index.php',
 };
 
 export default apiConfig; 

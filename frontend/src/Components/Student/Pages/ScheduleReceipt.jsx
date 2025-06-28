@@ -50,25 +50,8 @@ const ScheduleReceipt = (props) =>
   };
 
   const handleConfirm = () => {
-    console.log('=== handleConfirm called ===');
-    console.log('isViewingExisting:', isViewingExisting);
-    console.log('props.handleSubmit exists:', !!props.handleSubmit);
-    
     setConfirmed(true);
     localStorage.setItem('confirmedSlot', 'true');
-    
-    // Only call handleSubmit for new users (not for viewing existing appointments)
-    if (props.handleSubmit && !isViewingExisting) {
-        console.log('✅ Calling handleSubmit...');
-        // Create a fake event object since handleSubmit expects one
-        const fakeEvent = { preventDefault: () => {} };
-        props.handleSubmit(fakeEvent);
-    } else {
-        console.log('❌ Not calling handleSubmit because:', {
-            hasHandleSubmit: !!props.handleSubmit,
-            isViewingExisting: isViewingExisting
-        });
-    }
   };
 
   // Remove confirmedSlot flag when leaving the page or logging out
@@ -107,14 +90,14 @@ const ScheduleReceipt = (props) =>
           <div className="flex w-full justify-center gap-2 mb-2">
             <button
               onClick={handleBack}
-              className="bg-[#CE9D31] hover:bg-[#b88a1a] text-white font-bold py-2 px-4 rounded-xl shadow-lg"
+              className="bg-[#E1A500] hover:bg-[#C68C10] text-white font-bold py-2 px-4 rounded-xl shadow-lg border-2 border-[#C68C10] transition-all duration-200"
             >
               {confirmed || isViewingExisting ? 'Back to Home' : 'Back'}
             </button>
             {!confirmed && !isViewingExisting && (
               <button
                 id="downloadBtn"
-                className="px-6 rounded-lg' bg-[#CE9D31] hover:bg-[#5d4e2e] self-center py-3 text-sm sm:text-base md:text-lg istok-font text-white font-bold rounded-xl shadow-lg"
+                className="px-6 rounded-lg bg-[#E1A500] hover:bg-[#C68C10] self-center py-3 text-sm sm:text-base md:text-lg istok-font text-white font-bold rounded-xl shadow-lg border-2 border-[#C68C10] transition-all duration-200"
                 onClick={handleConfirm}
               >
                 Confirm

@@ -157,12 +157,12 @@ function DatePicker(props) {
 
 
   return (
-    <div className='flex-col flex justify-bet items-center h-4/12 w-full lg:w-fit '>
-      <h1 className='font-bold text-4xl text-gray-600 league-font'>
+    <div className='flex flex-col justify-center items-center w-full'>
+      <h1 className='font-bold text-3xl sm:text-4xl text-gray-600 league-font mb-6'>
         Pick a date
       </h1>
 
-      <div className="flex items-center justify-center space-x-2 sm:space-x-4 w-full lg:w-fit">
+      <div className="flex items-center justify-center space-x-2 sm:space-x-4 w-full">
         <button
           onClick={handlePrevWeek}
           className={`p-2 sm:p-3 text-gray-500 transition-colors duration-200 ease-in-out rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300
@@ -175,7 +175,7 @@ function DatePicker(props) {
         </button>
 
         {/* Date Display */}
-        <div className="flex flex-wrap justify-center sm:justify-start shadow-lg shadow-gray-300 w-full sm:w-full xl:h-4/4 ">
+        <div className="flex flex-wrap justify-center sm:justify-start shadow-lg shadow-gray-300 w-full">
           {availableDates.map((date) => {
             // Validate date before rendering
             if (!(date instanceof Date) || isNaN(date.getTime())) {
@@ -195,23 +195,23 @@ function DatePicker(props) {
             return (
               <button
                 key={format(date, 'yyyy-MM-dd')}
-                className={`league-font flex flex-col items-center justify-between w-1/4 sm:h-35 md:h-45 lg:w-40 xl:h-60 transition-all duration-200 ease-in-out
-                  border-4
+                className={`league-font flex flex-col items-center justify-between w-1/4 sm:w-1/4 md:w-1/4 lg:w-1/4 h-24 sm:h-28 md:h-32 lg:h-36 transition-all duration-200 ease-in-out
+                  border-4 rounded-lg
                   ${isSelected ? 'border-red-700 bg-red-50' : 'border-gray-300 bg-gray-100'}
-                  ${isFull ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  ${isFull ? 'opacity-40 cursor-not-allowed' : 'hover:shadow-lg'}`}
                 onClick={() => !isFull && handleDateSelect(date)}
                 disabled={isFull}
               >
-                <div className='text-md sm:text-xl pt-3 font-semibold text-gray-600 mb-3 border-gray-400 w-full h-4/12 flex justify-center items-center bg-neutral-200'>
+                <div className='text-xs sm:text-sm md:text-lg pt-2 font-semibold text-gray-600 mb-1 border-gray-400 w-full flex justify-center items-center bg-neutral-200 rounded-t-sm'>
                   {dayOfWeek}
                 </div>
-                <div className={`text-3xl md:text-4xl lg:text-5xl font-bold flex items-end h-5/12 ${isSelected ? 'text-red-900' : 'text-neutral-500'}`}>
+                <div className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold flex items-end ${isSelected ? 'text-red-900' : 'text-neutral-500'}`}>
                   {dayOfMonth}
                 </div>
-                <div className={`text-sm md:text-xl lg:text-2xl font-mono uppercase h-3/12 ${isSelected ? 'text-red-900' : 'text-gray-500'}`}>
+                <div className={`text-xs sm:text-sm md:text-base lg:text-lg font-mono uppercase ${isSelected ? 'text-red-900' : 'text-gray-500'}`}>
                   {month}
                 </div>
-                <div className={`text-sm md:text-lg lg:text-xl font-mono uppercase h-3/12 ${isSelected ? 'text-red-900' : 'text-gray-400'}`}>
+                <div className={`text-xs sm:text-xs md:text-sm lg:text-base font-mono uppercase ${isSelected ? 'text-red-900' : 'text-gray-400'}`}>
                   {year}
                 </div>
                 {isFull && <div className="text-xs text-red-700 font-bold mt-1">All slots full</div>}

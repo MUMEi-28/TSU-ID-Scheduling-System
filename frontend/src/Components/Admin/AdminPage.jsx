@@ -3,7 +3,6 @@ import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { buildApiUrl, API_ENDPOINTS } from '../../config/api';
 import CustomDropdown from './CustomDropdown';
-import checkImg from '../public/check.png';
 import kuruKuru from '../public/kurukuru-kururing.gif';
 
 // Toast component
@@ -20,15 +19,14 @@ function Toast({ message, type, onClose }) {
 // Lazy load the Calendar component
 const Calendar = React.lazy(() => import('../Student/ScheduleSelection/Calendar'));
 
-const AdminPage = (props) =>
-{
+const AdminPage = (props) => {
     const location = useLocation();
     const [showCalendar, setShowCalendar] = useState(false);
     const [showList, setShowList] = useState(false);
     const [currentScheduleDate, setCurrentScheduleDate] = useState("No Date Chosen");
     const [placeHolderDate, setPlaceHolderDate] = useState("No Date Chosen");
     const [selectedTime, setSelectedTime] = useState("No Time Chosen");
-    const [students, setStudents] = useState([]); // 📌 This will hold the fetched data
+    const [students, setStudents] = useState([]);
     const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
     const [showChangeCredentials, setShowChangeCredentials] = useState(false);
     const [adminFullname, setAdminFullname] = useState("");
@@ -37,6 +35,11 @@ const AdminPage = (props) =>
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
     const [editRowId, setEditRowId] = useState(null);
     const [editData, setEditData] = useState({});
+    
+    // New state for modals
+    const [detailModal, setDetailModal] = useState({ show: false, student: null });
+    const [editModal, setEditModal] = useState({ show: false, student: null, data: {} });
+    
     // Toast state
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     // Confirmation modal state
@@ -54,6 +57,20 @@ const AdminPage = (props) =>
     const [isLoading, setIsLoading] = useState(true);
     const [isFiltering, setIsFiltering] = useState(false);
 
+    // Header state
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    // ID reason options for editing
+    const idReasonOptions = [
+        { value: 're_id', label: 'Re-ID' },
+        { value: 'lost_id', label: 'Lost ID' },
+        { value: 'masters_doctors_law', label: 'Masters/Doctors/School of Law' }
+    ];
+
+    const toggleMenu = () => {
+        setIsMenuOpen(!isMenuOpen);
+    };
+
     // Fetch students from backend on mount
     useEffect(() => {
         setIsLoading(true);
@@ -66,17 +83,15 @@ const AdminPage = (props) =>
         if (Date.now() - timestamp < 30000) { // 30 seconds
           setStudents(data);
           shouldFetch = false;
-                // Still show loading for 5 seconds even with cache
                 setTimeout(() => setIsLoading(false), 5000);
             }
         }
         
       if (shouldFetch) {
-        axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
+            axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
           .then(response => {
                 setStudents(response.data);
             localStorage.setItem(cacheKey, JSON.stringify({ data: response.data, timestamp: Date.now() }));
-                    // Show loading for 5 seconds
                     setTimeout(() => setIsLoading(false), 5000);
             })
           .catch(error => {
@@ -91,7 +106,6 @@ const AdminPage = (props) =>
     useEffect(() => {
         if (!isLoading && currentScheduleDate !== "No Date Chosen") {
             setIsFiltering(true);
-            // Simulate loading time for filtering
             setTimeout(() => setIsFiltering(false), 2000);
         }
     }, [currentScheduleDate, selectedTime, isLoading]);
@@ -104,38 +118,98 @@ const AdminPage = (props) =>
       }
     }, [toast.show]);
 
+    // Modal functions
+    const showStudentDetails = (student) => {
+        setDetailModal({ show: true, student });
+    };
+
+    const showEditModal = (student) => {
+        setEditModal({ 
+            show: true, 
+            student, 
+            data: { 
+                fullname: student.fullname,
+                student_number: student.student_number,
+                email: student.email || '',
+                id_reason: student.id_reason || 're_id'
+            }
+        });
+    };
+
+    const handleEditChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setEditModal(prev => ({
+            ...prev,
+            data: {
+                ...prev.data,
+                [name]: type === 'checkbox' ? checked : value
+            }
+        }));
+    };
+
+    const handleEditSave = async () => {
+        setIsLoading(true);
+        try {
+            const updateData = {
+                id: editModal.student.id,
+                fullname: editModal.data.fullname,
+                student_number: editModal.data.student_number,
+                email: editModal.data.email,
+                id_reason: editModal.data.id_reason
+            };
+            
+            await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), updateData, {
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            setEditModal({ show: false, student: null, data: {} });
+            setToast({ show: true, message: 'Student updated successfully!', type: 'success' });
+            invalidateStudentCache();
+            
+            // Refresh the students list
+            const response = await axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS));
+            setStudents(response.data);
+            localStorage.setItem('admin_students_cache', JSON.stringify({ 
+                data: response.data, 
+                timestamp: Date.now() 
+            }));
+        } catch (err) {
+            setToast({ show: true, message: 'Failed to update student', type: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Existing functions (keep all your existing functions here)
     const HandleChangeDate = () => setShowCalendar(true);
     const HandleShowList = () => setShowList(true);
 
     const handleDownloadList = () => {
         setShowList(false);
         if (currentScheduleDate === "No Date Chosen") {
-            // Generate all students data
             setToast({ show: true, message: 'Generating complete student list...', type: 'success' });
-            // Here you can add logic to download all students data
             downloadAllStudentsData();
         } else {
             setToast({ show: true, message: `Generating list for ${currentScheduleDate}, ${selectedTime}`, type: 'success' });
-            // Here you can add logic to download filtered students data
             downloadFilteredStudentsData();
         }
     };
 
     const downloadAllStudentsData = () => {
-        // Filter out admin and create CSV data
         const allStudents = students.filter(student => student.id !== 1);
         const csvData = [
-            ['Name', 'Student Number', 'Date', 'Time', 'Status'],
+            ['Name', 'Student Number', 'Email', 'ID Reason', 'Date', 'Time', 'Status'],
             ...allStudents.map(student => [
                 student.fullname,
                 student.student_number,
+                student.email || 'N/A',
+                student.id_reason || 'N/A',
                 student.schedule_date || 'Not scheduled',
                 student.schedule_time || 'Not scheduled',
                 student.status || 'pending'
             ])
         ];
         
-        // Convert to CSV and download
         const csvContent = csvData.map(row => row.join(',')).join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
@@ -147,7 +221,6 @@ const AdminPage = (props) =>
     };
 
     const downloadFilteredStudentsData = () => {
-        // Download filtered students data
         const filteredData = students.filter(student => 
             student.id !== 1 && 
             student.schedule_date === currentScheduleDate && 
@@ -155,10 +228,12 @@ const AdminPage = (props) =>
         );
         
         const csvData = [
-            ['Name', 'Student Number', 'Date', 'Time', 'Status'],
+            ['Name', 'Student Number', 'Email', 'ID Reason', 'Date', 'Time', 'Status'],
             ...filteredData.map(student => [
                 student.fullname,
                 student.student_number,
+                student.email || 'N/A',
+                student.id_reason || 'N/A',
                 student.schedule_date,
                 student.schedule_time,
                 student.status || 'pending'
@@ -180,13 +255,11 @@ const AdminPage = (props) =>
         if (!selectedCalendarDate) return;
         const realDate = new Date(selectedCalendarDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         setCurrentScheduleDate(realDate);
-        // Show filtering loading
         setIsFiltering(true);
         setTimeout(() => setIsFiltering(false), 2000);
     };
 
-    useEffect(() =>
-    {
+    useEffect(() => {
         const urlSegments = location.pathname.split('/');
         const dateNumerical = urlSegments[urlSegments.length - 1];
         const dateObject = new Date(dateNumerical);
@@ -196,50 +269,32 @@ const AdminPage = (props) =>
 
     // Search, filter, and paginate students
     const filteredStudents = students.filter(student => {
-      // Exclude admin (id=1) from the table
       if (student.id === 1) return false;
       
-      const matchesSearch =
-        student.fullname.toLowerCase().includes(search.toLowerCase()) ||
-        student.student_number.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = filterStatus === 'all' ? true : (student.status === filterStatus);
-      
-      // Show all students when no specific date is selected
-      let matchesDate = true;
-      
-      // Only apply date/time filtering if a specific date is selected AND it's not "No Date Chosen"
-      if (currentScheduleDate && currentScheduleDate !== "No Date Chosen") {
-        // If time is "No Time Chosen", only filter by date
-        if (selectedTime && selectedTime !== "No Time Chosen") {
-          matchesDate = student.schedule_date === currentScheduleDate && student.schedule_time === selectedTime;
-        } else {
-          matchesDate = student.schedule_date === currentScheduleDate;
-        }
-      }
-      
-      return matchesSearch && matchesStatus && matchesDate;
+        const matchesSearch = student.fullname.toLowerCase().includes(search.toLowerCase()) ||
+                             student.student_number.includes(search) ||
+                             (student.email && student.email.toLowerCase().includes(search.toLowerCase()));
+        
+        const matchesStatus = filterStatus === 'all' || student.status === filterStatus;
+        
+        return matchesSearch && matchesStatus;
     });
+
     const totalPages = Math.ceil(filteredStudents.length / perPage);
-    const paginatedStudents = filteredStudents.slice((page - 1) * perPage, page * perPage);
+    const startIndex = (page - 1) * perPage;
+    const paginatedStudents = filteredStudents.slice(startIndex, startIndex + perPage);
 
-    // Add this for debugging
-    useEffect(() => {
-        console.log('Students loaded:', students.length);
-        console.log('Current schedule date:', currentScheduleDate);
-        console.log('Selected time:', selectedTime);
-        console.log('Filtered students:', filteredStudents.length);
-    }, [students, currentScheduleDate, selectedTime, filteredStudents]);
-
+    // Existing CRUD functions (keep all your existing functions)
     const handleOpenChangeCredentials = () => {
         setShowChangeCredentials(true);
         setChangeStatus("");
     };
+
     const handleCloseChangeCredentials = () => {
         setShowChangeCredentials(false);
-        setAdminFullname("");
-        setAdminStudentNumber("");
         setChangeStatus("");
     };
+
     const handleChangeCredentials = async (e) => {
         e.preventDefault();
         setChangeStatus("");
@@ -265,6 +320,7 @@ const AdminPage = (props) =>
             setToast({ show: true, message: 'Error updating credentials', type: 'error' });
         }
     };
+
     const handleLogoutClick = () => {
         setConfirmModal({
           show: true,
@@ -277,38 +333,38 @@ const AdminPage = (props) =>
         });
     };
 
-    // CRUD handlers
     const handleEditClick = (student) => {
         setEditRowId(student.id);
         setEditData({ ...student });
     };
-    const handleEditChange = (e) => {
+
+    const handleEditChangeOld = (e) => {
         setEditData({ ...editData, [e.target.name]: e.target.value });
     };
-    const handleEditSave = async () => {
+
+    const handleEditSaveOld = async () => {
         setConfirmModal({
           show: true,
           action: async () => {
             setIsLoading(true);
             try {
-              // Only send editable fields (name and student number)
               const updateData = {
                 id: editData.id,
                 fullname: editData.fullname,
                 student_number: editData.student_number
               };
               
-              await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), updateData, {
+                    await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), updateData, {
                 headers: { 'Content-Type': 'application/json' }
               });
               setEditRowId(null);
               setToast({ show: true, message: 'Student updated successfully!', type: 'success' });
               invalidateStudentCache();
-              axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
+                    axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
                 .then(response => {
                   setStudents(response.data);
                   localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
-                  setTimeout(() => setIsLoading(false), 2000); // 2 seconds for updates
+                            setTimeout(() => setIsLoading(false), 2000);
                 });
             } catch (err) {
               setToast({ show: true, message: 'Failed to update student', type: 'error' });
@@ -319,23 +375,25 @@ const AdminPage = (props) =>
           message: 'Are you sure you want to save these changes?'
         });
     };
+
     const handleEditCancel = () => {
         setEditRowId(null);
         setEditData({});
     };
+
     const handleDelete = (id) => {
         setConfirmModal({
           show: true,
           action: async () => {
             setIsLoading(true);
             try {
-              await axios.delete(buildApiUrl(API_ENDPOINTS.INDEX), {
+                    await axios.delete(buildApiUrl(API_ENDPOINTS.INDEX), {
                 data: { id },
                 headers: { 'Content-Type': 'application/json' }
               });
               setToast({ show: true, message: 'Student deleted successfully!', type: 'success' });
               invalidateStudentCache();
-              axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
+                    axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
                 .then(response => {
                   setStudents(response.data);
                   localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
@@ -350,6 +408,7 @@ const AdminPage = (props) =>
           message: 'Are you sure you want to delete this student? This action cannot be undone.'
         });
     };
+
     const handleToggleStatus = async (student) => {
         const newStatus = student.status === 'done' ? 'pending' : 'done';
         await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), { ...student, status: newStatus }, {
@@ -369,12 +428,12 @@ const AdminPage = (props) =>
           show: true,
           action: async () => {
             try {
-              await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), { ...student, status: 'cancelled' }, {
+                    await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), { ...student, status: 'cancelled' }, {
                 headers: { 'Content-Type': 'application/json' }
               });
               setToast({ show: true, message: 'Student marked as cancelled', type: 'success' });
               invalidateStudentCache();
-              axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
+                    axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
                 .then(response => {
                   setStudents(response.data);
                   localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
@@ -436,7 +495,6 @@ const AdminPage = (props) =>
     };
 
     const handleDateChange = (e) => {
-        // Convert HTML date input (YYYY-MM-DD) to database format (Month Day, Year)
         const date = new Date(e.target.value);
         const formattedDate = date.toLocaleDateString('en-US', { 
             month: 'long', 
@@ -446,7 +504,6 @@ const AdminPage = (props) =>
         setRescheduleDate(formattedDate);
     };
 
-    // Invalidate cache on student edit, delete, or status change
     const invalidateStudentCache = () => {
       localStorage.removeItem('admin_students_cache');
     };
@@ -467,13 +524,12 @@ const AdminPage = (props) =>
 
     // Calculate pagination with sliding window
     const getPaginationRange = () => {
-        const windowSize = 5; // Show 5 page numbers at a time
+        const windowSize = 5;
         const halfWindow = Math.floor(windowSize / 2);
         
         let startPage = Math.max(1, page - halfWindow);
         let endPage = Math.min(totalPages, startPage + windowSize - 1);
         
-        // Adjust start if we're near the end
         if (endPage - startPage < windowSize - 1) {
             startPage = Math.max(1, endPage - windowSize + 1);
         }
@@ -483,10 +539,8 @@ const AdminPage = (props) =>
 
     const { startPage, endPage } = getPaginationRange();
 
-    // Add loading when time changes
     const handleTimeChange = (newTime) => {
         setSelectedTime(newTime);
-        // Only show loading if a specific date is selected and time is not "No Time Chosen"
         if (currentScheduleDate !== "No Date Chosen" && newTime !== "No Time Chosen") {
             setIsFiltering(true);
             setTimeout(() => setIsFiltering(false), 1500);
@@ -494,7 +548,87 @@ const AdminPage = (props) =>
     };
 
     return (
-        <div className="min-h-screen w-full overflow-x-hidden flex flex-col lg:flex-row">
+        <div className="min-h-screen w-full overflow-x-hidden flex flex-col">
+            {/* Header */}
+            <header className='w-full bg-gradient-to-bl from-[#641500] from-100% to-[#CA2A00] to-0% py-4 px-6 shadow-lg relative z-40'>
+                <div className='flex justify-between items-center'>
+                    {/* Logo/Title */}
+                    <div className='flex items-center space-x-4'>
+                        <div className='text-white league-font'>
+                            <h1 className='text-2xl sm:text-3xl md:text-4xl font-bold m-0'>2025</h1>
+                            <h2 className='text-sm sm:text-lg md:text-xl font-bold m-0'>Calendar</h2>
+                            <h3 className='text-xs sm:text-sm md:text-base font-sans m-0'>TSU ID</h3>
+                            <h4 className='text-xs sm:text-sm md:text-base font-sans m-0'>Scheduling</h4>
+                            <h5 className='text-xs sm:text-sm md:text-base font-sans m-0'>System</h5>
+                        </div>
+                    </div>
+
+                    {/* Desktop Navigation */}
+                    <div className='hidden sm:flex items-center space-x-4'>
+                        <button
+                            onClick={HandleChangeDate}
+                            className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-4 py-2 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold"
+                        >
+                            Change Date
+                        </button>
+                        <button
+                            onClick={HandleShowList}
+                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+                        >
+                            Download List
+                        </button>
+                        <button
+                            onClick={handleLogoutClick}
+                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+                        >
+                            Logout
+                        </button>
+                    </div>
+
+                    {/* Mobile Hamburger Menu */}
+                    <div className='sm:hidden'>
+                        <button
+                            onClick={toggleMenu}
+                            className='text-white p-2 rounded-lg hover:bg-white/10 transition-all duration-200'
+                            aria-label="Toggle menu"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {isMenuOpen ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                ) : (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                )}
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Mobile Menu Dropdown */}
+                {isMenuOpen && (
+                    <div className='sm:hidden absolute top-full left-0 right-0 bg-gradient-to-bl from-[#641500] from-100% to-[#CA2A00] to-0% shadow-lg border-t border-white/20'>
+                        <div className='flex flex-col space-y-3 p-4'>
+                            <button
+                                onClick={HandleChangeDate}
+                                className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-4 py-3 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold w-full text-center"
+                            >
+                                Change Date
+                            </button>
+                            <button
+                                onClick={HandleShowList}
+                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg w-full text-center"
+                            >
+                                Download List
+                            </button>
+                            <button
+                                onClick={handleLogoutClick}
+                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg w-full text-center"
+                            >
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </header>
 
             {/* Loading Overlay - Initial Load */}
             {isLoading && (
@@ -524,6 +658,7 @@ const AdminPage = (props) =>
 
             {/* Toast Notification */}
             {toast.show && <Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />}
+            
             {/* Confirmation Modal */}
             <ConfirmModal
               show={confirmModal.show}
@@ -534,287 +669,194 @@ const AdminPage = (props) =>
               }}
               onCancel={() => setConfirmModal({ ...confirmModal, show: false })}
             />
-            {/* Calendar Modal */}
-                {showCalendar && (
-                    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-20">
-                        <div className="bg-white p-6 opacity-100 rounded-lg shadow-xl h-fit flex flex-col justify-center items-center text-2xl">
-                            <Suspense fallback={<div className='text-xl font-bold text-gray-600'>Loading calendar...</div>}>
-                              <Calendar onDateSelect={setSelectedCalendarDate} onClose={() => setShowCalendar(false)} />
-                            </Suspense>
-                            <hr />
+
+            {/* Detail Modal */}
+            {detailModal.show && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold">Student Details</h2>
                             <button
-                                onClick={HandleDateReplace}
-                                className="w-full p-5 text-2xl bg-red-500 text-white rounded-md hover:bg-red-600"
+                                onClick={() => setDetailModal({ show: false, student: null })}
+                                className="text-gray-500 hover:text-gray-700 text-2xl"
                             >
-                                Change Date to: {selectedCalendarDate ? new Date(selectedCalendarDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'No Date Selected'}
+                                ✕
                             </button>
                         </div>
-                    </div>
-                )}
-
-                {/* Generate List Popup - Improved Design */}
-                {showList && (
-                    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-20">
-                        <div className="bg-white p-8 rounded-lg shadow-xl w-96 flex flex-col justify-center items-center border-2 border-gray-200">
-                            <h1 className="text-3xl font-bold mb-6 text-gray-800">Generate List</h1>
-                            
-                            {currentScheduleDate === "No Date Chosen" ? (
-                                <div className="text-center mb-6">
-                                    <p className="text-lg text-gray-600 mb-2">Generate complete student list</p>
-                                    <p className="text-sm text-gray-500">All students will be included in the download</p>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div><strong>Name:</strong> {detailModal.student.fullname}</div>
+                            <div><strong>Student Number:</strong> {detailModal.student.student_number}</div>
+                            <div><strong>Email:</strong> {detailModal.student.email || 'N/A'}</div>
+                            <div><strong>ID Reason:</strong> {detailModal.student.id_reason || 'N/A'}</div>
+                            <div><strong>Schedule Date:</strong> {detailModal.student.schedule_date || 'Not scheduled'}</div>
+                            <div><strong>Schedule Time:</strong> {detailModal.student.schedule_time || 'Not scheduled'}</div>
+                            <div><strong>Status:</strong> 
+                                <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${
+                                    detailModal.student.status === 'done' ? 'bg-green-100 text-green-800' :
+                                    detailModal.student.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                    'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                    {detailModal.student.status}
+                                </span>
                                 </div>
-                            ) : (
-                                <div className="text-center mb-6">
-                                    <p className="text-lg text-gray-600 mb-2">Generate filtered list</p>
-                                    <div className="bg-gray-100 p-4 rounded-lg">
-                                        <p className="text-sm font-semibold text-gray-700">Date: {currentScheduleDate}</p>
-                                        <p className="text-sm font-semibold text-gray-700">Time: {selectedTime}</p>
+                            <div><strong>Privacy Agreed:</strong> {detailModal.student.data_privacy_agreed ? 'Yes' : 'No'}</div>
+                            <div><strong>Created:</strong> {detailModal.student.created_at ? new Date(detailModal.student.created_at).toLocaleDateString() : 'N/A'}</div>
+                            <div><strong>Updated:</strong> {detailModal.student.updated_at ? new Date(detailModal.student.updated_at).toLocaleDateString() : 'N/A'}</div>
                                     </div>
-                                </div>
-                            )}
                             
-                            <div className="flex gap-4">
+                        <div className="flex gap-2 justify-end">
                             <button
-                                onClick={handleDownloadList}
-                                    className="px-6 py-3 bg-green-600 text-white rounded-lg font-bold text-lg hover:bg-green-700 transition-colors"
-                                >
-                                    Download CSV
+                                onClick={() => {
+                                    setDetailModal({ show: false, student: null });
+                                    showEditModal(detailModal.student);
+                                }}
+                                className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-4 py-2 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold"
+                            >
+                                Edit Student
                                 </button>
                                 <button
-                                    onClick={() => setShowList(false)}
-                                    className="px-6 py-3 bg-gray-400 text-white rounded-lg font-bold text-lg hover:bg-gray-500 transition-colors"
+                                onClick={() => setDetailModal({ show: false, student: null })}
+                                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
                                 >
-                                    Cancel
+                                Close
                             </button>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* Change Credentials Modal */}
-                {showChangeCredentials && (
-                    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-30">
-                        <div className="bg-white p-8 rounded-lg shadow-xl flex flex-col items-center w-96 relative">
-                            {showSuccessPopup && (
-                                <div className="fixed inset-0 flex items-center justify-center z-50">
-                                    <div className="flex flex-col items-center bg-green-600 text-white px-8 py-8 rounded-lg shadow-2xl text-lg font-bold">
-                                        <img src={checkImg} alt="check" className="w-16 h-16 mb-4" />
-                                        Credentials successfully updated!
+            {/* Edit Modal */}
+            {editModal.show && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold">Edit Student</h2>
+                            <button 
+                                onClick={() => setEditModal({ show: false, student: null, data: {} })}
+                                className="text-gray-500 hover:text-gray-700 text-2xl"
+                            >
+                                ✕
+                            </button>
                                     </div>
-                                </div>
-                            )}
-                            <h2 className="text-2xl font-bold mb-4">Change Admin Credentials</h2>
-                            <form onSubmit={handleChangeCredentials} className="flex flex-col gap-4 w-full">
-                                <input
-                                    type="text"
-                                    placeholder="Full Name (Username)"
-                                    value={adminFullname}
-                                    onChange={e => setAdminFullname(e.target.value)}
-                                    className="border p-2 rounded w-full"
-                                    required
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Student Number (Password)"
-                                    value={adminStudentNumber}
-                                    onChange={e => setAdminStudentNumber(e.target.value)}
-                                    className="border p-2 rounded w-full"
-                                    required
-                                />
-                                <div className="flex justify-center gap-4 mt-2">
-                                    <button
-                                        type="submit"
-                                        className="w-fit text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:text-bold hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-8 py-2 text-lg"
-                                    >
-                                        Update
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={handleCloseChangeCredentials}
-                                        className="w-fit text-center duration-150 rounded-md border-2 border-gray-400 bg-gray-200 text-gray-800 hover:bg-gray-300 hover:text-black px-8 py-2 text-lg"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
-                            {changeStatus && !showSuccessPopup && <div className="mt-4 text-center text-lg font-semibold">{changeStatus}</div>}
-                        </div>
-                    </div>
-                )}
-
-            {/* Reschedule Modal */}
-            {showRescheduleModal && (
-                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-30">
-                    <div className="bg-white p-8 rounded-lg shadow-xl flex flex-col items-center w-96 relative">
-                        <h2 className="text-2xl font-bold mb-4">Reschedule Student</h2>
-                        <div className="w-full mb-4">
-                            <p className="text-sm text-gray-600 mb-2">
-                                <strong>Student:</strong> {rescheduleStudent?.fullname}
-                            </p>
-                            <p className="text-sm text-gray-600 mb-4">
-                                <strong>Student Number:</strong> {rescheduleStudent?.student_number}
-                            </p>
-                        </div>
                         
-                        <div className="w-full mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                New Date
-                            </label>
+                        <form onSubmit={(e) => { e.preventDefault(); handleEditSave(); }}>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                <input
+                                    type="text"
+                                        name="fullname"
+                                        value={editModal.data.fullname}
+                                        onChange={handleEditChange}
+                                        className="w-full p-2 border border-gray-300 rounded-lg"
+                                    required
+                                />
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Student Number</label>
+                                <input
+                                    type="text"
+                                        name="student_number"
+                                        value={editModal.data.student_number}
+                                        onChange={handleEditChange}
+                                        className="w-full p-2 border border-gray-300 rounded-lg"
+                                    required
+                                />
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                             <input
-                                type="date"
-                                onChange={handleDateChange}
-                                className="border border-gray-400 rounded-lg px-4 py-2 w-full"
+                                        type="email"
+                                        name="email"
+                                        value={editModal.data.email}
+                                        onChange={handleEditChange}
+                                        className="w-full p-2 border border-gray-300 rounded-lg"
                                 required
                             />
-                            {rescheduleDate && (
-                                <p className="text-sm text-gray-600 mt-1">
-                                    Selected: {rescheduleDate}
-                                </p>
-                            )}
                         </div>
 
-                        <div className="w-full mb-6">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                New Time
-                            </label>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">ID Reason</label>
                             <select
-                                value={rescheduleTime}
-                                onChange={(e) => setRescheduleTime(e.target.value)}
-                                className="border border-gray-400 rounded-lg px-4 py-2 w-full"
+                                        name="id_reason"
+                                        value={editModal.data.id_reason}
+                                        onChange={handleEditChange}
+                                        className="w-full p-2 border border-gray-300 rounded-lg"
                                 required
                             >
-                                <option value="8:00am - 9:00am">8:00am - 9:00am</option>
-                                <option value="9:00am - 10:00am">9:00am - 10:00am</option>
-                                <option value="10:00am - 11:00am">10:00am - 11:00am</option>
-                                <option value="11:00am - 12:00pm">11:00am - 12:00pm</option>
-                                <option value="1:00pm - 2:00pm">1:00pm - 2:00pm</option>
-                                <option value="2:00pm - 3:00pm">2:00pm - 3:00pm</option>
-                                <option value="3:00pm - 4:00pm">3:00pm - 4:00pm</option>
-                                <option value="4:00pm - 5:00pm">4:00pm - 5:00pm</option>
+                                        {idReasonOptions.map(option => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
                             </select>
+                                </div>
                         </div>
 
-                        <div className="flex justify-center gap-4 w-full">
+                            <div className="flex gap-2 justify-end mt-6">
                             <button
-                                onClick={handleRescheduleSave}
-                                className="bg-green-600 text-white px-6 py-2 rounded-lg font-bold text-lg hover:bg-green-800"
+                                    type="button"
+                                    onClick={() => setEditModal({ show: false, student: null, data: {} })}
+                                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
                             >
-                                Reschedule
+                                    Cancel
                             </button>
                             <button
-                                onClick={handleRescheduleCancel}
-                                className="bg-gray-400 text-white px-6 py-2 rounded-lg font-bold text-lg hover:bg-gray-600"
+                                    type="submit"
+                                    className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-4 py-2 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold"
                             >
-                                Cancel
+                                    Save Changes
                             </button>
                         </div>
+                        </form>
                     </div>
                 </div>
             )}
-            {/* Sidebar */}
-            <div className="hidden lg:flex w-3/12 h-screen relative flex-col justify-center items-center gap-5">
-                <h1 className="hidden lg:block absolute border-2 left-0 top-6 sm:top-10 text-[clamp(1.25rem,3cqw,2rem)] px-6 sm:px-14 py-1 bg-[#971212] text-white">
-  Admin
-</h1>
 
-
-                    <h1 className="text-[clamp(1.25rem,3cqw,2rem)] ml-4 sm:ml-14 mt-24 font-bold">Scheduled Time</h1>
-                <CustomDropdown selectedTime={selectedTime} setSelectedTime={handleTimeChange} />
-
-                {/* Change Date Button */}
-                <div className="flex flex-col items-center gap-2 mt-8 sm:mt-10 ml-4 sm:ml-14">
-                    <p className="text-[clamp(1rem,2.5cqw,1.25rem)]">Change Date</p>
+            {/* Calendar Modal */}
+            {showCalendar && (
+                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-20">
+                    <div className="bg-white p-6 opacity-100 rounded-lg shadow-xl h-fit flex flex-col justify-center items-center text-2xl">
+                        <Suspense fallback={<div className='text-xl font-bold text-gray-600'>Loading calendar...</div>}>
+                            <Calendar onDateSelect={setSelectedCalendarDate} onClose={() => setShowCalendar(false)} />
+                        </Suspense>
+                        <hr />
                     <button
-                        onClick={HandleChangeDate}
-                        className="w-[200px] sm:w-[250px] text-center duration-150 border-2 text-white bg-[#AC0000] hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] 
-                            px-4 py-2 text-[clamp(1rem,2.5cqw,1.25rem)] rounded-md"
-
-                    >
-                        {currentScheduleDate}
+                            onClick={HandleDateReplace}
+                            className="w-full p-5 text-2xl bg-red-500 text-white rounded-md hover:bg-red-600"
+                        >
+                            Change Date to: {selectedCalendarDate ? new Date(selectedCalendarDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'No Date Selected'}
                     </button>
                 </div>
-
-
-                {/* Show All Students Button */}
-                <div className="flex flex-col items-center gap-2 mt-4 ml-12">
-                    <button
-                        onClick={() => {
-                            setIsFiltering(true);
-                            setCurrentScheduleDate("No Date Chosen");
-                            setSelectedTime("No Time Chosen");
-                            setTimeout(() => setIsFiltering(false), 2000);
-                        }}
-                        className="w-[200px] sm:w-[250px] text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:font-bold 
-                        hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-4 py-2 text-[clamp(1rem,2.5cqw,1.25rem)]">
-                    
-                        Show All Students
-                    </button>
                 </div>
+            )}
 
-                {/* Generate List Button - Consistent with other buttons */}
-                <div className="flex flex-col items-center gap-2 mt-4 ml-12">
-                    <button
-                        onClick={HandleShowList}
-                        className="w-[200px] sm:w-[250px] text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:font-bold 
-                        hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-4 py-2 text-[clamp(1rem,2.5cqw,1.25rem)]">
-                        Generate List
-                    </button>
-                </div>
-
-                {/* Change Admin Credentials Button */}
-                <div className="flex flex-col items-center gap-2 mt-0 ml-12">
-                    <button
-                        onClick={handleOpenChangeCredentials}
-                        className="w-[200px] sm:w-[250px] text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:font-bold 
-                        hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-4 py-2 text-[clamp(1rem,2.5cqw,1.25rem)]">
-                        Change Admin Credentials
-                    </button>
-                </div>
-
-                {/* Logout Button */}
-                <div className="flex flex-col items-center gap-2 mt-0 ml-12">
-                    <button
-                        onClick={handleLogoutClick}
-                        className="w-[200px] sm:w-[250px] text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:font-bold 
-                        hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-4 py-2 text-[clamp(1rem,2.5cqw,1.25rem)]">
-                        Logout
-                    </button>
-                </div>
-            </div>
-
-            {/* Main Content Area */}
-            <div className="w-9/12 h-screen flex flex-col">
-                
-                {/* Filter Status Indicator */}
-                    <div className="ml-6 mt-6 mr-6 mb-4 p-3 bg-gray-100 rounded-lg text-[clamp(0.8rem,2cqw,1rem)]">
-                        <p className="text-sm text-gray-600">
-                            <strong>Current Filter:</strong> 
-                            {currentScheduleDate === "No Date Chosen" 
-                                ? " Showing all students" 
-                                : ` ${currentScheduleDate}${selectedTime !== "No Time Chosen" ? `, ${selectedTime}` : ''}`}
-                            {filterStatus !== 'all' && ` | Status: ${filterStatus}`}
-                            {search && ` | Search: "${search}"`}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Showing {filteredStudents.length} of {students.filter(s => s.id !== 1).length} students
-                            {currentScheduleDate !== "No Date Chosen" && 
-                                (selectedTime !== "No Time Chosen" ? ' for selected date/time' : ' for selected date')}
-                        </p>
-                    </div>
-
-                    {/* Search and Filter Controls */}
-                    <div className="flex flex-row md:items-center md:justify-between ml-6 mt-3 mb-2 mr-6 sm:mr-0 gap-4">
+            {/* Main content */}
+            <div className="flex-1 p-6">
+                {/* Filters */}
+                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
                         <input
                             type="text"
-                            placeholder="Search by name or student number..."
+                                placeholder="Search by name, student number, or email..."
                             value={search}
-                            onChange={e => { setSearch(e.target.value); setPage(1); }}
-                            className="border border-gray-400 rounded-lg px-4 py-2 w-full md:w-1/3"
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-lg"
                         />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Status Filter</label>
                         <select
                             value={filterStatus}
-                            onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
-                            className="lg:w-75 w-82 sm:w-[250px] sm:mr-6 px-4 py-2 bg-white text-gray-700 rounded-md font-semibold text-sm border-2 border-gray-300 hover:border-gray-400 focus:outline-none focus:border-[#AC0000]">
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-lg"
+                            >
                             <option value="all">All Status</option>
                             <option value="pending">Pending</option>
                             <option value="done">Done</option>
@@ -822,228 +864,181 @@ const AdminPage = (props) =>
                         </select>
                     </div>
 
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Current Date</label>
+                            <div className="p-2 bg-gray-100 rounded-lg">
+                                {currentScheduleDate}
+                            </div>
+                        </div>
                         
-                {/* Table Container - Fixed height with scroll */}
-                <div className="flex-1 p-6 flex flex-col-reverse lg:flex-col gap-4">
-                    
-                    {/* Table with fixed height and scroll */}
-                    <div className="flex-1 overflow-hidden flex flex-col">
-                        <div className="flex-1 overflow-x-auto overflow-y-auto lg:overflow-x-visible">
-                    <table className="w-full text-center border border-gray-300">
-                                <thead className="bg-[#971212] text-white text-lg sticky top-0">
-                            <tr>
-                                <th className="py-3 border">Name</th>
-                                <th className="py-3 border">Student Number</th>
-                                <th className="py-3 border">Date</th>
-                                <th className="py-3 border">Time</th>
-                                <th className="py-3 border">Status</th>
-                                <th className="py-3 border">Actions</th>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Current Time</label>
+                            <CustomDropdown
+                                options={[
+                                    "No Time Chosen",
+                                    "8:00am - 9:00am",
+                                    "9:00am -10:00am",
+                                    "10:00am-11:00am",
+                                    "11:00am-12:00pm",
+                                    "1:00pm - 2:00pm",
+                                    "2:00pm - 3:00pm",
+                                    "3:00pm - 4:00pm",
+                                    "4:00pm - 5:00pm"
+                                ]}
+                                value={selectedTime}
+                                onChange={handleTimeChange}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Table */}
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="py-3 px-4 text-left font-semibold text-gray-700">Name</th>
+                                    <th className="py-3 px-4 text-left font-semibold text-gray-700">Student Number</th>
+                                    <th className="py-3 px-4 text-left font-semibold text-gray-700">Schedule Date</th>
+                                    <th className="py-3 px-4 text-left font-semibold text-gray-700">Schedule Time</th>
+                                    <th className="py-3 px-4 text-left font-semibold text-gray-700">Status</th>
+                                    <th className="py-3 px-4 text-left font-semibold text-gray-700">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                                    {paginatedStudents.length > 0 ? (
-                                paginatedStudents.map((student, index) => (
-                                    <tr key={index} className="hover:bg-gray-100">
-                                        {editRowId === student.id ? (
-                                            <>
-                                                <td className="py-2 border"><input name="fullname" value={editData.fullname} onChange={handleEditChange} className="border p-1 rounded w-full" /></td>
-                                                <td className="py-2 border"><input name="student_number" value={editData.student_number} onChange={handleEditChange} className="border p-1 rounded w-full" /></td>
-                                                <td className="py-2 border">{editData.schedule_date}</td>
-                                                <td className="py-2 border">{editData.schedule_time}</td>
-                                                <td className="py-2 border">
-                                                    <span className={
-                                                        editData.status === 'done' ? 'bg-green-200 text-green-800 px-2 py-1 rounded' : 
-                                                        editData.status === 'cancelled' ? 'bg-red-200 text-red-800 px-2 py-1 rounded' :
-                                                        'bg-yellow-200 text-yellow-800 px-2 py-1 rounded'
-                                                    }>
-                                                    {editData.status || 'pending'}
+                                {paginatedStudents.map((student, index) => (
+                                    <tr 
+                                        key={student.id} 
+                                        className="border-b hover:bg-gray-50 cursor-pointer"
+                                        onClick={() => showStudentDetails(student)}
+                                    >
+                                        <td className="py-3 px-4">{student.fullname}</td>
+                                        <td className="py-3 px-4">{student.student_number}</td>
+                                        <td className="py-3 px-4">{student.schedule_date || 'Not scheduled'}</td>
+                                        <td className="py-3 px-4">{student.schedule_time || 'Not scheduled'}</td>
+                                        <td className="py-3 px-4">
+                                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                                student.status === 'done' ? 'bg-green-100 text-green-800' :
+                                                student.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                                'bg-yellow-100 text-yellow-800'
+                                            }`}>
+                                                {student.status}
                                                 </span>
                                                 </td>
-                                                <td className="py-2 border flex gap-2 justify-center">
-                                                    <button onClick={handleEditSave} className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-800">Save</button>
-                                                    <button onClick={handleEditCancel} className="bg-gray-400 text-white px-2 py-1 rounded hover:bg-gray-600">Cancel</button>
-                                                </td>
-                                            </>
-                                        ) : (
-                                            <>
-                                        <td className="py-2 border">{student.fullname}</td>
-                                        <td className="py-2 border">{student.student_number}</td>
-                                        <td className="py-2 border">{student.schedule_date}</td>
-                                        <td className="py-2 border">{student.schedule_time}</td>
-                                                <td className="py-2 border">
-                                                        <span className={
-                                                            student.status === 'done' ? 'bg-green-200 text-green-800 px-2 py-1 rounded' : 
-                                                            student.status === 'cancelled' ? 'bg-red-200 text-red-800 px-2 py-1 rounded' :
-                                                            'bg-yellow-200 text-yellow-800 px-2 py-1 rounded'
-                                                        }>
-                                                        {student.status || 'pending'}
-                                                    </span>
-                                                </td>
-                                                <td className="py-2 border flex gap-2 justify-center">
-                                                    <button onClick={() => handleEditClick(student)} className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-800">Edit</button>
-                                                    <button onClick={() => handleDelete(student.id)} className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-800">Delete</button>
-                                                    <button onClick={() => handleToggleStatus(student)} className={student.status === 'done' ? 'bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-700' : 'bg-green-500 text-white px-2 py-1 rounded hover:bg-green-700'}>
-                                                        {student.status === 'done' ? 'Mark Pending' : 'Mark Done'}
+                                        <td className="py-3 px-4">
+                                            <div className="flex flex-wrap gap-1">
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        showEditModal(student);
+                                                    }}
+                                                    className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-2 py-1 rounded text-xs border border-[#C68C10] transition-all duration-200"
+                                                    title="Edit"
+                                                >
+                                                    ✏️
+                                                </button>
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDelete(student.id);
+                                                    }}
+                                                    className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs"
+                                                    title="Delete"
+                                                >
+                                                    🗑️
+                                                </button>
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleToggleStatus(student);
+                                                    }}
+                                                    className={`px-2 py-1 rounded text-xs ${
+                                                        student.status === 'done' 
+                                                            ? 'bg-yellow-500 hover:bg-yellow-600 text-white' 
+                                                            : 'bg-green-500 hover:bg-green-600 text-white'
+                                                    }`}
+                                                    title={student.status === 'done' ? 'Mark Pending' : 'Mark Done'}
+                                                >
+                                                    {student.status === 'done' ? '⏳' : '✅'}
                                                     </button>
                                                         {student.status !== 'cancelled' && (
-                                                            <button onClick={() => handleMarkCancelled(student)} className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-700">
-                                                                Mark Cancelled
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleMarkCancelled(student);
+                                                        }}
+                                                        className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs"
+                                                        title="Mark Cancelled"
+                                                    >
+                                                        ❌
                                                             </button>
                                                         )}
                                                         {student.status === 'cancelled' && (
-                                                            <button onClick={() => handleReschedule(student)} className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-700">
-                                                                Reschedule
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleReschedule(student);
+                                                        }}
+                                                        className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-2 py-1 rounded text-xs border border-[#C68C10] transition-all duration-200"
+                                                        title="Reschedule"
+                                                    >
+                                                        📅
                                                             </button>
                                                         )}
+                                            </div>
                                                 </td>
-                                            </>
-                                        )}
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="6" className="py-4 text-gray-400">
-                                                {currentScheduleDate === "No Date Chosen" 
-                                                    ? "No students found matching your search criteria." 
-                                                    : `No students found for ${currentScheduleDate}, ${selectedTime}.`}
-                                    </td>
-                                </tr>
-                            )}
+                                ))}
                         </tbody>
                     </table>
                         </div>
 
-                        {/* Pagination - Always at bottom */}
+                    {/* Pagination */}
                     {totalPages > 1 && (
-                            <div className="mt-4 pt-4 border-t border-gray-200">
-                                <div className="flex flex-col items-center gap-2">
-                                    {/* Page info */}
-                                    <div className="text-sm text-gray-600">
-                                        Page {page} of {totalPages} • Showing {((page - 1) * perPage) + 1} to {Math.min(page * perPage, filteredStudents.length)} of {filteredStudents.length} students
+                        <div className="px-4 py-3 border-t border-gray-200">
+                            <div className="flex items-center justify-between">
+                                <div className="text-sm text-gray-700">
+                                    Showing {startIndex + 1} to {Math.min(startIndex + perPage, filteredStudents.length)} of {filteredStudents.length} results
                                     </div>
-                                    
-                                    {/* Pagination buttons */}
-                                    <div className="flex justify-center items-center gap-2">
-                                        {/* Previous button */}
+                                <div className="flex space-x-2">
                             <button
                                 onClick={() => setPage(page - 1)}
                                 disabled={page === 1}
-                                            className="px-3 py-1 rounded bg-gray-200 text-gray-700 font-bold disabled:opacity-50 hover:bg-gray-300"
+                                        className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                             >
-                                &lt;
+                                        Previous
                             </button>
                                         
-                                        {/* First page (if not in current window) */}
-                                        {startPage > 1 && (
-                                            <>
-                                                <button
-                                                    onClick={() => setPage(1)}
-                                                    className="px-3 py-1 rounded bg-gray-100 text-gray-700 font-bold hover:bg-gray-200"
-                                                >
-                                                    1
-                                                </button>
-                                                {startPage > 2 && (
-                                                    <span className="px-2 text-gray-500">...</span>
-                                                )}
-                                            </>
-                                        )}
-                                        
-                                        {/* Page numbers in current window */}
-                                        {Array.from({ length: endPage - startPage + 1 }, (_, i) => {
-                                            const pageNum = startPage + i;
-                                            return (
+                                    {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map(pageNum => (
                                                 <button
                                                     key={pageNum}
                                                     onClick={() => setPage(pageNum)}
-                                                    className={`px-3 py-1 rounded font-bold ${
-                                                        page === pageNum 
-                                                            ? 'bg-[#971212] text-white' 
-                                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            className={`px-3 py-1 border rounded-md text-sm transition-all duration-200 ${
+                                                pageNum === page
+                                                    ? 'bg-[#E1A500] text-white border-[#C68C10]'
+                                                    : 'border-gray-300 hover:bg-gray-50'
                                                     }`}
                                                 >
                                                     {pageNum}
                                                 </button>
-                                            );
-                                        })}
-                                        
-                                        {/* Last page (if not in current window) */}
-                                        {endPage < totalPages && (
-                                            <>
-                                                {endPage < totalPages - 1 && (
-                                                    <span className="px-2 text-gray-500">...</span>
-                                                )}
-                                <button
-                                                    onClick={() => setPage(totalPages)}
-                                                    className="px-3 py-1 rounded bg-gray-100 text-gray-700 font-bold hover:bg-gray-200"
-                                >
-                                                    {totalPages}
-                                </button>
-                                            </>
-                                        )}
-                                        
-                                        {/* Next button */}
+                                    ))}
+                                    
                             <button
                                 onClick={() => setPage(page + 1)}
                                 disabled={page === totalPages}
-                                            className="px-3 py-1 rounded bg-gray-200 text-gray-700 font-bold disabled:opacity-50 hover:bg-gray-300"
+                                        className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                             >
-                                &gt;
+                                        Next
                             </button>
                                     </div>
                                 </div>
                         </div>
                     )}
-
-                    {/* Mobile Bottom Controls */}
-                        <div className="lg:hidden w-full px-4 py-6 bg-white border-t border-gray-200 mt-auto flex flex-col gap-4">
-                        <div>
-                            <p className="text-sm font-semibold mb-2">Scheduled Time</p>
-                            <CustomDropdown selectedTime={selectedTime} setSelectedTime={handleTimeChange} />
                         </div>
-                        <button
-                            onClick={HandleChangeDate}
-                            className="w-full text-white bg-[#AC0000] hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] border-2 px-4 py-2 rounded-md text-sm font-semibold"
-                        >
-                            {currentScheduleDate}
-                        </button>
-                        <button
-                            onClick={() => {
-                            setIsFiltering(true);
-                            setCurrentScheduleDate("No Date Chosen");
-                            setSelectedTime("No Time Chosen");
-                            setTimeout(() => setIsFiltering(false), 2000);
-                            }}
-                            className="w-full text-white bg-[#AC0000] hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] border-2 px-4 py-2 rounded-md text-sm font-semibold"
-                        >
-                            Show All Students
-                        </button>
-                        <button
-                            onClick={HandleShowList}
-                            className="w-full text-white bg-[#AC0000] hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] border-2 px-4 py-2 rounded-md text-sm font-semibold"
-                        >
-                            Generate List
-                        </button>
-                        <button
-                            onClick={handleOpenChangeCredentials}
-                            className="w-full text-white bg-[#AC0000] hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] border-2 px-4 py-2 rounded-md text-sm font-semibold"
-                        >
-                            Change Admin
-                        </button>
-                        <button
-                            onClick={handleLogoutClick}
-                            className="w-full text-white bg-[#AC0000] hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] border-2 px-4 py-2 rounded-md text-sm font-semibold"
-                        >
-                            Logout
-                        </button>
                         </div>
-
-                    </div>
-
-                    
-                </div>
-            </div>
-
         </div>
     );
 };
+
 export default AdminPage;

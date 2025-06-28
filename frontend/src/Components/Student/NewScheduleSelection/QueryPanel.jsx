@@ -18,7 +18,7 @@ const QueryPanel = ({ handleBack }) =>
         <div className="flex flex-col sm:flex-col-reverse items-end right-0 bottom-0 z-30 w-fit h-full sm:h-full justify-between absolute sm:relative p-0">
           <button
             onClick={handleBack}
-            className='bg-[#CE9D31] hover:bg-[#b88a1a] text-white font-bold py-2 px-4 rounded-xl shadow-lg mt-6 sm:mt-0 mr-3 sm:mr-0'
+            className='bg-[#E1A500] hover:bg-[#C68C10] text-white font-bold py-2 px-4 rounded-xl shadow-lg mt-6 sm:mt-0 mr-3 sm:mr-0 border-2 border-[#C68C10] transition-all duration-200'
           >
             Back to Home
           </button>

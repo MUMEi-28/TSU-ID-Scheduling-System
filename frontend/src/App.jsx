@@ -127,13 +127,11 @@ export default function App()
       localStorage.setItem('registrationInputs', JSON.stringify(updated));
       return updated;
     });
-    console.log(registrationInputs);
   }
 
   useEffect(() =>
   {
     localStorage.setItem('registrationInputs', JSON.stringify(registrationInputs));
-    console.log(registrationInputs);
   }, [registrationInputs])
 
   useEffect(() => {
@@ -302,7 +300,7 @@ export default function App()
                   localStorage.setItem('existing_user_token', 'temp_token');
                   navigate('/receipt');
                 }}
-                className="flex-1 bg-[#CE9D31] hover:bg-[#b88a1a] text-white font-bold py-3 px-4 rounded-lg transition-colors"
+                className="flex-1 bg-[#E1A500] hover:bg-[#C68C10] text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 border-2 border-[#C68C10]"
               >
                 View Full Receipt
               </button>
@@ -323,7 +321,6 @@ export default function App()
             handleUnselectDate={handleUnselectDate}
             handleUnselectTime={handleUnselectTime}
       />} />
-
 
       <Route path='/schedule' element={
         <StudentRoute>
@@ -359,6 +356,7 @@ export default function App()
               <AdminPage handleLogout={handleLogout} />
         </AdminRoute>
       } />
+      <Route path="/register" element={<RegistrationForm handleChange={handleStudentInfoChange} registrationInputs={registrationInputs} />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
       </div>
