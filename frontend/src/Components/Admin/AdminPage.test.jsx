@@ -7,8 +7,10 @@ const mockProps = {
   handleLogout: jest.fn(),
 };
 
-describe('AdminPage', () => {
-  it('renders search bar and table', () => {
+describe('AdminPage', () =>
+{
+  it('renders search bar and table', () =>
+  {
     render(<AdminPage {...mockProps} />);
     expect(screen.getByPlaceholderText(/search by name or student number/i)).toBeInTheDocument();
     expect(screen.getByRole('table')).toBeInTheDocument();

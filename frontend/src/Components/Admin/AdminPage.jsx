@@ -5,21 +5,29 @@ import { buildApiUrl, API_ENDPOINTS } from '../../config/api';
 import CustomDropdown from './CustomDropdown';
 import kuruKuru from '../public/kurukuru-kururing.gif';
 
+
+
+//Modals
+import AddStudentModal from './Modals/AddStudentModal'
+// const AddStudentModal = React.lazy(() => import('./Modals/AddStudentModal')); [AYAW GUMANA E -_- FIX LATER ]
+
 // Toast component
-function Toast({ message, type, onClose }) {
-  return (
-    <div className={`fixed top-8 right-8 z-[9999] px-6 py-4 rounded-lg shadow-lg text-lg font-bold transition-all duration-300 ${type === 'success' ? 'bg-green-500 text-white' : 'bg-red-600 text-white'}`}
-      style={{ minWidth: '220px', maxWidth: '90vw' }}>
-      <span>{message}</span>
-      <button onClick={onClose} className="ml-4 text-2xl font-bold text-white/80 hover:text-white">&times;</button>
-    </div>
-  );
+function Toast({ message, type, onClose })
+{
+    return (
+        <div className={`fixed top-8 right-8 z-[9999] px-6 py-4 rounded-lg shadow-lg text-lg font-bold transition-all duration-300 ${type === 'success' ? 'bg-green-500 text-white' : 'bg-red-600 text-white'}`}
+            style={{ minWidth: '220px', maxWidth: '90vw' }}>
+            <span>{message}</span>
+            <button onClick={onClose} className="ml-4 text-2xl font-bold text-white/80 hover:text-white">&times;</button>
+        </div>
+    );
 }
 
 // Lazy load the Calendar component
 const Calendar = React.lazy(() => import('../Student/ScheduleSelection/Calendar'));
 
-const AdminPage = (props) => {
+const AdminPage = (props) =>
+{
     const location = useLocation();
     const [showCalendar, setShowCalendar] = useState(false);
     const [showList, setShowList] = useState(false);
@@ -35,11 +43,11 @@ const AdminPage = (props) => {
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
     const [editRowId, setEditRowId] = useState(null);
     const [editData, setEditData] = useState({});
-    
+
     // New state for modals
     const [detailModal, setDetailModal] = useState({ show: false, student: null });
     const [editModal, setEditModal] = useState({ show: false, student: null, data: {} });
-    
+
     // Toast state
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     // Confirmation modal state
@@ -50,6 +58,7 @@ const AdminPage = (props) => {
     const [page, setPage] = useState(1);
     const perPage = 10;
     const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+    const [showAddStudent, setShowAddStudent] = useState(false);
     const [rescheduleStudent, setRescheduleStudent] = useState(null);
     const [rescheduleDate, setRescheduleDate] = useState('');
     const [rescheduleTime, setRescheduleTime] = useState('8:00am - 9:00am');
@@ -67,67 +76,80 @@ const AdminPage = (props) => {
         { value: 'masters_doctors_law', label: 'Masters/Doctors/School of Law' }
     ];
 
-    const toggleMenu = () => {
+    const toggleMenu = () =>
+    {
         setIsMenuOpen(!isMenuOpen);
     };
 
     // Fetch students from backend on mount
-    useEffect(() => {
+    useEffect(() =>
+    {
         setIsLoading(true);
-      const cacheKey = 'admin_students_cache';
-      const cache = localStorage.getItem(cacheKey);
-      let shouldFetch = true;
-        
-      if (cache) {
-        const { data, timestamp } = JSON.parse(cache);
-        if (Date.now() - timestamp < 30000) { // 30 seconds
-          setStudents(data);
-          shouldFetch = false;
-                setTimeout(() => setIsLoading(false), 5000);
+        const cacheKey = 'admin_students_cache';
+        const cache = localStorage.getItem(cacheKey);
+        let shouldFetch = true;
+
+        if (cache)
+        {
+            const { data, timestamp } = JSON.parse(cache);
+            if (Date.now() - timestamp < 30000)
+            { // 30 seconds
+                setStudents(data);
+                shouldFetch = false;
+                setTimeout(() => setIsLoading(false), 0); // IBALIK SA 5000 LATER
             }
         }
-        
-      if (shouldFetch) {
+
+        if (shouldFetch)
+        {
             axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
-          .then(response => {
-                setStudents(response.data);
-            localStorage.setItem(cacheKey, JSON.stringify({ data: response.data, timestamp: Date.now() }));
-                    setTimeout(() => setIsLoading(false), 5000);
-            })
-          .catch(error => {
-                console.error('Failed to fetch students:', error);
-            setToast({ show: true, message: 'Failed to fetch students', type: 'error' });
-                    setTimeout(() => setIsLoading(false), 5000);
-            });
-      }
+                .then(response =>
+                {
+                    setStudents(response.data);
+                    localStorage.setItem(cacheKey, JSON.stringify({ data: response.data, timestamp: Date.now() }));
+                    setTimeout(() => setIsLoading(false), 0); // IBALIK SA 5000 LATER
+                })
+                .catch(error =>
+                {
+                    console.error('Failed to fetch students:', error);
+                    setToast({ show: true, message: 'Failed to fetch students', type: 'error' });
+                    setTimeout(() => setIsLoading(false), 0); // IBALIK SA 5000 LATER
+                });
+        }
     }, []);
 
     // Add loading when date/time changes
-    useEffect(() => {
-        if (!isLoading && currentScheduleDate !== "No Date Chosen") {
+    useEffect(() =>
+    {
+        if (!isLoading && currentScheduleDate !== "No Date Chosen")
+        {
             setIsFiltering(true);
             setTimeout(() => setIsFiltering(false), 2000);
         }
     }, [currentScheduleDate, selectedTime, isLoading]);
 
     // Auto-dismiss toast after 3 seconds
-    useEffect(() => {
-      if (toast.show) {
-        const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
-        return () => clearTimeout(timer);
-      }
+    useEffect(() =>
+    {
+        if (toast.show)
+        {
+            const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+            return () => clearTimeout(timer);
+        }
     }, [toast.show]);
 
     // Modal functions
-    const showStudentDetails = (student) => {
+    const showStudentDetails = (student) =>
+    {
         setDetailModal({ show: true, student });
     };
 
-    const showEditModal = (student) => {
-        setEditModal({ 
-            show: true, 
-            student, 
-            data: { 
+    const showEditModal = (student) =>
+    {
+        setEditModal({
+            show: true,
+            student,
+            data: {
                 fullname: student.fullname,
                 student_number: student.student_number,
                 email: student.email || '',
@@ -137,7 +159,8 @@ const AdminPage = (props) => {
         });
     };
 
-    const handleEditChange = (e) => {
+    const handleEditChange = (e) =>
+    {
         const { name, value, type, checked } = e.target;
         setEditModal(prev => ({
             ...prev,
@@ -148,9 +171,11 @@ const AdminPage = (props) => {
         }));
     };
 
-    const handleEditSave = async () => {
+    const handleEditSave = async () =>
+    {
         setIsLoading(true);
-        try {
+        try
+        {
             const updateData = {
                 id: editModal.student.id,
                 fullname: editModal.data.fullname,
@@ -159,25 +184,27 @@ const AdminPage = (props) => {
                 id_reason: editModal.data.id_reason,
                 status: editModal.data.status
             };
-            
+
             await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), updateData, {
                 headers: { 'Content-Type': 'application/json' }
             });
-            
+
             setEditModal({ show: false, student: null, data: {} });
             setToast({ show: true, message: 'Student updated successfully!', type: 'success' });
             invalidateStudentCache();
-            
+
             // Refresh the students list
             const response = await axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS));
             setStudents(response.data);
-            localStorage.setItem('admin_students_cache', JSON.stringify({ 
-                data: response.data, 
-                timestamp: Date.now() 
+            localStorage.setItem('admin_students_cache', JSON.stringify({
+                data: response.data,
+                timestamp: Date.now()
             }));
-        } catch (err) {
+        } catch (err)
+        {
             setToast({ show: true, message: 'Failed to update student', type: 'error' });
-        } finally {
+        } finally
+        {
             setIsLoading(false);
         }
     };
@@ -185,19 +212,28 @@ const AdminPage = (props) => {
     // Existing functions (keep all your existing functions here)
     const HandleChangeDate = () => setShowCalendar(true);
     const HandleShowList = () => setShowList(true);
+    const HandleShowAddStudent = () =>
+    {
+        setShowAddStudent(true);
+        console.log("Add Student Pressed");
+    }
 
-    const handleDownloadList = () => {
+    const handleDownloadList = () =>
+    {
         setShowList(false);
-        if (currentScheduleDate === "No Date Chosen") {
+        if (currentScheduleDate === "No Date Chosen")
+        {
             setToast({ show: true, message: 'Generating complete student list...', type: 'success' });
             downloadAllStudentsData();
-        } else {
+        } else
+        {
             setToast({ show: true, message: `Generating list for ${currentScheduleDate}, ${selectedTime}`, type: 'success' });
             downloadFilteredStudentsData();
         }
     };
 
-    const downloadAllStudentsData = () => {
+    const downloadAllStudentsData = () =>
+    {
         const allStudents = students.filter(student => student.id !== 1);
         const csvData = [
             ['Name', 'Student Number', 'Email', 'ID Reason', 'Date', 'Time', 'Status'],
@@ -211,7 +247,7 @@ const AdminPage = (props) => {
                 student.status || 'pending'
             ])
         ];
-        
+
         const csvContent = csvData.map(row => row.join(',')).join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
@@ -222,13 +258,14 @@ const AdminPage = (props) => {
         window.URL.revokeObjectURL(url);
     };
 
-    const downloadFilteredStudentsData = () => {
-        const filteredData = students.filter(student => 
-            student.id !== 1 && 
-            student.schedule_date === currentScheduleDate && 
+    const downloadFilteredStudentsData = () =>
+    {
+        const filteredData = students.filter(student =>
+            student.id !== 1 &&
+            student.schedule_date === currentScheduleDate &&
             student.schedule_time === selectedTime
         );
-        
+
         const csvData = [
             ['Name', 'Student Number', 'Email', 'ID Reason', 'Date', 'Time', 'Status'],
             ...filteredData.map(student => [
@@ -241,7 +278,7 @@ const AdminPage = (props) => {
                 student.status || 'pending'
             ])
         ];
-        
+
         const csvContent = csvData.map(row => row.join(',')).join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
@@ -252,7 +289,8 @@ const AdminPage = (props) => {
         window.URL.revokeObjectURL(url);
     };
 
-    const HandleDateReplace = () => {
+    const HandleDateReplace = () =>
+    {
         setShowCalendar(false);
         if (!selectedCalendarDate) return;
         const realDate = new Date(selectedCalendarDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
@@ -261,7 +299,8 @@ const AdminPage = (props) => {
         setTimeout(() => setIsFiltering(false), 2000);
     };
 
-    useEffect(() => {
+    useEffect(() =>
+    {
         const urlSegments = location.pathname.split('/');
         const dateNumerical = urlSegments[urlSegments.length - 1];
         const dateObject = new Date(dateNumerical);
@@ -270,15 +309,16 @@ const AdminPage = (props) => {
     }, [location.pathname]);
 
     // Search, filter, and paginate students
-    const filteredStudents = students.filter(student => {
-      if (student.id === 1) return false;
-      
+    const filteredStudents = students.filter(student =>
+    {
+        if (student.id === 1) return false;
+
         const matchesSearch = student.fullname.toLowerCase().includes(search.toLowerCase()) ||
-                             student.student_number.includes(search) ||
-                             (student.email && student.email.toLowerCase().includes(search.toLowerCase()));
-        
+            student.student_number.includes(search) ||
+            (student.email && student.email.toLowerCase().includes(search.toLowerCase()));
+
         const matchesStatus = filterStatus === 'all' || student.status === filterStatus;
-        
+
         return matchesSearch && matchesStatus;
     });
 
@@ -287,182 +327,216 @@ const AdminPage = (props) => {
     const paginatedStudents = filteredStudents.slice(startIndex, startIndex + perPage);
 
     // Existing CRUD functions (keep all your existing functions)
-    const handleOpenChangeCredentials = () => {
+    const handleOpenChangeCredentials = () =>
+    {
         setShowChangeCredentials(true);
         setChangeStatus("");
     };
 
-    const handleCloseChangeCredentials = () => {
+    const handleCloseChangeCredentials = () =>
+    {
         setShowChangeCredentials(false);
         setChangeStatus("");
     };
 
-    const handleChangeCredentials = async (e) => {
+    const handleChangeCredentials = async (e) =>
+    {
         e.preventDefault();
         setChangeStatus("");
-        try {
+        try
+        {
             const response = await axios.post(buildApiUrl(API_ENDPOINTS.UPDATE_ADMIN), {
                 fullname: adminFullname,
                 student_number: adminStudentNumber
             });
-            if (response.data.status === 1) {
+            if (response.data.status === 1)
+            {
                 setChangeStatus("Credentials updated successfully!");
                 setShowSuccessPopup(true);
-                setTimeout(() => {
+                setTimeout(() =>
+                {
                     setShowSuccessPopup(false);
                     handleCloseChangeCredentials();
                 }, 2000);
                 setToast({ show: true, message: 'Admin credentials updated!', type: 'success' });
-            } else {
+            } else
+            {
                 setChangeStatus(response.data.message || "Failed to update credentials.");
                 setToast({ show: true, message: response.data.message || 'Failed to update credentials', type: 'error' });
             }
-        } catch (err) {
+        } catch (err)
+        {
             setChangeStatus("Error updating credentials.");
             setToast({ show: true, message: 'Error updating credentials', type: 'error' });
         }
     };
 
-    const handleLogoutClick = () => {
+    const handleLogoutClick = () =>
+    {
         setConfirmModal({
-          show: true,
-          action: () => {
-            setToast({ show: true, message: 'You have been logged out.', type: 'success' });
-            if (props.handleLogout) props.handleLogout();
-          },
-          payload: null,
-          message: 'Are you sure you want to log out?'
+            show: true,
+            action: () =>
+            {
+                setToast({ show: true, message: 'You have been logged out.', type: 'success' });
+                if (props.handleLogout) props.handleLogout();
+            },
+            payload: null,
+            message: 'Are you sure you want to log out?'
         });
     };
 
-    const handleEditClick = (student) => {
+    const handleEditClick = (student) =>
+    {
         setEditRowId(student.id);
         setEditData({ ...student });
     };
 
-    const handleEditChangeOld = (e) => {
+    const handleEditChangeOld = (e) =>
+    {
         setEditData({ ...editData, [e.target.name]: e.target.value });
     };
 
-    const handleEditSaveOld = async () => {
+    const handleEditSaveOld = async () =>
+    {
         setConfirmModal({
-          show: true,
-          action: async () => {
-            setIsLoading(true);
-            try {
-              const updateData = {
-                id: editData.id,
-                fullname: editData.fullname,
-                student_number: editData.student_number
-              };
-              
+            show: true,
+            action: async () =>
+            {
+                setIsLoading(true);
+                try
+                {
+                    const updateData = {
+                        id: editData.id,
+                        fullname: editData.fullname,
+                        student_number: editData.student_number
+                    };
+
                     await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), updateData, {
-                headers: { 'Content-Type': 'application/json' }
-              });
-              setEditRowId(null);
-              setToast({ show: true, message: 'Student updated successfully!', type: 'success' });
-              invalidateStudentCache();
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    setEditRowId(null);
+                    setToast({ show: true, message: 'Student updated successfully!', type: 'success' });
+                    invalidateStudentCache();
                     axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
-                .then(response => {
-                  setStudents(response.data);
-                  localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+                        .then(response =>
+                        {
+                            setStudents(response.data);
+                            localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
                             setTimeout(() => setIsLoading(false), 2000);
-                });
-            } catch (err) {
-              setToast({ show: true, message: 'Failed to update student', type: 'error' });
-              setTimeout(() => setIsLoading(false), 2000);
-            }
-          },
-          payload: null,
-          message: 'Are you sure you want to save these changes?'
+                        });
+                } catch (err)
+                {
+                    setToast({ show: true, message: 'Failed to update student', type: 'error' });
+                    setTimeout(() => setIsLoading(false), 2000);
+                }
+            },
+            payload: null,
+            message: 'Are you sure you want to save these changes?'
         });
     };
 
-    const handleEditCancel = () => {
+    const handleEditCancel = () =>
+    {
         setEditRowId(null);
         setEditData({});
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = (id) =>
+    {
         setConfirmModal({
-          show: true,
-          action: async () => {
-            setIsLoading(true);
-            try {
+            show: true,
+            action: async () =>
+            {
+                setIsLoading(true);
+                try
+                {
                     await axios.delete(buildApiUrl(API_ENDPOINTS.INDEX), {
-                data: { id },
-                headers: { 'Content-Type': 'application/json' }
-              });
-              setToast({ show: true, message: 'Student deleted successfully!', type: 'success' });
-              invalidateStudentCache();
+                        data: { id },
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    setToast({ show: true, message: 'Student deleted successfully!', type: 'success' });
+                    invalidateStudentCache();
                     axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
-                .then(response => {
-                  setStudents(response.data);
-                  localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
-                  setTimeout(() => setIsLoading(false), 2000);
-                });
-            } catch (err) {
-              setToast({ show: true, message: 'Failed to delete student', type: 'error' });
-              setTimeout(() => setIsLoading(false), 2000);
-            }
-          },
-          payload: null,
-          message: 'Are you sure you want to delete this student? This action cannot be undone.'
+                        .then(response =>
+                        {
+                            setStudents(response.data);
+                            localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+                            setTimeout(() => setIsLoading(false), 2000);
+                        });
+                } catch (err)
+                {
+                    setToast({ show: true, message: 'Failed to delete student', type: 'error' });
+                    setTimeout(() => setIsLoading(false), 2000);
+                }
+            },
+            payload: null,
+            message: 'Are you sure you want to delete this student? This action cannot be undone.'
         });
     };
 
-    const handleToggleStatus = async (student) => {
+    const handleToggleStatus = async (student) =>
+    {
         const newStatus = student.status === 'done' ? 'pending' : 'done';
         await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), { ...student, status: newStatus }, {
             headers: { 'Content-Type': 'application/json' }
         });
         invalidateStudentCache();
         axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
-            .then(response => {
-              setStudents(response.data);
-              localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+            .then(response =>
+            {
+                setStudents(response.data);
+                localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
             });
         setToast({ show: true, message: `Student marked as ${newStatus}`, type: 'success' });
     };
 
-    const handleMarkCancelled = async (student) => {
+    const handleMarkCancelled = async (student) =>
+    {
         setConfirmModal({
-          show: true,
-          action: async () => {
-            try {
+            show: true,
+            action: async () =>
+            {
+                try
+                {
                     await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), { ...student, status: 'cancelled' }, {
-                headers: { 'Content-Type': 'application/json' }
-              });
-              setToast({ show: true, message: 'Student marked as cancelled', type: 'success' });
-              invalidateStudentCache();
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    setToast({ show: true, message: 'Student marked as cancelled', type: 'success' });
+                    invalidateStudentCache();
                     axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
-                .then(response => {
-                  setStudents(response.data);
-                  localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
-                });
-            } catch (err) {
-              setToast({ show: true, message: 'Failed to mark student as cancelled', type: 'error' });
-            }
-          },
-          payload: null,
-          message: 'Are you sure you want to mark this student as cancelled?'
+                        .then(response =>
+                        {
+                            setStudents(response.data);
+                            localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+                        });
+                } catch (err)
+                {
+                    setToast({ show: true, message: 'Failed to mark student as cancelled', type: 'error' });
+                }
+            },
+            payload: null,
+            message: 'Are you sure you want to mark this student as cancelled?'
         });
     };
 
-    const handleReschedule = (student) => {
+    const handleReschedule = (student) =>
+    {
         setRescheduleStudent(student);
         setRescheduleDate(student.schedule_date || '');
         setRescheduleTime(student.schedule_time || '8:00am - 9:00am');
         setShowRescheduleModal(true);
     };
 
-    const handleRescheduleSave = async () => {
-        if (!rescheduleDate || !rescheduleTime) {
+    const handleRescheduleSave = async () =>
+    {
+        if (!rescheduleDate || !rescheduleTime)
+        {
             setToast({ show: true, message: 'Please select both date and time', type: 'error' });
             return;
         }
 
-        try {
+        try
+        {
             await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), {
                 ...rescheduleStudent,
                 schedule_date: rescheduleDate,
@@ -471,79 +545,88 @@ const AdminPage = (props) => {
             }, {
                 headers: { 'Content-Type': 'application/json' }
             });
-            
+
             setToast({ show: true, message: 'Student rescheduled successfully', type: 'success' });
             setShowRescheduleModal(false);
             setRescheduleStudent(null);
             setRescheduleDate('');
             setRescheduleTime('8:00am - 9:00am');
-            
+
             invalidateStudentCache();
             axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
-                .then(response => {
+                .then(response =>
+                {
                     setStudents(response.data);
                     localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
                 });
-        } catch (err) {
+        } catch (err)
+        {
             setToast({ show: true, message: 'Failed to reschedule student', type: 'error' });
         }
     };
 
-    const handleRescheduleCancel = () => {
+    const handleRescheduleCancel = () =>
+    {
         setShowRescheduleModal(false);
         setRescheduleStudent(null);
         setRescheduleDate('');
         setRescheduleTime('8:00am - 9:00am');
     };
 
-    const handleDateChange = (e) => {
+    const handleDateChange = (e) =>
+    {
         const date = new Date(e.target.value);
-        const formattedDate = date.toLocaleDateString('en-US', { 
-            month: 'long', 
-            day: 'numeric', 
-            year: 'numeric' 
+        const formattedDate = date.toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
         });
         setRescheduleDate(formattedDate);
     };
 
-    const invalidateStudentCache = () => {
-      localStorage.removeItem('admin_students_cache');
+    const invalidateStudentCache = () =>
+    {
+        localStorage.removeItem('admin_students_cache');
     };
 
     // Confirmation Modal
     const ConfirmModal = ({ show, message, onConfirm, onCancel }) => show ? (
-      <div className="fixed inset-0 z-[9998] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.15)' }}>
-        <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full flex flex-col items-center">
-          <h2 className="text-2xl font-bold mb-4 text-center">Confirmation</h2>
-          <p className="mb-6 text-center text-lg">{message}</p>
-          <div className="flex gap-6 justify-center">
-            <button onClick={onConfirm} className="bg-green-600 text-white px-6 py-2 rounded-lg font-bold text-lg hover:bg-green-800">Yes</button>
-            <button onClick={onCancel} className="bg-gray-400 text-white px-6 py-2 rounded-lg font-bold text-lg hover:bg-gray-600">No</button>
-          </div>
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.15)' }}>
+            <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full flex flex-col items-center">
+                <h2 className="text-2xl font-bold mb-4 text-center">Confirmation</h2>
+                <p className="mb-6 text-center text-lg">{message}</p>
+                <div className="flex gap-6 justify-center">
+                    <button onClick={onConfirm} className="bg-green-600 text-white px-6 py-2 rounded-lg font-bold text-lg hover:bg-green-800">Yes</button>
+                    <button onClick={onCancel} className="bg-gray-400 text-white px-6 py-2 rounded-lg font-bold text-lg hover:bg-gray-600">No</button>
+                </div>
+            </div>
         </div>
-      </div>
     ) : null;
 
     // Calculate pagination with sliding window
-    const getPaginationRange = () => {
+    const getPaginationRange = () =>
+    {
         const windowSize = 5;
         const halfWindow = Math.floor(windowSize / 2);
-        
+
         let startPage = Math.max(1, page - halfWindow);
         let endPage = Math.min(totalPages, startPage + windowSize - 1);
-        
-        if (endPage - startPage < windowSize - 1) {
+
+        if (endPage - startPage < windowSize - 1)
+        {
             startPage = Math.max(1, endPage - windowSize + 1);
         }
-        
+
         return { startPage, endPage };
     };
 
     const { startPage, endPage } = getPaginationRange();
 
-    const handleTimeChange = (newTime) => {
+    const handleTimeChange = (newTime) =>
+    {
         setSelectedTime(newTime);
-        if (currentScheduleDate !== "No Date Chosen" && newTime !== "No Time Chosen") {
+        if (currentScheduleDate !== "No Date Chosen" && newTime !== "No Time Chosen")
+        {
             setIsFiltering(true);
             setTimeout(() => setIsFiltering(false), 1500);
         }
@@ -567,6 +650,14 @@ const AdminPage = (props) => {
 
                     {/* Desktop Navigation */}
                     <div className='hidden sm:flex items-center space-x-4'>
+
+                        <button
+                            className='bg-blue-500 hover:bg-blue-600 border-2 border-[#107ac6] active:bg-blue-400 text-white px-4 py-2 rounded-lg'
+
+                            onClick={HandleShowAddStudent}
+                        >
+                            Add Student
+                        </button>
                         <button
                             onClick={HandleChangeDate}
                             className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-4 py-2 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold"
@@ -585,6 +676,7 @@ const AdminPage = (props) => {
                         >
                             Logout
                         </button>
+
                     </div>
 
                     {/* Mobile Hamburger Menu */}
@@ -606,295 +698,337 @@ const AdminPage = (props) => {
                 </div>
 
                 {/* Mobile Menu Dropdown */}
-                {isMenuOpen && (
-                    <div className='sm:hidden absolute top-full left-0 right-0 bg-gradient-to-bl from-[#641500] from-100% to-[#CA2A00] to-0% shadow-lg border-t border-white/20'>
-                        <div className='flex flex-col space-y-3 p-4'>
-                            <button
-                                onClick={HandleChangeDate}
-                                className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-4 py-3 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold w-full text-center"
-                            >
-                                Change Date
-                            </button>
-                            <button
-                                onClick={HandleShowList}
-                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg w-full text-center"
-                            >
-                                Download List
-                            </button>
-                            <button
-                                onClick={handleLogoutClick}
-                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg w-full text-center"
-                            >
-                                Logout
-                            </button>
+                {
+                    isMenuOpen && (
+                        <div className='sm:hidden absolute top-full left-0 right-0 bg-gradient-to-bl from-[#641500] from-100% to-[#CA2A00] to-0% shadow-lg border-t border-white/20'>
+                            <div className='flex flex-col space-y-3 p-4'>
+                                <button
+                                    onClick={HandleChangeDate}
+                                    className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-4 py-3 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold w-full text-center"
+                                >
+                                    Change Date
+                                </button>
+                                <button
+                                    onClick={HandleShowList}
+                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg w-full text-center"
+                                >
+                                    Download List
+                                </button>
+                                <button
+                                    onClick={handleLogoutClick}
+                                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg w-full text-center"
+                                >
+                                    Logout
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                )}
-            </header>
+                    )
+                }
+            </header >
 
             {/* Loading Overlay - Initial Load */}
-            {isLoading && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-12 flex flex-col items-center shadow-xl">
-                        <img src={kuruKuru} alt="Loading..." className="w-24 h-24 mb-6" />
-                        <p className="text-2xl font-semibold text-gray-700 mb-2">Loading students...</p>
-                        <p className="text-sm text-gray-500">Please wait while we fetch the data</p>
+            {
+                isLoading && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-12 flex flex-col items-center shadow-xl">
+                            <img src={kuruKuru} alt="Loading..." className="w-24 h-24 mb-6" />
+                            <p className="text-2xl font-semibold text-gray-700 mb-2">Loading students...</p>
+                            <p className="text-sm text-gray-500">Please wait while we fetch the data</p>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Filtering Overlay - When changing date/time */}
-            {isFiltering && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40">
-                    <div className="bg-white rounded-lg p-10 flex flex-col items-center shadow-xl">
-                        <img src={kuruKuru} alt="Filtering..." className="w-20 h-20 mb-4" />
-                        <p className="text-xl font-semibold text-gray-700 mb-2">Filtering students...</p>
-                        <p className="text-base text-gray-500">
-                            {currentScheduleDate !== "No Date Chosen" 
-                                ? `${currentScheduleDate}, ${selectedTime}` 
-                                : 'Loading all students...'}
-                        </p>
+            {
+                isFiltering && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40">
+                        <div className="bg-white rounded-lg p-10 flex flex-col items-center shadow-xl">
+                            <img src={kuruKuru} alt="Filtering..." className="w-20 h-20 mb-4" />
+                            <p className="text-xl font-semibold text-gray-700 mb-2">Filtering students...</p>
+                            <p className="text-base text-gray-500">
+                                {currentScheduleDate !== "No Date Chosen"
+                                    ? `${currentScheduleDate}, ${selectedTime}`
+                                    : 'Loading all students...'}
+                            </p>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Toast Notification */}
             {toast.show && <Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />}
-            
+
             {/* Confirmation Modal */}
             <ConfirmModal
-              show={confirmModal.show}
-              message={confirmModal.message}
-              onConfirm={async () => {
-                setConfirmModal({ ...confirmModal, show: false });
-                if (typeof confirmModal.action === 'function') await confirmModal.action();
-              }}
-              onCancel={() => setConfirmModal({ ...confirmModal, show: false })}
+                show={confirmModal.show}
+                message={confirmModal.message}
+                onConfirm={async () =>
+                {
+                    setConfirmModal({ ...confirmModal, show: false });
+                    if (typeof confirmModal.action === 'function') await confirmModal.action();
+                }}
+                onCancel={() => setConfirmModal({ ...confirmModal, show: false })}
             />
 
+            {showAddStudent && (
+                <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-black/50 text-white text-xl z-[9999]">Loading Add Form...</div>}>
+                    <AddStudentModal
+                        onClose={() => setShowAddStudent(false)}
+                        onSuccess={() =>
+                        {
+                            invalidateStudentCache();
+                            axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
+                                .then(response =>
+                                {
+                                    setStudents(response.data);
+                                    localStorage.setItem('admin_students_cache', JSON.stringify({
+                                        data: response.data,
+                                        timestamp: Date.now()
+                                    }));
+                                    setToast({ show: true, message: 'Student added successfully', type: 'success' });
+                                })
+                                .catch(() => setToast({ show: true, message: 'Failed to refresh student list', type: 'error' }));
+                        }}
+                    />
+                </Suspense>
+            )}
+
+
             {/* Detail Modal */}
-            {detailModal.show && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-                    <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold">Student Details</h2>
-                            <button
-                                onClick={() => setDetailModal({ show: false, student: null })}
-                                className="text-gray-500 hover:text-gray-700 text-2xl"
-                            >
-                                ✕
-                            </button>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                            <div><strong>Name:</strong> {detailModal.student.fullname}</div>
-                            <div><strong>Student Number:</strong> {detailModal.student.student_number}</div>
-                            <div><strong>Email:</strong> {detailModal.student.email || 'N/A'}</div>
-                            <div><strong>ID Reason:</strong> {detailModal.student.id_reason || 'N/A'}</div>
-                            <div><strong>Schedule Date:</strong> {detailModal.student.schedule_date || 'Not scheduled'}</div>
-                            <div><strong>Schedule Time:</strong> {detailModal.student.schedule_time || 'Not scheduled'}</div>
-                            <div><strong>Status:</strong> 
-                                <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${
-                                    detailModal.student.status === 'done' ? 'bg-green-100 text-green-800' :
-                                    detailModal.student.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                    'bg-yellow-100 text-yellow-800'
-                                }`}>
-                                    {detailModal.student.status}
-                                </span>
+            {
+                detailModal.show && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+                        <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-bold">Student Details</h2>
+                                <button
+                                    onClick={() => setDetailModal({ show: false, student: null })}
+                                    className="text-gray-500 hover:text-gray-700 text-2xl"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div><strong>Name:</strong> {detailModal.student.fullname}</div>
+                                <div><strong>Student Number:</strong> {detailModal.student.student_number}</div>
+                                <div><strong>Email:</strong> {detailModal.student.email || 'N/A'}</div>
+                                <div><strong>ID Reason:</strong> {detailModal.student.id_reason || 'N/A'}</div>
+                                <div><strong>Schedule Date:</strong> {detailModal.student.schedule_date || 'Not scheduled'}</div>
+                                <div><strong>Schedule Time:</strong> {detailModal.student.schedule_time || 'Not scheduled'}</div>
+                                <div><strong>Status:</strong>
+                                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${detailModal.student.status === 'done' ? 'bg-green-100 text-green-800' :
+                                        detailModal.student.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                            'bg-yellow-100 text-yellow-800'
+                                        }`}>
+                                        {detailModal.student.status}
+                                    </span>
                                 </div>
-                            <div><strong>Privacy Agreed:</strong> {detailModal.student.data_privacy_agreed ? 'Yes' : 'No'}</div>
-                            <div><strong>Created:</strong> {detailModal.student.created_at ? new Date(detailModal.student.created_at).toLocaleDateString() : 'N/A'}</div>
-                            <div><strong>Updated:</strong> {detailModal.student.updated_at ? new Date(detailModal.student.updated_at).toLocaleDateString() : 'N/A'}</div>
-                                    </div>
-                            
-                        <div className="flex gap-2 justify-end">
-                            <button
-                                onClick={() => {
-                                    setDetailModal({ show: false, student: null });
-                                    showEditModal(detailModal.student);
-                                }}
-                                className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-4 py-2 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold"
-                            >
-                                Edit Student
+                                <div><strong>Privacy Agreed:</strong> {detailModal.student.data_privacy_agreed ? 'Yes' : 'No'}</div>
+                                <div><strong>Created:</strong> {detailModal.student.created_at ? new Date(detailModal.student.created_at).toLocaleDateString() : 'N/A'}</div>
+                                <div><strong>Updated:</strong> {detailModal.student.updated_at ? new Date(detailModal.student.updated_at).toLocaleDateString() : 'N/A'}</div>
+                            </div>
+
+                            <div className="flex gap-2 justify-end">
+                                <button
+                                    onClick={() =>
+                                    {
+                                        setDetailModal({ show: false, student: null });
+                                        showEditModal(detailModal.student);
+                                    }}
+                                    className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-4 py-2 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold"
+                                >
+                                    Edit Student
                                 </button>
                                 <button
-                                onClick={() => setDetailModal({ show: false, student: null })}
-                                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+                                    onClick={() => setDetailModal({ show: false, student: null })}
+                                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
                                 >
-                                Close
-                            </button>
+                                    Close
+                                </button>
                             </div>
                         </div>
                     </div>
-                )}
+                )
+            }
 
             {/* Edit Modal */}
-            {editModal.show && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold">Edit Student</h2>
-                            <button 
-                                onClick={() => setEditModal({ show: false, student: null, data: {} })}
-                                className="text-gray-500 hover:text-gray-700 text-2xl"
-                            >
-                                ✕
-                            </button>
-                                    </div>
-                        
-                        <form onSubmit={(e) => { e.preventDefault(); handleEditSave(); }}>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                                <input
-                                    type="text"
-                                        name="fullname"
-                                        value={editModal.data.fullname}
-                                        onChange={handleEditChange}
-                                        className="w-full p-2 border border-gray-300 rounded-lg"
-                                    required
-                                />
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Student Number</label>
-                                <input
-                                    type="text"
-                                        name="student_number"
-                                        value={editModal.data.student_number}
-                                        onChange={handleEditChange}
-                                        className="w-full p-2 border border-gray-300 rounded-lg"
-                                    required
-                                />
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                            <input
-                                        type="email"
-                                        name="email"
-                                        value={editModal.data.email}
-                                        onChange={handleEditChange}
-                                        className="w-full p-2 border border-gray-300 rounded-lg"
-                                required
-                            />
-                        </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">ID Reason</label>
-                            <select
-                                        name="id_reason"
-                                        value={editModal.data.id_reason}
-                                        onChange={handleEditChange}
-                                        className="w-full p-2 border border-gray-300 rounded-lg"
-                                required
-                            >
-                                        {idReasonOptions.map(option => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                            </select>
-                                </div>
-                        </div>
-
-                            <div className="flex gap-2 justify-end mt-6">
-                            <button
-                                    type="button"
+            {
+                editModal.show && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+                        <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-bold">Edit Student</h2>
+                                <button
                                     onClick={() => setEditModal({ show: false, student: null, data: {} })}
-                                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
-                            >
-                                    Cancel
-                            </button>
-                            <button
-                                    type="submit"
-                                    className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-4 py-2 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold"
-                            >
-                                    Save Changes
-                            </button>
+                                    className="text-gray-500 hover:text-gray-700 text-2xl"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            <form onSubmit={(e) => { e.preventDefault(); handleEditSave(); }}>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                        <input
+                                            type="text"
+                                            name="fullname"
+                                            value={editModal.data.fullname}
+                                            onChange={handleEditChange}
+                                            className="w-full p-2 border border-gray-300 rounded-lg"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Student Number</label>
+                                        <input
+                                            type="text"
+                                            name="student_number"
+                                            value={editModal.data.student_number}
+                                            onChange={handleEditChange}
+                                            className="w-full p-2 border border-gray-300 rounded-lg"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            value={editModal.data.email}
+                                            onChange={handleEditChange}
+                                            className="w-full p-2 border border-gray-300 rounded-lg"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">ID Reason</label>
+                                        <select
+                                            name="id_reason"
+                                            value={editModal.data.id_reason}
+                                            onChange={handleEditChange}
+                                            className="w-full p-2 border border-gray-300 rounded-lg"
+                                            required
+                                        >
+                                            {idReasonOptions.map(option => (
+                                                <option key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-2 justify-end mt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditModal({ show: false, student: null, data: {} })}
+                                        className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-4 py-2 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold"
+                                    >
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                        </form>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Calendar Modal (reworked for both normal and reschedule usage) */}
-            {showCalendar && (
-                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999]">
-                    <div className="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center max-w-md w-full mx-4">
-                        <Suspense fallback={<div className='text-xl font-bold text-gray-600'>Loading calendar...</div>}>
-                            <Calendar 
-                                onDateSelect={date => {
-                                    const formattedDate = new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-                                    if (showRescheduleModal) {
-                                        setRescheduleDate(formattedDate);
-                                        setShowCalendar(false);
-                                    } else {
-                                        setSelectedCalendarDate(date);
-                                        setShowCalendar(false);
-                                    }
-                                }}
-                                onClose={() => setShowCalendar(false)}
-                            />
-                        </Suspense>
-                        <button
-                            onClick={() => setShowCalendar(false)}
-                            className="mt-4 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-bold border-2 border-gray-600"
-                        >
-                            Close
-                        </button>
+            {
+                showCalendar && (
+                    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999]">
+                        <div className="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center max-w-md w-full mx-4">
+                            <Suspense fallback={<div className='text-xl font-bold text-gray-600'>Loading calendar...</div>}>
+                                <Calendar
+                                    onDateSelect={date =>
+                                    {
+                                        const formattedDate = new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                                        if (showRescheduleModal)
+                                        {
+                                            setRescheduleDate(formattedDate);
+                                            setShowCalendar(false);
+                                        } else
+                                        {
+                                            setSelectedCalendarDate(date);
+                                            setShowCalendar(false);
+                                        }
+                                    }}
+                                    onClose={() => setShowCalendar(false)}
+                                />
+                            </Suspense>
+                            <button
+                                onClick={() => setShowCalendar(false)}
+                                className="mt-4 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-bold border-2 border-gray-600"
+                            >
+                                Close
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Reschedule Modal */}
-            {showRescheduleModal && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-                <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                  <h2 className="text-xl font-bold mb-4">Reschedule Student</h2>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                    <input
-                      type="date"
-                      value={rescheduleDate}
-                      onChange={e => setRescheduleDate(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg"
-                    />
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
-                    <select
-                      value={rescheduleTime}
-                      onChange={e => setRescheduleTime(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 font-bold focus:outline-none focus:ring-2 focus:ring-gray-400"
-                    >
-                      <option value="8:00am - 9:00am">8:00am - 9:00am</option>
-                      <option value="9:00am -10:00am">9:00am -10:00am</option>
-                      <option value="10:00am-11:00am">10:00am-11:00am</option>
-                      <option value="11:00am-12:00pm">11:00am-12:00pm</option>
-                      <option value="1:00pm - 2:00pm">1:00pm - 2:00pm</option>
-                      <option value="2:00pm - 3:00pm">2:00pm - 3:00pm</option>
-                      <option value="3:00pm - 4:00pm">3:00pm - 4:00pm</option>
-                      <option value="4:00pm - 5:00pm">4:00pm - 5:00pm</option>
-                    </select>
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                    <button
-                      onClick={handleRescheduleCancel}
-                      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-bold border-2 border-gray-600"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleRescheduleSave}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-bold border-2 border-yellow-600"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            {
+                showRescheduleModal && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+                        <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                            <h2 className="text-xl font-bold mb-4">Reschedule Student</h2>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                <input
+                                    type="date"
+                                    value={rescheduleDate}
+                                    onChange={e => setRescheduleDate(e.target.value)}
+                                    className="w-full p-2 border border-gray-300 rounded-lg"
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                                <select
+                                    value={rescheduleTime}
+                                    onChange={e => setRescheduleTime(e.target.value)}
+                                    className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 font-bold focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                >
+                                    <option value="8:00am - 9:00am">8:00am - 9:00am</option>
+                                    <option value="9:00am -10:00am">9:00am -10:00am</option>
+                                    <option value="10:00am-11:00am">10:00am-11:00am</option>
+                                    <option value="11:00am-12:00pm">11:00am-12:00pm</option>
+                                    <option value="1:00pm - 2:00pm">1:00pm - 2:00pm</option>
+                                    <option value="2:00pm - 3:00pm">2:00pm - 3:00pm</option>
+                                    <option value="3:00pm - 4:00pm">3:00pm - 4:00pm</option>
+                                    <option value="4:00pm - 5:00pm">4:00pm - 5:00pm</option>
+                                </select>
+                            </div>
+                            <div className="flex gap-2 justify-end">
+                                <button
+                                    onClick={handleRescheduleCancel}
+                                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-bold border-2 border-gray-600"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleRescheduleSave}
+                                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-bold border-2 border-yellow-600"
+                                >
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
 
             {/* Main content */}
             <div className="flex-1 p-6">
@@ -903,28 +1037,28 @@ const AdminPage = (props) => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                        <input
-                            type="text"
+                            <input
+                                type="text"
                                 placeholder="Search by name, student number, or email..."
-                            value={search}
+                                value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 className="w-full p-2 border border-gray-300 rounded-lg"
-                        />
+                            />
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Status Filter</label>
-                        <select
-                            value={filterStatus}
+                            <select
+                                value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
                                 className="w-full p-2 border border-gray-300 rounded-lg"
                             >
-                            <option value="all">All Status</option>
-                            <option value="pending">Pending</option>
-                            <option value="done">Done</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                    </div>
+                                <option value="all">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="done">Done</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Current Date</label>
@@ -935,7 +1069,7 @@ const AdminPage = (props) => {
                                 {currentScheduleDate === 'No Date Chosen' ? 'No Date Chosen (Click to select)' : currentScheduleDate}
                             </button>
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Current Time</label>
                             <CustomDropdown
@@ -972,8 +1106,8 @@ const AdminPage = (props) => {
                         </thead>
                         <tbody>
                             {paginatedStudents.map((student) => (
-                                <tr 
-                                    key={student.id} 
+                                <tr
+                                    key={student.id}
                                     className="border-b hover:bg-gray-50 cursor-pointer"
                                     onClick={() => showStudentDetails(student)}
                                 >
@@ -982,18 +1116,18 @@ const AdminPage = (props) => {
                                     <td className="py-2 px-2 border-r">{student.schedule_date || 'Not scheduled'}</td>
                                     <td className="py-2 px-2 border-r">{student.schedule_time || 'Not scheduled'}</td>
                                     <td className="py-2 px-2 border-r">
-                                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                                            student.status === 'done' ? 'bg-green-100 text-green-800' :
+                                        <span className={`px-2 py-1 rounded text-xs font-semibold ${student.status === 'done' ? 'bg-green-100 text-green-800' :
                                             student.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                            'bg-yellow-100 text-yellow-800'
-                                        }`}>
+                                                'bg-yellow-100 text-yellow-800'
+                                            }`}>
                                             {student.status}
                                         </span>
                                     </td>
                                     <td className="py-2 px-2">
                                         <div className="flex space-x-2">
-                                            <button 
-                                                onClick={(e) => {
+                                            <button
+                                                onClick={(e) =>
+                                                {
                                                     e.stopPropagation();
                                                     showEditModal(student);
                                                 }}
@@ -1002,8 +1136,9 @@ const AdminPage = (props) => {
                                             >
                                                 <span className="mr-1">✏️</span> Edit
                                             </button>
-                                            <button 
-                                                onClick={(e) => {
+                                            <button
+                                                onClick={(e) =>
+                                                {
                                                     e.stopPropagation();
                                                     handleDelete(student.id);
                                                 }}
@@ -1012,23 +1147,24 @@ const AdminPage = (props) => {
                                             >
                                                 <span className="mr-1">🗑️</span> Delete
                                             </button>
-                                            <button 
-                                                onClick={(e) => {
+                                            <button
+                                                onClick={(e) =>
+                                                {
                                                     e.stopPropagation();
                                                     handleToggleStatus(student);
                                                 }}
-                                                className={`flex items-center px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150 ${
-                                                    student.status === 'done' 
-                                                        ? 'bg-gray-400 hover:bg-gray-500 text-white' 
-                                                        : 'bg-green-500 hover:bg-green-600 text-white'
-                                                }`}
+                                                className={`flex items-center px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150 ${student.status === 'done'
+                                                    ? 'bg-gray-400 hover:bg-gray-500 text-white'
+                                                    : 'bg-green-500 hover:bg-green-600 text-white'
+                                                    }`}
                                                 title={student.status === 'done' ? 'Mark Pending' : 'Mark Done'}
                                             >
                                                 <span className="mr-1">{student.status === 'done' ? '⏳' : '✅'}</span> {student.status === 'done' ? 'Pending' : 'Done'}
                                             </button>
                                             {student.status !== 'cancelled' && (
-                                                <button 
-                                                    onClick={(e) => {
+                                                <button
+                                                    onClick={(e) =>
+                                                    {
                                                         e.stopPropagation();
                                                         handleMarkCancelled(student);
                                                     }}
@@ -1039,8 +1175,9 @@ const AdminPage = (props) => {
                                                 </button>
                                             )}
                                             {student.status === 'cancelled' && (
-                                                <button 
-                                                    onClick={(e) => {
+                                                <button
+                                                    onClick={(e) =>
+                                                    {
                                                         e.stopPropagation();
                                                         handleReschedule(student);
                                                     }}
@@ -1064,30 +1201,29 @@ const AdminPage = (props) => {
                         <div className="flex items-center justify-between">
                             <div className="text-sm text-gray-700">
                                 Showing {startIndex + 1} to {Math.min(startIndex + perPage, filteredStudents.length)} of {filteredStudents.length} results
-                                </div>
+                            </div>
                             <div className="flex space-x-2">
-                        <button
-                            onClick={() => setPage(page - 1)}
-                            disabled={page === 1}
+                                <button
+                                    onClick={() => setPage(page - 1)}
+                                    disabled={page === 1}
                                     className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                        >
+                                >
                                     Previous
-                            </button>
-                                    
+                                </button>
+
                                 {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map(pageNum => (
-                                            <button
-                                                key={pageNum}
-                                                onClick={() => setPage(pageNum)}
-                                        className={`px-3 py-1 border rounded-md text-sm transition-all duration-200 ${
-                                            pageNum === page
-                                                ? 'bg-[#E1A500] text-white border-[#C68C10]'
-                                                : 'border-gray-300 hover:bg-gray-50'
-                                                }`}
-                                            >
-                                                {pageNum}
-                                            </button>
-                                        ))}
-                                        
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => setPage(pageNum)}
+                                        className={`px-3 py-1 border rounded-md text-sm transition-all duration-200 ${pageNum === page
+                                            ? 'bg-[#E1A500] text-white border-[#C68C10]'
+                                            : 'border-gray-300 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                ))}
+
                                 <button
                                     onClick={() => setPage(page + 1)}
                                     disabled={page === totalPages}
@@ -1100,7 +1236,7 @@ const AdminPage = (props) => {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 

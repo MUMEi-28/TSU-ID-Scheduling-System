@@ -17,7 +17,8 @@ const environment = import.meta.env.MODE || 'development';
 export const apiConfig = config[environment] || config.development;
 
 // Helper function to build full API URLs
-export const buildApiUrl = (endpoint) => {
+export const buildApiUrl = (endpoint) =>
+{
   const baseURL = apiConfig.baseURL;
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   return `${baseURL}${cleanEndpoint}`;
