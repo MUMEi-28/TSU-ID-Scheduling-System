@@ -1,6 +1,7 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { buildApiUrl, API_ENDPOINTS } from '../../config/api';
 import CustomDropdown from './CustomDropdown';
 import checkImg from '../public/check.png';
 import kuruKuru from '../public/kurukuru-kururing.gif';
@@ -71,7 +72,7 @@ const AdminPage = (props) =>
         }
         
       if (shouldFetch) {
-        axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
+        axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
           .then(response => {
                 setStudents(response.data);
             localStorage.setItem(cacheKey, JSON.stringify({ data: response.data, timestamp: Date.now() }));
@@ -243,7 +244,7 @@ const AdminPage = (props) =>
         e.preventDefault();
         setChangeStatus("");
         try {
-            const response = await axios.post('http://localhost/Projects/TSU-ID-Scheduling-System/backend/update_admin.php', {
+            const response = await axios.post(buildApiUrl(API_ENDPOINTS.UPDATE_ADMIN), {
                 fullname: adminFullname,
                 student_number: adminStudentNumber
             });
@@ -297,13 +298,13 @@ const AdminPage = (props) =>
                 student_number: editData.student_number
               };
               
-              await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', updateData, {
+              await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), updateData, {
                 headers: { 'Content-Type': 'application/json' }
               });
               setEditRowId(null);
               setToast({ show: true, message: 'Student updated successfully!', type: 'success' });
               invalidateStudentCache();
-              axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
+              axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
                 .then(response => {
                   setStudents(response.data);
                   localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
@@ -328,13 +329,13 @@ const AdminPage = (props) =>
           action: async () => {
             setIsLoading(true);
             try {
-              await axios.delete('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', {
+              await axios.delete(buildApiUrl(API_ENDPOINTS.INDEX), {
                 data: { id },
                 headers: { 'Content-Type': 'application/json' }
               });
               setToast({ show: true, message: 'Student deleted successfully!', type: 'success' });
               invalidateStudentCache();
-              axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
+              axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
                 .then(response => {
                   setStudents(response.data);
                   localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
@@ -351,11 +352,11 @@ const AdminPage = (props) =>
     };
     const handleToggleStatus = async (student) => {
         const newStatus = student.status === 'done' ? 'pending' : 'done';
-        await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', { ...student, status: newStatus }, {
+        await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), { ...student, status: newStatus }, {
             headers: { 'Content-Type': 'application/json' }
         });
         invalidateStudentCache();
-        axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
+        axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
             .then(response => {
               setStudents(response.data);
               localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
@@ -368,12 +369,12 @@ const AdminPage = (props) =>
           show: true,
           action: async () => {
             try {
-              await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', { ...student, status: 'cancelled' }, {
+              await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), { ...student, status: 'cancelled' }, {
                 headers: { 'Content-Type': 'application/json' }
               });
               setToast({ show: true, message: 'Student marked as cancelled', type: 'success' });
               invalidateStudentCache();
-              axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
+              axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
                 .then(response => {
                   setStudents(response.data);
                   localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
@@ -401,7 +402,7 @@ const AdminPage = (props) =>
         }
 
         try {
-            await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', {
+            await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), {
                 ...rescheduleStudent,
                 schedule_date: rescheduleDate,
                 schedule_time: rescheduleTime,
@@ -417,7 +418,7 @@ const AdminPage = (props) =>
             setRescheduleTime('8:00am - 9:00am');
             
             invalidateStudentCache();
-            axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
+            axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS))
                 .then(response => {
                     setStudents(response.data);
                     localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
