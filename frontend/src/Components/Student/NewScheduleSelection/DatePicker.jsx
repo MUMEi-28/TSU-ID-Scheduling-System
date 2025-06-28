@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { addDays, subDays, format, isToday, isBefore } from 'date-fns'; // Added isBefore
+import { addDays, subDays, format, isToday, isBefore } from 'date-fns';
 import axios from 'axios';
 
 function DatePicker(props) {
@@ -28,7 +28,7 @@ function DatePicker(props) {
     const checkFullDates = async () => {
       const results = [];
       for (const date of availableDates) {
-        const formattedDate = format(date, 'MMMM d, yyyy');
+        const formattedDate = format(date, 'MMMM d,PPPP');
         let allFull = true;
         for (const time of [
           "8:00am - 9:00am", "9:00am -10:00am",
@@ -63,21 +63,24 @@ function DatePicker(props) {
   // Define today's date for comparison
   const today = useMemo(() => new Date(), []);
 
-  // Move window forward/backward by 1 day
+  // Move window forward/backward by 4 days
   const handleNextWindow = () => {
-    setWindowStartDate(prev => addDays(prev, 1));
+    setWindowStartDate(prev => addDays(prev, 4));
   };
   const handlePrevWindow = () => {
     // Calculate the potential new start date
-    const newStartDate = subDays(windowStartDate, 1);
+    const newStartDate = subDays(windowStartDate, 4); // Changed from 1 to 4
     // Only allow going back if the new start date is not before today
     if (!isBefore(newStartDate, today)) {
       setWindowStartDate(newStartDate);
+    } else {
+        // If going back by 4 days would go before today, go back to today's start date
+        setWindowStartDate(today);
     }
   };
 
   const handleDateSelect = (date) => {
-    const dateAsString = format(date, "MMMM d, yyyy");
+    const dateAsString = format(date, "MMMM d,PPPP");
     if (props.selectedDate === dateAsString) {
       props.setSelectedDate(null);
       props.setRegistrationInputs(prev => ({
@@ -95,7 +98,7 @@ function DatePicker(props) {
 
   // Determine if the previous button should be disabled
   // It should be disabled if windowStartDate is today or before today
-  const isPrevDisabled = isBefore(windowStartDate, addDays(today, 1)); // isBefore(windowStartDate, today + 1 day) effectively means windowStartDate is today or before
+  const isPrevDisabled = isBefore(windowStartDate, addDays(today, 1));
 
   return (
     <div className='flex-col flex justify-bet items-center h-4/12 w-full lg:w-fit '>
@@ -108,7 +111,7 @@ function DatePicker(props) {
           onClick={handlePrevWindow}
           className={`p-2 sm:p-3 text-gray-500 transition-colors duration-200 ease-in-out rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300
                     ${isPrevDisabled ? 'opacity-30 cursor-not-allowed' : 'hover:text-gray-700 hover:bg-gray-200'}`}
-          disabled={isPrevDisabled} // Disable the button based on the condition
+          disabled={isPrevDisabled}
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -123,7 +126,7 @@ function DatePicker(props) {
             const year = format(date, "yyyy");
             const isSelected = props.selectedDate && format(props.selectedDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
             const isCurrentDay = isToday(date);
-            const formattedDate = format(date, 'MMMM d, yyyy');
+            const formattedDate = format(date, 'MMMM d,PPPP');
             const isFull = fullDates.includes(formattedDate);
             return (
               <button
