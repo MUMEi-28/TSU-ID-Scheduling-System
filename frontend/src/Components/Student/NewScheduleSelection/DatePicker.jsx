@@ -69,7 +69,7 @@ function DatePicker(props) {
           console.error("Skipping invalid date in checkFullDates loop:", date);
           continue;
         }
-        const formattedDate = format(date, 'MMMM d,PPPP');
+        const formattedDate = format(date, 'MMMM d,yyyy');
         let allFull = true;
         for (const time of [
           "8:00am - 9:00am", "9:00am -10:00am",
@@ -134,7 +134,7 @@ function DatePicker(props) {
       console.error("Attempted to select an invalid date:", date);
       return;
     }
-    const dateAsString = format(date, "MMMM d,PPPP");
+    const dateAsString = format(date, "MMMM d,yyyy");
     if (props.selectedDate === dateAsString) {
       props.setSelectedDate(null);
       props.setRegistrationInputs(prev => ({
@@ -187,7 +187,7 @@ function DatePicker(props) {
             const year = format(date, "yyyy");
             const isSelected = props.selectedDate && format(props.selectedDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
             const isCurrentDay = isToday(date);
-            const formattedDate = format(date, 'MMMM d,PPPP');
+            const formattedDate = format(date, 'MMMM d,yyyy');
             const isFull = fullDates.includes(formattedDate);
 
             return (
