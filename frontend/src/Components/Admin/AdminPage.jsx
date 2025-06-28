@@ -23,11 +23,9 @@ const AdminPage = (props) => {
     const location = useLocation();
     const [showCalendar, setShowCalendar] = useState(false);
     const [showList, setShowList] = useState(false);
-    const [currentScheduleDate, setCurrentScheduleDate] = useState("No Date Chosen");
     const [placeHolderDate, setPlaceHolderDate] = useState("No Date Chosen");
     const [selectedTime, setSelectedTime] = useState("No Time Chosen");
     const [students, setStudents] = useState([]);
-    const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
     const [showChangeCredentials, setShowChangeCredentials] = useState(false);
     const [adminFullname, setAdminFullname] = useState("");
     const [adminStudentNumber, setAdminStudentNumber] = useState("");
@@ -104,11 +102,11 @@ const AdminPage = (props) => {
 
     // Add loading when date/time changes
     useEffect(() => {
-        if (!isLoading && currentScheduleDate !== "No Date Chosen") {
+        if (!isLoading && selectedTime !== "No Time Chosen") {
             setIsFiltering(true);
             setTimeout(() => setIsFiltering(false), 2000);
         }
-    }, [currentScheduleDate, selectedTime, isLoading]);
+    }, [selectedTime, isLoading]);
 
     // Auto-dismiss toast after 3 seconds
     useEffect(() => {
@@ -183,16 +181,16 @@ const AdminPage = (props) => {
     };
 
     // Existing functions (keep all your existing functions here)
-    const HandleChangeDate = () => setShowCalendar(true);
     const HandleShowList = () => setShowList(true);
 
     const handleDownloadList = () => {
         setShowList(false);
-        if (currentScheduleDate === "No Date Chosen") {
+        if (showAllStudents) {
             setToast({ show: true, message: 'Generating complete student list...', type: 'success' });
             downloadAllStudentsData();
         } else {
-            setToast({ show: true, message: `Generating list for ${currentScheduleDate}, ${selectedTime}`, type: 'success' });
+            const monthName = new Date(0, currentScheduleMonth).toLocaleString('en-US', { month: 'long' });
+            setToast({ show: true, message: `Generating list for ${monthName} ${currentScheduleYear}${selectedTime !== 'No Time Chosen' ? ', ' + selectedTime : ''}`, type: 'success' });
             downloadFilteredStudentsData();
         }
     };
@@ -211,7 +209,6 @@ const AdminPage = (props) => {
                 student.status || 'pending'
             ])
         ];
-        
         const csvContent = csvData.map(row => row.join(',')).join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
@@ -223,12 +220,15 @@ const AdminPage = (props) => {
     };
 
     const downloadFilteredStudentsData = () => {
-        const filteredData = students.filter(student => 
-            student.id !== 1 && 
-            student.schedule_date === currentScheduleDate && 
-            student.schedule_time === selectedTime
-        );
-        
+        const filteredData = students.filter(student => {
+            if (student.id === 1) return false;
+            if (!student.schedule_date) return false;
+            const dateObj = new Date(student.schedule_date);
+            const matchesMonth = dateObj.getMonth() === currentScheduleMonth && dateObj.getFullYear() === currentScheduleYear;
+            const matchesTime = selectedTime === 'No Time Chosen' || student.schedule_time === selectedTime;
+            return matchesMonth && matchesTime;
+        });
+        const monthName = new Date(0, currentScheduleMonth).toLocaleString('en-US', { month: 'long' });
         const csvData = [
             ['Name', 'Student Number', 'Email', 'ID Reason', 'Date', 'Time', 'Status'],
             ...filteredData.map(student => [
@@ -241,24 +241,14 @@ const AdminPage = (props) => {
                 student.status || 'pending'
             ])
         ];
-        
         const csvContent = csvData.map(row => row.join(',')).join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${currentScheduleDate}_${selectedTime}_students.csv`;
+        a.download = `${monthName}_${currentScheduleYear}${selectedTime !== 'No Time Chosen' ? '_' + selectedTime.replace(/\s+/g, '') : ''}_students.csv`;
         a.click();
         window.URL.revokeObjectURL(url);
-    };
-
-    const HandleDateReplace = () => {
-        setShowCalendar(false);
-        if (!selectedCalendarDate) return;
-        const realDate = new Date(selectedCalendarDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-        setCurrentScheduleDate(realDate);
-        setIsFiltering(true);
-        setTimeout(() => setIsFiltering(false), 2000);
     };
 
     useEffect(() => {
@@ -269,17 +259,27 @@ const AdminPage = (props) => {
         setPlaceHolderDate(realDate);
     }, [location.pathname]);
 
-    // Search, filter, and paginate students
+    // Add month/year state for filtering
+    const [currentScheduleMonth, setCurrentScheduleMonth] = useState(new Date().getMonth()); // 0-indexed
+    const [currentScheduleYear, setCurrentScheduleYear] = useState(new Date().getFullYear());
+
+    // Update filteredStudents to filter by month/year if not showing all students
     const filteredStudents = students.filter(student => {
-      if (student.id === 1) return false;
-      
-        const matchesSearch = student.fullname.toLowerCase().includes(search.toLowerCase()) ||
-                             student.student_number.includes(search) ||
-                             (student.email && student.email.toLowerCase().includes(search.toLowerCase()));
-        
-        const matchesStatus = filterStatus === 'all' || student.status === filterStatus;
-        
-        return matchesSearch && matchesStatus;
+      if (
+        student.id === 1 ||
+        (adminFullname && student.fullname === adminFullname) ||
+        (adminStudentNumber && student.student_number === adminStudentNumber)
+      ) return false;
+      const matchesSearch = student.fullname.toLowerCase().includes(search.toLowerCase()) ||
+                           student.student_number.includes(search) ||
+                           (student.email && student.email.toLowerCase().includes(search.toLowerCase()));
+      const matchesStatus = filterStatus === 'all' || student.status === filterStatus;
+      let matchesMonth = true;
+      if (!showAllStudents && student.schedule_date) {
+        const dateObj = new Date(student.schedule_date);
+        matchesMonth = dateObj.getMonth() === currentScheduleMonth && dateObj.getFullYear() === currentScheduleYear;
+      }
+      return matchesSearch && matchesStatus && matchesMonth;
     });
 
     const totalPages = Math.ceil(filteredStudents.length / perPage);
@@ -496,16 +496,6 @@ const AdminPage = (props) => {
         setRescheduleTime('8:00am - 9:00am');
     };
 
-    const handleDateChange = (e) => {
-        const date = new Date(e.target.value);
-        const formattedDate = date.toLocaleDateString('en-US', { 
-            month: 'long', 
-            day: 'numeric', 
-            year: 'numeric' 
-        });
-        setRescheduleDate(formattedDate);
-    };
-
     const invalidateStudentCache = () => {
       localStorage.removeItem('admin_students_cache');
     };
@@ -543,11 +533,31 @@ const AdminPage = (props) => {
 
     const handleTimeChange = (newTime) => {
         setSelectedTime(newTime);
-        if (currentScheduleDate !== "No Date Chosen" && newTime !== "No Time Chosen") {
+        if (selectedTime !== "No Time Chosen") {
             setIsFiltering(true);
             setTimeout(() => setIsFiltering(false), 1500);
         }
     };
+
+    const handleMonthChange = (e) => {
+        setCurrentScheduleMonth(Number(e.target.value));
+        setShowAllStudents(false);
+    };
+    const handleYearChange = (e) => {
+        setCurrentScheduleYear(Number(e.target.value));
+        setShowAllStudents(false);
+    };
+
+    const allStudentsList = students.filter(student =>
+      student.id !== 1 &&
+      (!adminFullname || student.fullname !== adminFullname) &&
+      (!adminStudentNumber || student.student_number !== adminStudentNumber)
+    );
+    const totalAllPages = Math.ceil(allStudentsList.length / perPage);
+    const studentsToShow = showAllStudents
+      ? allStudentsList.slice((page - 1) * perPage, (page - 1) * perPage + perPage)
+      : paginatedStudents;
+    const totalPagesToShow = showAllStudents ? totalAllPages : totalPages;
 
     return (
         <div className="min-h-screen w-full overflow-x-hidden flex flex-col">
@@ -567,12 +577,6 @@ const AdminPage = (props) => {
 
                     {/* Desktop Navigation */}
                     <div className='hidden sm:flex items-center space-x-4'>
-                        <button
-                            onClick={HandleChangeDate}
-                            className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-4 py-2 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold"
-                        >
-                            Change Date
-                        </button>
                         <button
                             onClick={HandleShowList}
                             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
@@ -610,14 +614,8 @@ const AdminPage = (props) => {
                     <div className='sm:hidden absolute top-full left-0 right-0 bg-gradient-to-bl from-[#641500] from-100% to-[#CA2A00] to-0% shadow-lg border-t border-white/20'>
                         <div className='flex flex-col space-y-3 p-4'>
                             <button
-                                onClick={HandleChangeDate}
-                                className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-4 py-3 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold w-full text-center"
-                            >
-                                Change Date
-                            </button>
-                            <button
                                 onClick={HandleShowList}
-                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg w-full text-center"
+                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold w-full text-center"
                             >
                                 Download List
                             </button>
@@ -650,9 +648,7 @@ const AdminPage = (props) => {
                         <img src={kuruKuru} alt="Filtering..." className="w-20 h-20 mb-4" />
                         <p className="text-xl font-semibold text-gray-700 mb-2">Filtering students...</p>
                         <p className="text-base text-gray-500">
-                            {currentScheduleDate !== "No Date Chosen" 
-                                ? `${currentScheduleDate}, ${selectedTime}` 
-                                : 'Loading all students...'}
+                            {selectedTime !== "No Time Chosen" ? selectedTime : 'Loading all students...'}
                         </p>
                     </div>
                 </div>
@@ -818,35 +814,6 @@ const AdminPage = (props) => {
                 </div>
             )}
 
-            {/* Calendar Modal (reworked for both normal and reschedule usage) */}
-            {showCalendar && (
-                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999]">
-                    <div className="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center max-w-md w-full mx-4">
-                        <Suspense fallback={<div className='text-xl font-bold text-gray-600'>Loading calendar...</div>}>
-                            <Calendar 
-                                onDateSelect={date => {
-                                    const formattedDate = new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-                                    if (showRescheduleModal) {
-                                        setRescheduleDate(formattedDate);
-                                        setShowCalendar(false);
-                                    } else {
-                                        setSelectedCalendarDate(date);
-                                        setShowCalendar(false);
-                                    }
-                                }}
-                                onClose={() => setShowCalendar(false)}
-                            />
-                        </Suspense>
-                        <button
-                            onClick={() => setShowCalendar(false)}
-                            className="mt-4 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-bold border-2 border-gray-600"
-                        >
-                            Close
-                        </button>
-                    </div>
-                </div>
-            )}
-
             {/* Reschedule Modal */}
             {showRescheduleModal && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
@@ -854,12 +821,20 @@ const AdminPage = (props) => {
                   <h2 className="text-xl font-bold mb-4">Reschedule Student</h2>
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                    <input
-                      type="date"
-                      value={rescheduleDate}
-                      onChange={e => setRescheduleDate(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg"
-                    />
+                    <div className="flex items-center gap-2">
+                      <span className="p-2 border border-gray-300 rounded-lg bg-gray-50 min-w-[140px]">
+                        {rescheduleDate ? rescheduleDate : 'No Date Chosen'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCalendar(true);
+                        }}
+                        className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold border-2 border-blue-600 text-sm"
+                      >
+                        Pick Date
+                      </button>
+                    </div>
                   </div>
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
@@ -896,8 +871,54 @@ const AdminPage = (props) => {
               </div>
             )}
 
+            {/* Calendar Modal (shared for both normal and reschedule usage) */}
+            {showCalendar && (
+                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999]">
+                    <div className="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center max-w-md w-full mx-2">
+                        <Suspense fallback={<div className='text-xl font-bold text-gray-600'>Loading calendar...</div>}>
+                            <Calendar 
+                                onDateSelect={date => {
+                                    setShowCalendar(false);
+                                }}
+                                onClose={() => setShowCalendar(false)}
+                            />
+                        </Suspense>
+                        <div className="flex gap-2 mt-3">
+                            <button
+                                onClick={() => {
+                                    setShowCalendar(false);
+                                }}
+                                className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold border-2 border-green-700 text-sm"
+                            >
+                                Confirm
+                            </button>
+                            <button
+                                onClick={() => { setShowCalendar(false); }}
+                                className="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-bold border-2 border-gray-600 text-sm"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Main content */}
             <div className="flex-1 p-6">
+                {/* Move the Show All Students button above the filters */}
+                <div className="flex justify-end mb-4">
+                    <button
+                        onClick={() => {
+                            setCurrentScheduleMonth(new Date().getMonth());
+                            setCurrentScheduleYear(new Date().getFullYear());
+                            setShowAllStudents(true);
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold border-2 border-blue-700 transition-all duration-150"
+                    >
+                        Show All Students
+                    </button>
+                </div>
+
                 {/* Filters */}
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -907,7 +928,7 @@ const AdminPage = (props) => {
                             type="text"
                                 placeholder="Search by name, student number, or email..."
                             value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                                onChange={(e) => { setSearch(e.target.value); setShowAllStudents(false); }}
                                 className="w-full p-2 border border-gray-300 rounded-lg"
                         />
                         </div>
@@ -916,7 +937,7 @@ const AdminPage = (props) => {
                             <label className="block text-sm font-medium text-gray-700 mb-2">Status Filter</label>
                         <select
                             value={filterStatus}
-                                onChange={(e) => setFilterStatus(e.target.value)}
+                                onChange={(e) => { setFilterStatus(e.target.value); setShowAllStudents(false); }}
                                 className="w-full p-2 border border-gray-300 rounded-lg"
                             >
                             <option value="all">All Status</option>
@@ -927,139 +948,143 @@ const AdminPage = (props) => {
                     </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Current Date</label>
-                            <button
-                                onClick={HandleChangeDate}
-                                className="w-full p-2 bg-gray-100 text-gray-700 rounded-lg font-bold border-2 border-gray-300 hover:bg-gray-200 transition-all duration-150 shadow-sm"
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                            <select
+                                value={currentScheduleMonth}
+                                onChange={e => { setCurrentScheduleMonth(Number(e.target.value)); setShowAllStudents(false); }}
+                                className="w-full p-2 border border-gray-300 rounded-lg"
                             >
-                                {currentScheduleDate === 'No Date Chosen' ? 'No Date Chosen (Click to select)' : currentScheduleDate}
-                            </button>
+                                {Array.from({ length: 12 }, (_, i) => (
+                                    <option key={i} value={i}>{new Date(0, i).toLocaleString('en-US', { month: 'long' })}</option>
+                                ))}
+                            </select>
                         </div>
-                        
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Current Time</label>
-                            <CustomDropdown
-                                options={[
-                                    "No Time Chosen",
-                                    "8:00am - 9:00am",
-                                    "9:00am -10:00am",
-                                    "10:00am-11:00am",
-                                    "11:00am-12:00pm",
-                                    "1:00pm - 2:00pm",
-                                    "2:00pm - 3:00pm",
-                                    "3:00pm - 4:00pm",
-                                    "4:00pm - 5:00pm"
-                                ]}
-                                value={selectedTime}
-                                onChange={handleTimeChange}
-                            />
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                            <select
+                                value={currentScheduleYear}
+                                onChange={e => { setCurrentScheduleYear(Number(e.target.value)); setShowAllStudents(false); }}
+                                className="w-full p-2 border border-gray-300 rounded-lg"
+                            >
+                                {Array.from({ length: 5 }, (_, i) => {
+                                    const year = new Date().getFullYear() - 2 + i;
+                                    return <option key={year} value={year}>{year}</option>;
+                                })}
+                            </select>
                         </div>
                     </div>
                 </div>
 
-                {/* Table */}
-                <div className="bg-white border border-gray-200 overflow-x-auto">
-                    <table className="table-auto w-full">
-                        <thead className="bg-gray-100 border-b border-gray-300">
-                            <tr>
-                                <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Name</th>
-                                <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Student Number</th>
-                                <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Schedule Date</th>
-                                <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Schedule Time</th>
-                                <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Status</th>
-                                <th className="py-2 px-2 text-left font-semibold text-gray-700">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {paginatedStudents.map((student) => (
-                                <tr 
-                                    key={student.id} 
-                                    className="border-b hover:bg-gray-50 cursor-pointer"
-                                    onClick={() => showStudentDetails(student)}
-                                >
-                                    <td className="py-2 px-2 border-r">{student.fullname}</td>
-                                    <td className="py-2 px-2 border-r">{student.student_number}</td>
-                                    <td className="py-2 px-2 border-r">{student.schedule_date || 'Not scheduled'}</td>
-                                    <td className="py-2 px-2 border-r">{student.schedule_time || 'Not scheduled'}</td>
-                                    <td className="py-2 px-2 border-r">
-                                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                                            student.status === 'done' ? 'bg-green-100 text-green-800' :
-                                            student.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                            'bg-yellow-100 text-yellow-800'
-                                        }`}>
-                                            {student.status}
-                                        </span>
-                                    </td>
-                                    <td className="py-2 px-2">
-                                        <div className="flex space-x-2">
-                                            <button 
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    showEditModal(student);
-                                                }}
-                                                className="flex items-center bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150"
-                                                title="Edit"
-                                            >
-                                                <span className="mr-1">✏️</span> Edit
-                                            </button>
-                                            <button 
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDelete(student.id);
-                                                }}
-                                                className="flex items-center bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150"
-                                                title="Delete"
-                                            >
-                                                <span className="mr-1">🗑️</span> Delete
-                                            </button>
-                                            <button 
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleToggleStatus(student);
-                                                }}
-                                                className={`flex items-center px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150 ${
-                                                    student.status === 'done' 
-                                                        ? 'bg-gray-400 hover:bg-gray-500 text-white' 
-                                                        : 'bg-green-500 hover:bg-green-600 text-white'
-                                                }`}
-                                                title={student.status === 'done' ? 'Mark Pending' : 'Mark Done'}
-                                            >
-                                                <span className="mr-1">{student.status === 'done' ? '⏳' : '✅'}</span> {student.status === 'done' ? 'Pending' : 'Done'}
-                                            </button>
-                                            {student.status !== 'cancelled' && (
-                                                <button 
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleMarkCancelled(student);
-                                                    }}
-                                                    className="flex items-center bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150"
-                                                    title="Mark Cancelled"
-                                                >
-                                                    <span className="mr-1">❌</span> Cancel
-                                                </button>
-                                            )}
-                                            {student.status === 'cancelled' && (
-                                                <button 
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleReschedule(student);
-                                                    }}
-                                                    className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150"
-                                                    title="Reschedule"
-                                                >
-                                                    <span className="mr-1">📅</span> Resched
-                                                </button>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                {/* Table logic: show all students if showAllStudents is true, else paginatedStudents */}
+                {(() => {
+                    const studentsToShow = showAllStudents
+                        ? allStudentsList.slice((page - 1) * perPage, (page - 1) * perPage + perPage)
+                        : paginatedStudents;
+                    return (
+                        <div className="bg-white border border-gray-200 overflow-x-auto">
+                            <table className="table-auto w-full">
+                                <thead className="bg-gray-100 border-b border-gray-300">
+                                    <tr>
+                                        <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Name</th>
+                                        <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Student Number</th>
+                                        <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Schedule Date</th>
+                                        <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Schedule Time</th>
+                                        <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Status</th>
+                                        <th className="py-2 px-2 text-left font-semibold text-gray-700">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {studentsToShow.map((student) => (
+                                        <tr 
+                                            key={student.id} 
+                                            className="border-b hover:bg-gray-50 cursor-pointer"
+                                            onClick={() => showStudentDetails(student)}
+                                        >
+                                            <td className="py-2 px-2 border-r">{student.fullname}</td>
+                                            <td className="py-2 px-2 border-r">{student.student_number}</td>
+                                            <td className="py-2 px-2 border-r">{student.schedule_date || 'Not scheduled'}</td>
+                                            <td className="py-2 px-2 border-r">{student.schedule_time || 'Not scheduled'}</td>
+                                            <td className="py-2 px-2 border-r">
+                                                <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                                                    student.status === 'done' ? 'bg-green-100 text-green-800' :
+                                                    student.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                                    'bg-yellow-100 text-yellow-800'
+                                                }`}>
+                                                    {student.status}
+                                                </span>
+                                            </td>
+                                            <td className="py-2 px-2">
+                                                <div className="flex space-x-2">
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            showEditModal(student);
+                                                        }}
+                                                        className="flex items-center bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150"
+                                                        title="Edit"
+                                                    >
+                                                        <span className="mr-1">✏️</span> Edit
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDelete(student.id);
+                                                        }}
+                                                        className="flex items-center bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150"
+                                                        title="Delete"
+                                                    >
+                                                        <span className="mr-1">🗑️</span> Delete
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleToggleStatus(student);
+                                                        }}
+                                                        className={`flex items-center px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150 ${
+                                                            student.status === 'done' 
+                                                                ? 'bg-gray-400 hover:bg-gray-500 text-white' 
+                                                                : 'bg-green-500 hover:bg-green-600 text-white'
+                                                        }`}
+                                                        title={student.status === 'done' ? 'Mark Pending' : 'Mark Done'}
+                                                    >
+                                                        <span className="mr-1">{student.status === 'done' ? '⏳' : '✅'}</span> {student.status === 'done' ? 'Pending' : 'Done'}
+                                                    </button>
+                                                    {student.status !== 'cancelled' && (
+                                                        <button 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleMarkCancelled(student);
+                                                            }}
+                                                            className="flex items-center bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150"
+                                                            title="Mark Cancelled"
+                                                        >
+                                                            <span className="mr-1">❌</span> Cancel
+                                                        </button>
+                                                    )}
+                                                    {student.status === 'cancelled' && (
+                                                        <button 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleReschedule(student);
+                                                            }}
+                                                            className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150"
+                                                            title="Reschedule"
+                                                        >
+                                                            <span className="mr-1">📅</span> Resched
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    );
+                })()}
 
-                {/* Pagination */}
-                {totalPages > 1 && (
+                {/* Hide pagination if showAllStudents is true */}
+                {!showAllStudents && totalPagesToShow > 1 && (
                     <div className="px-4 py-3 border-t border-gray-200">
                         <div className="flex items-center justify-between">
                             <div className="text-sm text-gray-700">
@@ -1090,7 +1115,7 @@ const AdminPage = (props) => {
                                         
                                 <button
                                     onClick={() => setPage(page + 1)}
-                                    disabled={page === totalPages}
+                                    disabled={page === totalPagesToShow}
                                     className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                                 >
                                     Next
