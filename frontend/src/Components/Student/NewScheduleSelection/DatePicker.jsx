@@ -1,32 +1,55 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { addDays, subDays, format, isToday, isBefore } from 'date-fns';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback, useMemo } from 'react'; // Added useMemo
+import { addDays, subDays, format, nextTuesday, previousTuesday, isToday, isBefore, isEqual } from 'date-fns'; // Added isEqual, isBefore
 
 function DatePicker(props) {
-  const [windowStartDate, setWindowStartDate] = useState(() => {
-    return new Date(); // Always start with a fresh, valid date
-  });
-  const [fullDates, setFullDates] = useState([]);
-
-  // Define today's date for comparison - ensure it's stable and normalized
-  const today = useMemo(() => {
+  // Normalize 'today' to the start of the day for consistent comparisons
+  const todayNormalized = useMemo(() => {
     const d = new Date();
-    d.setHours(0, 0, 0, 0); // Normalize to start of day for accurate comparison
+    d.setHours(0, 0, 0, 0);
     return d;
   }, []);
 
-  const availableDates = useMemo(() => {
-    // Ensure windowStartDate is valid before deriving dates
-    if (!(windowStartDate instanceof Date) || isNaN(windowStartDate.getTime())) {
-        console.error("Invalid windowStartDate detected, resetting to today.", windowStartDate);
-        return Array.from({ length: 4 }, (_, i) => addDays(today, i)); // Fallback to valid dates
+  // Calculate the earliest allowed 'currentWeekStart' (the Tuesday of the current week or today if today is Tuesday)
+  const initialCurrentWeekStart = useMemo(() => {
+    const dayOfWeek = todayNormalized.getDay(); // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
+
+    if (dayOfWeek === 2) { // Tuesday (Tarlac City might have different start of week, but JS getDay() is consistent)
+      return todayNormalized;
+    } else if (dayOfWeek < 2) { // Monday (1) or Sunday (0)
+      return nextTuesday(todayNormalized);
+    } else { // Wednesday (3), Thursday (4), Friday (5), Saturday (6)
+      return previousTuesday(todayNormalized);
     }
-    return Array.from({ length: 4 }, (_, i) => addDays(windowStartDate, i));
-  }, [windowStartDate, today]);
+  }, [todayNormalized]);
+
+  const [currentWeekStart, setCurrentWeekStart] = useState(initialCurrentWeekStart); // Initialize with the calculated earliest start
+
+  const [availableDates, setAvailableDates] = useState([]);
+  const [fullDates, setFullDates] = useState([]);
+
+  const calculateWeekDays = useCallback(() => {
+    const dates = [];
+    let currentDate = currentWeekStart;
+    // Ensure currentWeekStart is valid before adding days
+    if (!(currentDate instanceof Date) || isNaN(currentDate.getTime())) {
+      console.error("Invalid currentWeekStart detected in calculateWeekDays, resetting to initialCurrentWeekStart.");
+      currentDate = initialCurrentWeekStart; // Fallback to a valid date
+    }
+
+    for (let i = 0; i < 4; i++) { // Loop 4 times
+      dates.push(currentDate);
+      currentDate = addDays(currentDate, 1);
+    }
+    setAvailableDates(dates);
+  }, [currentWeekStart, initialCurrentWeekStart]); // Added initialCurrentWeekStart to dependencies
+
+  // Recalculate dates whenever currentWeekStart changes
+  useEffect(() => {
+    calculateWeekDays();
+  }, [currentWeekStart, calculateWeekDays]);
 
   useEffect(() => {
     // Check which dates are fully booked
-    // Add a check to ensure availableDates are valid before mapping for cacheKey
     const validDatesForCache = availableDates.filter(d => d instanceof Date && !isNaN(d.getTime()));
     const cacheKey = `full_dates_${validDatesForCache.map(d => format(d, 'yyyy-MM-dd')).join('_')}`;
     const cache = localStorage.getItem(cacheKey);
@@ -41,10 +64,10 @@ function DatePicker(props) {
     const checkFullDates = async () => {
       const results = [];
       for (const date of availableDates) {
-        // Add a check here for debugging before formatting
+        // Validate date before formatting
         if (!(date instanceof Date) || isNaN(date.getTime())) {
           console.error("Skipping invalid date in checkFullDates loop:", date);
-          continue; // Skip invalid dates to prevent further errors
+          continue;
         }
         const formattedDate = format(date, 'MMMM d,PPPP');
         let allFull = true;
@@ -76,42 +99,42 @@ function DatePicker(props) {
       localStorage.setItem(cacheKey, JSON.stringify({ data: results, timestamp: Date.now() }));
     };
     if (availableDates.length > 0 && shouldFetch) checkFullDates();
-  }, [windowStartDate, availableDates, today]); // Added today to dependencies
+  }, [availableDates]);
 
-  const handleNextWindow = () => {
-    setWindowStartDate(prev => {
-      if (!(prev instanceof Date) || isNaN(prev.getTime())) {
-        console.error("Invalid 'prev' date in handleNextWindow, using 'today' as base:", prev);
-        return addDays(today, 4); // Use a valid base if 'prev' is invalid
+  const handleNextWeek = () => {
+    setCurrentWeekStart(prevDate => {
+      // Validate prevDate before using addDays
+      if (!(prevDate instanceof Date) || isNaN(prevDate.getTime())) {
+        console.error("Invalid 'prevDate' in handleNextWeek, using initialCurrentWeekStart as base:", prevDate);
+        return addDays(initialCurrentWeekStart, 7); // Use a valid base if 'prevDate' is invalid
       }
-      return addDays(prev, 4);
+      return addDays(prevDate, 7);
     });
   };
 
-  const handlePrevWindow = () => {
-    setWindowStartDate(prev => {
-      if (!(prev instanceof Date) || isNaN(prev.getTime())) {
-        console.error("Invalid 'prev' date in handlePrevWindow, using 'today' as base:", prev);
-        return today; // Use a valid base if 'prev' is invalid
+  const handlePrevWeek = () => {
+    setCurrentWeekStart(prevDate => {
+      // Validate prevDate before using subDays
+      if (!(prevDate instanceof Date) || isNaN(prevDate.getTime())) {
+        console.error("Invalid 'prevDate' in handlePrevWeek, using initialCurrentWeekStart as base:", prevDate);
+        return initialCurrentWeekStart; // Use a valid base if 'prevDate' is invalid
       }
-      const newStartDate = subDays(prev, 4);
-      // Use the normalized 'today' for accurate comparison
-      if (!isBefore(newStartDate, today)) {
-        return newStartDate;
-      } else {
-          // If going back by 4 days would go before today, go back to today's start date
-          return today;
+      const newDate = subDays(prevDate, 7);
+      // Prevent going before the earliest allowed week start
+      if (isBefore(newDate, initialCurrentWeekStart)) {
+        return initialCurrentWeekStart;
       }
+      return newDate;
     });
   };
 
   const handleDateSelect = (date) => {
-    // Add validation here as well
+    // Validate date before use
     if (!(date instanceof Date) || isNaN(date.getTime())) {
-        console.error("Attempted to select an invalid date:", date);
-        return; // Prevent further execution with invalid date
+      console.error("Attempted to select an invalid date:", date);
+      return;
     }
-    const dateAsString = format(date, "MMM dd,yyyy");
+    const dateAsString = format(date, "MMMM d,PPPP");
     if (props.selectedDate === dateAsString) {
       props.setSelectedDate(null);
       props.setRegistrationInputs(prev => ({
@@ -127,13 +150,8 @@ function DatePicker(props) {
     }
   };
 
-  // Determine if the previous button should be disabled
-  // It should be disabled if windowStartDate is today or before today (normalized)
-  const isPrevDisabled = useMemo(() => {
-    // Normalize windowStartDate for comparison to avoid time component issues
-    const normalizedWindowStartDate = new Date(windowStartDate.getFullYear(), windowStartDate.getMonth(), windowStartDate.getDate());
-    return isBefore(normalizedWindowStartDate, addDays(today, 1));
-  }, [windowStartDate, today]);
+  // Disable previous button if currentWeekStart is the earliest allowed week start
+  const isPrevDisabled = isEqual(currentWeekStart, initialCurrentWeekStart);
 
 
   return (
@@ -141,10 +159,10 @@ function DatePicker(props) {
       <h1 className='font-bold text-4xl text-gray-600 league-font'>
         Pick a date
       </h1>
+
       <div className="flex items-center justify-center space-x-2 sm:space-x-4 w-full lg:w-fit">
-        {/* Prev Window Button */}
         <button
-          onClick={handlePrevWindow}
+          onClick={handlePrevWeek}
           className={`p-2 sm:p-3 text-gray-500 transition-colors duration-200 ease-in-out rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300
                     ${isPrevDisabled ? 'opacity-30 cursor-not-allowed' : 'hover:text-gray-700 hover:bg-gray-200'}`}
           disabled={isPrevDisabled}
@@ -153,13 +171,14 @@ function DatePicker(props) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        {/* Date Display (4 at a time) */}
+
+        {/* Date Display */}
         <div className="flex flex-wrap justify-center sm:justify-start shadow-lg shadow-gray-300 w-full sm:w-full xl:h-4/4 ">
           {availableDates.map((date) => {
-            // Add validation here as well, right before formatting for display
+            // Validate date before rendering
             if (!(date instanceof Date) || isNaN(date.getTime())) {
-                console.error("Invalid date found in availableDates map during render:", date);
-                return null; // Skip rendering this invalid date entry
+              console.error("Invalid date found in availableDates map during render:", date);
+              return null; // Skip rendering this invalid date entry
             }
 
             const dayOfWeek = format(date, 'EEE');
@@ -170,6 +189,7 @@ function DatePicker(props) {
             const isCurrentDay = isToday(date);
             const formattedDate = format(date, 'MMMM d,PPPP');
             const isFull = fullDates.includes(formattedDate);
+
             return (
               <button
                 key={format(date, 'yyyy-MM-dd')}
@@ -197,9 +217,10 @@ function DatePicker(props) {
             );
           })}
         </div>
-        {/* Next Window Button */}
+
+        {/* Next Week Button */}
         <button
-          onClick={handleNextWindow}
+          onClick={handleNextWeek}
           className="p-2 sm:p-3 text-gray-500 hover:text-gray-700 transition-colors duration-200 ease-in-out rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
