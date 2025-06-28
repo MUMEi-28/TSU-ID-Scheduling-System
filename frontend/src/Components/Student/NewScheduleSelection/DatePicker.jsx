@@ -111,7 +111,7 @@ function DatePicker(props) {
         console.error("Attempted to select an invalid date:", date);
         return; // Prevent further execution with invalid date
     }
-    const dateAsString = format(date, "MMMM d,PPPP");
+    const dateAsString = format(date, "MMM dd,yyyy");
     if (props.selectedDate === dateAsString) {
       props.setSelectedDate(null);
       props.setRegistrationInputs(prev => ({
