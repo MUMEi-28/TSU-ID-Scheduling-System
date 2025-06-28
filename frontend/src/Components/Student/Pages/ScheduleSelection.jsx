@@ -4,13 +4,18 @@ import DatePicker from '../NewScheduleSelection/DatePicker'
 import TimePicker from '../NewScheduleSelection/TimePicker'
 import { useNavigate } from 'react-router-dom'
 
-export default function ScheduleSelection(props) {
+export default function ScheduleSelection(props)
+{
   const navigate = useNavigate()
-  const handleBack = () => {
-    if (window.confirm('Are you sure you want to go back to the home page?')) {
-      if (props.handleLogout) {
+  const handleBack = () =>
+  {
+    if (window.confirm('Are you sure you want to go back to the home page?'))
+    {
+      if (props.handleLogout)
+      {
         props.handleLogout();
-      } else {
+      } else
+      {
         localStorage.removeItem('admin_token');
         localStorage.removeItem('registrationInputs');
         localStorage.removeItem('selectedTime');

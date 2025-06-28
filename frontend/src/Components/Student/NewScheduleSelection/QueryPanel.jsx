@@ -5,13 +5,13 @@ const QueryPanel = ({ handleBack }) =>
   const [showContact, setShowContact] = useState(false);
   return (
     <div className='h-fit sm:h-screen w-full sm:w-fit flex sm:flex-col justify-between bg-gradient-to-bl from-[#641500] from-100% to-[#CA2A00] to-0% py-7 sm:py-10 px-1 lg:px-3 xl:px-10 xl:pl-13  league-font sm:text-right text-left relative'>
-    
+
       <div className=''>
-      <h1 className='text-4xl sm:text-5xl font-bold text-white m-0'>2025</h1>
-      <h1 className='text-xl sm:text-3xl font-bold text-white m-0'>Calendar</h1>
-      <h1 className='text-md sm:text-xl font-sans  text-white m-0'>TSU ID</h1>
-      <h1 className='text-md sm:text-xl font-sans  text-white m-0'>Scheduling</h1>
-      <h1 className='text-md sm:text-xl font-sans  text-white m-0'>System</h1>
+        <h1 className='text-4xl sm:text-5xl font-bold text-white m-0'>2025</h1>
+        <h1 className='text-xl sm:text-3xl font-bold text-white m-0'>Calendar</h1>
+        <h1 className='text-md sm:text-xl font-sans  text-white m-0'>TSU ID</h1>
+        <h1 className='text-md sm:text-xl font-sans  text-white m-0'>Scheduling</h1>
+        <h1 className='text-md sm:text-xl font-sans  text-white m-0'>System</h1>
       </div>
 
       {handleBack && (
@@ -44,7 +44,7 @@ const QueryPanel = ({ handleBack }) =>
               &times;
             </button>
             <h2 className="text-3xl font-extrabold mb-4 text-center">Need Help? Report a Bug?</h2>
-            <p className="mb-6 text-lg text-center">For issues, suggestions, or feedback, contact us at:<br/><span className="font-mono text-blue-700 text-xl">reporthere@student.tsu.edu.ph</span></p>
+            <p className="mb-6 text-lg text-center">For issues, suggestions, or feedback, contact us at:<br /><span className="font-mono text-blue-700 text-xl">reporthere@student.tsu.edu.ph</span></p>
             <div className="w-full flex justify-center mb-4">
               <iframe
                 width="480"

@@ -28,9 +28,11 @@ const TimePicker = (props) =>
     const handleChooseTime = (e) =>
     {
         const selected = e.target.value;
-        if (props.selectedTime === selected) {
+        if (props.selectedTime === selected)
+        {
             props.setSelectedTime(null);
-        } else {
+        } else
+        {
             props.setSelectedTime(selected);
         }
 
@@ -55,8 +57,10 @@ const TimePicker = (props) =>
         return slotCounts[time];
     };
 
-    useEffect(() => {
-        if (!props.selectedDate) {
+    useEffect(() =>
+    {
+        if (!props.selectedDate)
+        {
             props.setSelectedTime(null);
             setLoading(false);
             return;
@@ -66,28 +70,35 @@ const TimePicker = (props) =>
         const cacheKey = `slot_counts_${props.selectedDate}`;
         const cache = localStorage.getItem(cacheKey);
         let shouldFetch = true;
-        if (cache) {
+        if (cache)
+        {
             const { data, timestamp } = JSON.parse(cache);
-            if (Date.now() - timestamp < 30000) { // 30 seconds
+            if (Date.now() - timestamp < 30000)
+            { // 30 seconds
                 setSlotCounts(data);
                 setLoading(false);
                 shouldFetch = false;
             }
         }
-        if (shouldFetch) {
-            const fetchCounts = async () => {
+        if (shouldFetch)
+        {
+            const fetchCounts = async () =>
+            {
                 const counts = {};
                 const formattedDate = format(new Date(props.selectedDate), "MMMM d, yyyy");
-                for (const time of timeSlots) {
-                    try {
-                        const res = await axios.get(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_slot_count.php`, {
+                for (const time of timeSlots)
+                {
+                    try
+                    {
+                        const res = await axios.get(`https://tsu-id-schedule.rf.gd/backend/get_slot_count.php`, {
                             params: {
                                 schedule_date: formattedDate,
                                 schedule_time: time
                             }
                         });
                         counts[time] = res.data.count || 0;
-                    } catch (e) {
+                    } catch (e)
+                    {
                         counts[time] = 0;
                     }
                 }
@@ -99,25 +110,31 @@ const TimePicker = (props) =>
         }
     }, [props.selectedDate]);
 
-    const handleSchedule = async () => {
-        if (!props.selectedTime) {
+    const handleSchedule = async () =>
+    {
+        if (!props.selectedTime)
+        {
             return;
         }
         const slotsLeft = getSlotAvailability(props.selectedTime);
-        if (slotsLeft >= 12) {
+        if (slotsLeft >= 12)
+        {
             setErrorMsg('Selected slot is already full. Please choose another slot.');
             const formattedDate = format(new Date(props.selectedDate), "MMMM d, yyyy");
             const counts = {};
-            for (const time of timeSlots) {
-                try {
-                    const res = await axios.get(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_slot_count.php`, {
+            for (const time of timeSlots)
+            {
+                try
+                {
+                    const res = await axios.get(`https://tsu-id-schedule.rf.gd/backend/get_slot_count.php`, {
                         params: {
                             schedule_date: formattedDate,
                             schedule_time: time
                         }
                     });
                     counts[time] = res.data.count || 0;
-                } catch (e) {
+                } catch (e)
+                {
                     counts[time] = 0;
                 }
             }
@@ -126,7 +143,8 @@ const TimePicker = (props) =>
             return;
         }
         setErrorMsg("");
-        try {
+        try
+        {
             props.setRegistrationInputs(prev => ({
                 ...prev,
                 schedule_time: props.selectedTime
@@ -135,27 +153,34 @@ const TimePicker = (props) =>
             navigate('/receipt');
             const formattedDate = format(new Date(props.selectedDate), "MMMM d, yyyy");
             const counts = {};
-            for (const time of timeSlots) {
-                try {
-                    const res = await axios.get(`http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_slot_count.php`, {
+            for (const time of timeSlots)
+            {
+                try
+                {
+                    const res = await axios.get(`https://tsu-id-schedule.rf.gd/backend/get_slot_count.php`, {
                         params: {
                             schedule_date: formattedDate,
                             schedule_time: time
                         }
                     });
                     counts[time] = res.data.count || 0;
-                } catch (e) {
+                } catch (e)
+                {
                     counts[time] = 0;
                 }
             }
             setSlotCounts(counts);
             localStorage.setItem(`slot_counts_${props.selectedDate}`, JSON.stringify({ data: counts, timestamp: Date.now() }));
-        } catch (err) {
-            if (err.response && err.response.data && err.response.data.message) {
+        } catch (err)
+        {
+            if (err.response && err.response.data && err.response.data.message)
+            {
                 setErrorMsg(err.response.data.message);
-            } else if (err.message) {
+            } else if (err.message)
+            {
                 setErrorMsg(`Scheduling error: ${err.message}`);
-            } else {
+            } else
+            {
                 setErrorMsg("An error occurred while scheduling. Please try again.");
             }
         }

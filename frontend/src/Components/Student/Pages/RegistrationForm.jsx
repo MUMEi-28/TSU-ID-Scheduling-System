@@ -40,52 +40,64 @@ export default function RegistrationForm(props)
         setPendingStudentData(null);
         setIsLoading(true);
 
-        try {
+        try
+        {
             // Simulate processing delay
             await new Promise(resolve => setTimeout(resolve, 2000));
 
             // Try login first
             const loginResponse = await axios.post(
-                "http://localhost/Projects/TSU-ID-Scheduling-System/backend/login.php",
+                "https://tsu-id-schedule.rf.gd/backend/login.php",
                 props.registrationInputs
             );
-            if (loginResponse.data.status === 1) {
+            if (loginResponse.data.status === 1)
+            {
                 let tokenSet = false;
                 // Admin login
-                if (loginResponse.data.admin_token) {
+                if (loginResponse.data.admin_token)
+                {
                     localStorage.setItem('admin_token', loginResponse.data.admin_token);
                     tokenSet = true;
-                    if (loginResponse.data.is_admin) {
+                    if (loginResponse.data.is_admin)
+                    {
                         navigate('/admin');
                         return;
                     }
                 }
                 // Student login (including new users)
-                if (loginResponse.data.student_token) {
+                if (loginResponse.data.student_token)
+                {
                     localStorage.setItem('admin_token', loginResponse.data.student_token);
                     tokenSet = true;
                 }
-                if (tokenSet) {
+                if (tokenSet)
+                {
                     // Store user data for new users (those without student_id)
-                    if (!loginResponse.data.student_id) {
+                    if (!loginResponse.data.student_id)
+                    {
                         localStorage.setItem('new_user_data', JSON.stringify(props.registrationInputs));
-                    } else {
+                    } else
+                    {
                         // Store student_id for existing users
                         localStorage.setItem('student_id', loginResponse.data.student_id);
                     }
                     navigate('/schedule');
-                } else {
+                } else
+                {
                     setError('Login failed: No token received.');
                 }
                 return;
-            } else if (loginResponse.data.status === 2) {
+            } else if (loginResponse.data.status === 2)
+            {
                 // Pending student with existing schedule - show receipt only
                 setPendingStudentData(loginResponse.data.student_data);
                 setShowPendingMessage(true);
                 return;
-            } else {
+            } else
+            {
                 // Handle special cases for done/cancelled status
-                if (loginResponse.data.student_status === 'done') {
+                if (loginResponse.data.student_status === 'done')
+                {
                     // Show message with button instead of auto-redirecting
                     setDoneStudentData(loginResponse.data.student_data);
                     setShowDoneMessage(true);
@@ -93,21 +105,27 @@ export default function RegistrationForm(props)
                 }
                 setError(loginResponse.data.message);
             }
-        } catch (err) {
+        } catch (err)
+        {
             // Handle network errors or server errors
-            if (err.response && err.response.data && err.response.data.message) {
+            if (err.response && err.response.data && err.response.data.message)
+            {
                 setError(err.response.data.message);
-            } else if (err.message) {
+            } else if (err.message)
+            {
                 setError(`Connection error: ${err.message}`);
-            } else {
+            } else
+            {
                 setError("An error occurred. Please try again.");
             }
-        } finally {
+        } finally
+        {
             setIsLoading(false);
         }
     }
 
-    const handleViewReceipt = () => {
+    const handleViewReceipt = () =>
+    {
         // Store student data for receipt view with a special "done" token
         localStorage.setItem('viewing_student_data', JSON.stringify(doneStudentData));
         localStorage.setItem('viewing_student_id', doneStudentData.id);
@@ -115,7 +133,8 @@ export default function RegistrationForm(props)
         navigate('/receipt');
     };
 
-    const handleViewPendingReceipt = () => {
+    const handleViewPendingReceipt = () =>
+    {
         // Store student data for receipt view with a special "pending" token
         localStorage.setItem('viewing_student_data', JSON.stringify(pendingStudentData));
         localStorage.setItem('viewing_student_id', pendingStudentData.id);
@@ -123,7 +142,8 @@ export default function RegistrationForm(props)
         navigate('/receipt');
     };
 
-    const handleBackToHome = () => {
+    const handleBackToHome = () =>
+    {
         setShowDoneMessage(false);
         setDoneStudentData(null);
         setShowPendingMessage(false);
@@ -151,7 +171,7 @@ export default function RegistrationForm(props)
                 <div className="relative w-full max-w-md sm:max-w-lg md:max-w-xl rounded-xl flex flex-col justify-center items-center gap-y-6 px-6 sm:px-10 pt-16 pb-1">
                     <div className='w-full h-full bg-[#ECECEC] absolute z-10 rounded-xl opacity-[.83] pb-10'></div>
                     <div className="h-8 w-full bg-[#5C0101] rounded-t-xl absolute top-0 z-10 mt-3"></div>
-                    
+
                     {/* Done Status Message */}
                     {showDoneMessage ? (
                         <div className="poppins-font text-[#5B0000] text-2xl sm:text-3xl md:text-4xl font-medium tracking-tight z-20 text-center">
@@ -280,7 +300,7 @@ export default function RegistrationForm(props)
                     <div className='w-full flex items-start justify-start flex-col gap-y-2'>
                         <h1 className='text-3xl sm:text-2xl md:text-3xl tracking-[.001vw] mt-0 font-medium'>Notice</h1>
                         <p className='text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-[#AAAAAA]'>
-                            <strong>🎉 TSU ID Scheduling System is not live!</strong><br/>
+                            <strong>🎉 TSU ID Scheduling System is not live!</strong><br />
                             We are excited to announce the official release of the TSU ID Scheduling System. Students can now book their ID appointment slots online, and admins can manage appointments with ease. Thank you for your support and we look forward to serving you better!
                         </p>
                         <p className='opacity-[.34] italic'>June 27, 2025</p>

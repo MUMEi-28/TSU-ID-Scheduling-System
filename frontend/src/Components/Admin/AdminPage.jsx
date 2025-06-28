@@ -6,14 +6,15 @@ import checkImg from '../public/check.png';
 import kuruKuru from '../public/kurukuru-kururing.gif';
 
 // Toast component
-function Toast({ message, type, onClose }) {
-  return (
-    <div className={`fixed top-8 right-8 z-[9999] px-6 py-4 rounded-lg shadow-lg text-lg font-bold transition-all duration-300 ${type === 'success' ? 'bg-green-500 text-white' : 'bg-red-600 text-white'}`}
-      style={{ minWidth: '220px', maxWidth: '90vw' }}>
-      <span>{message}</span>
-      <button onClick={onClose} className="ml-4 text-2xl font-bold text-white/80 hover:text-white">&times;</button>
-    </div>
-  );
+function Toast({ message, type, onClose })
+{
+    return (
+        <div className={`fixed top-8 right-8 z-[9999] px-6 py-4 rounded-lg shadow-lg text-lg font-bold transition-all duration-300 ${type === 'success' ? 'bg-green-500 text-white' : 'bg-red-600 text-white'}`}
+            style={{ minWidth: '220px', maxWidth: '90vw' }}>
+            <span>{message}</span>
+            <button onClick={onClose} className="ml-4 text-2xl font-bold text-white/80 hover:text-white">&times;</button>
+        </div>
+    );
 }
 
 // Lazy load the Calendar component
@@ -54,41 +55,49 @@ const AdminPage = (props) =>
     const [isFiltering, setIsFiltering] = useState(false);
 
     // Fetch students from backend on mount
-    useEffect(() => {
+    useEffect(() =>
+    {
         setIsLoading(true);
-      const cacheKey = 'admin_students_cache';
-      const cache = localStorage.getItem(cacheKey);
-      let shouldFetch = true;
-        
-      if (cache) {
-        const { data, timestamp } = JSON.parse(cache);
-        if (Date.now() - timestamp < 30000) { // 30 seconds
-          setStudents(data);
-          shouldFetch = false;
+        const cacheKey = 'admin_students_cache';
+        const cache = localStorage.getItem(cacheKey);
+        let shouldFetch = true;
+
+        if (cache)
+        {
+            const { data, timestamp } = JSON.parse(cache);
+            if (Date.now() - timestamp < 30000)
+            { // 30 seconds
+                setStudents(data);
+                shouldFetch = false;
                 // Still show loading for 5 seconds even with cache
                 setTimeout(() => setIsLoading(false), 5000);
             }
         }
-        
-      if (shouldFetch) {
-        axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
-          .then(response => {
-                setStudents(response.data);
-            localStorage.setItem(cacheKey, JSON.stringify({ data: response.data, timestamp: Date.now() }));
+
+        if (shouldFetch)
+        {
+            axios.get('https://tsu-id-schedule.rf.gd/backend/get_students.php')
+                .then(response =>
+                {
+                    setStudents(response.data);
+                    localStorage.setItem(cacheKey, JSON.stringify({ data: response.data, timestamp: Date.now() }));
                     // Show loading for 5 seconds
                     setTimeout(() => setIsLoading(false), 5000);
-            })
-          .catch(error => {
-                console.error('Failed to fetch students:', error);
-            setToast({ show: true, message: 'Failed to fetch students', type: 'error' });
+                })
+                .catch(error =>
+                {
+                    console.error('Failed to fetch students:', error);
+                    setToast({ show: true, message: 'Failed to fetch students', type: 'error' });
                     setTimeout(() => setIsLoading(false), 5000);
-            });
-      }
+                });
+        }
     }, []);
 
     // Add loading when date/time changes
-    useEffect(() => {
-        if (!isLoading && currentScheduleDate !== "No Date Chosen") {
+    useEffect(() =>
+    {
+        if (!isLoading && currentScheduleDate !== "No Date Chosen")
+        {
             setIsFiltering(true);
             // Simulate loading time for filtering
             setTimeout(() => setIsFiltering(false), 2000);
@@ -96,31 +105,37 @@ const AdminPage = (props) =>
     }, [currentScheduleDate, selectedTime, isLoading]);
 
     // Auto-dismiss toast after 3 seconds
-    useEffect(() => {
-      if (toast.show) {
-        const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
-        return () => clearTimeout(timer);
-      }
+    useEffect(() =>
+    {
+        if (toast.show)
+        {
+            const timer = setTimeout(() => setToast({ ...toast, show: false }), 3000);
+            return () => clearTimeout(timer);
+        }
     }, [toast.show]);
 
     const HandleChangeDate = () => setShowCalendar(true);
     const HandleShowList = () => setShowList(true);
 
-    const handleDownloadList = () => {
+    const handleDownloadList = () =>
+    {
         setShowList(false);
-        if (currentScheduleDate === "No Date Chosen") {
+        if (currentScheduleDate === "No Date Chosen")
+        {
             // Generate all students data
             setToast({ show: true, message: 'Generating complete student list...', type: 'success' });
             // Here you can add logic to download all students data
             downloadAllStudentsData();
-        } else {
+        } else
+        {
             setToast({ show: true, message: `Generating list for ${currentScheduleDate}, ${selectedTime}`, type: 'success' });
             // Here you can add logic to download filtered students data
             downloadFilteredStudentsData();
         }
     };
 
-    const downloadAllStudentsData = () => {
+    const downloadAllStudentsData = () =>
+    {
         // Filter out admin and create CSV data
         const allStudents = students.filter(student => student.id !== 1);
         const csvData = [
@@ -133,7 +148,7 @@ const AdminPage = (props) =>
                 student.status || 'pending'
             ])
         ];
-        
+
         // Convert to CSV and download
         const csvContent = csvData.map(row => row.join(',')).join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -145,14 +160,15 @@ const AdminPage = (props) =>
         window.URL.revokeObjectURL(url);
     };
 
-    const downloadFilteredStudentsData = () => {
+    const downloadFilteredStudentsData = () =>
+    {
         // Download filtered students data
-        const filteredData = students.filter(student => 
-            student.id !== 1 && 
-            student.schedule_date === currentScheduleDate && 
+        const filteredData = students.filter(student =>
+            student.id !== 1 &&
+            student.schedule_date === currentScheduleDate &&
             student.schedule_time === selectedTime
         );
-        
+
         const csvData = [
             ['Name', 'Student Number', 'Date', 'Time', 'Status'],
             ...filteredData.map(student => [
@@ -163,7 +179,7 @@ const AdminPage = (props) =>
                 student.status || 'pending'
             ])
         ];
-        
+
         const csvContent = csvData.map(row => row.join(',')).join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
@@ -174,7 +190,8 @@ const AdminPage = (props) =>
         window.URL.revokeObjectURL(url);
     };
 
-    const HandleDateReplace = () => {
+    const HandleDateReplace = () =>
+    {
         setShowCalendar(false);
         if (!selectedCalendarDate) return;
         const realDate = new Date(selectedCalendarDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
@@ -194,214 +211,253 @@ const AdminPage = (props) =>
     }, [location.pathname]);
 
     // Search, filter, and paginate students
-    const filteredStudents = students.filter(student => {
-      // Exclude admin (id=1) from the table
-      if (student.id === 1) return false;
-      
-      const matchesSearch =
-        student.fullname.toLowerCase().includes(search.toLowerCase()) ||
-        student.student_number.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = filterStatus === 'all' ? true : (student.status === filterStatus);
-      
-      // Show all students when no specific date is selected
-      let matchesDate = true;
-      
-      // Only apply date/time filtering if a specific date is selected AND it's not "No Date Chosen"
-      if (currentScheduleDate && currentScheduleDate !== "No Date Chosen") {
-        // If time is "No Time Chosen", only filter by date
-        if (selectedTime && selectedTime !== "No Time Chosen") {
-          matchesDate = student.schedule_date === currentScheduleDate && student.schedule_time === selectedTime;
-        } else {
-          matchesDate = student.schedule_date === currentScheduleDate;
+    const filteredStudents = students.filter(student =>
+    {
+        // Exclude admin (id=1) from the table
+        if (student.id === 1) return false;
+
+        const matchesSearch =
+            student.fullname.toLowerCase().includes(search.toLowerCase()) ||
+            student.student_number.toLowerCase().includes(search.toLowerCase());
+        const matchesStatus = filterStatus === 'all' ? true : (student.status === filterStatus);
+
+        // Show all students when no specific date is selected
+        let matchesDate = true;
+
+        // Only apply date/time filtering if a specific date is selected AND it's not "No Date Chosen"
+        if (currentScheduleDate && currentScheduleDate !== "No Date Chosen")
+        {
+            // If time is "No Time Chosen", only filter by date
+            if (selectedTime && selectedTime !== "No Time Chosen")
+            {
+                matchesDate = student.schedule_date === currentScheduleDate && student.schedule_time === selectedTime;
+            } else
+            {
+                matchesDate = student.schedule_date === currentScheduleDate;
+            }
         }
-      }
-      
-      return matchesSearch && matchesStatus && matchesDate;
+
+        return matchesSearch && matchesStatus && matchesDate;
     });
     const totalPages = Math.ceil(filteredStudents.length / perPage);
     const paginatedStudents = filteredStudents.slice((page - 1) * perPage, page * perPage);
 
     // Add this for debugging
-    useEffect(() => {
+    useEffect(() =>
+    {
         console.log('Students loaded:', students.length);
         console.log('Current schedule date:', currentScheduleDate);
         console.log('Selected time:', selectedTime);
         console.log('Filtered students:', filteredStudents.length);
     }, [students, currentScheduleDate, selectedTime, filteredStudents]);
 
-    const handleOpenChangeCredentials = () => {
+    const handleOpenChangeCredentials = () =>
+    {
         setShowChangeCredentials(true);
         setChangeStatus("");
     };
-    const handleCloseChangeCredentials = () => {
+    const handleCloseChangeCredentials = () =>
+    {
         setShowChangeCredentials(false);
         setAdminFullname("");
         setAdminStudentNumber("");
         setChangeStatus("");
     };
-    const handleChangeCredentials = async (e) => {
+    const handleChangeCredentials = async (e) =>
+    {
         e.preventDefault();
         setChangeStatus("");
-        try {
-            const response = await axios.post('http://localhost/Projects/TSU-ID-Scheduling-System/backend/update_admin.php', {
+        try
+        {
+            const response = await axios.post('https://tsu-id-schedule.rf.gd/backend/update_admin.php', {
                 fullname: adminFullname,
                 student_number: adminStudentNumber
             });
-            if (response.data.status === 1) {
+            if (response.data.status === 1)
+            {
                 setChangeStatus("Credentials updated successfully!");
                 setShowSuccessPopup(true);
-                setTimeout(() => {
+                setTimeout(() =>
+                {
                     setShowSuccessPopup(false);
                     handleCloseChangeCredentials();
                 }, 2000);
                 setToast({ show: true, message: 'Admin credentials updated!', type: 'success' });
-            } else {
+            } else
+            {
                 setChangeStatus(response.data.message || "Failed to update credentials.");
                 setToast({ show: true, message: response.data.message || 'Failed to update credentials', type: 'error' });
             }
-        } catch (err) {
+        } catch (err)
+        {
             setChangeStatus("Error updating credentials.");
             setToast({ show: true, message: 'Error updating credentials', type: 'error' });
         }
     };
-    const handleLogoutClick = () => {
+    const handleLogoutClick = () =>
+    {
         setConfirmModal({
-          show: true,
-          action: () => {
-            setToast({ show: true, message: 'You have been logged out.', type: 'success' });
-            if (props.handleLogout) props.handleLogout();
-          },
-          payload: null,
-          message: 'Are you sure you want to log out?'
+            show: true,
+            action: () =>
+            {
+                setToast({ show: true, message: 'You have been logged out.', type: 'success' });
+                if (props.handleLogout) props.handleLogout();
+            },
+            payload: null,
+            message: 'Are you sure you want to log out?'
         });
     };
 
     // CRUD handlers
-    const handleEditClick = (student) => {
+    const handleEditClick = (student) =>
+    {
         setEditRowId(student.id);
         setEditData({ ...student });
     };
-    const handleEditChange = (e) => {
+    const handleEditChange = (e) =>
+    {
         setEditData({ ...editData, [e.target.name]: e.target.value });
     };
-    const handleEditSave = async () => {
+    const handleEditSave = async () =>
+    {
         setConfirmModal({
-          show: true,
-          action: async () => {
-            setIsLoading(true);
-            try {
-              // Only send editable fields (name and student number)
-              const updateData = {
-                id: editData.id,
-                fullname: editData.fullname,
-                student_number: editData.student_number
-              };
-              
-              await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', updateData, {
-                headers: { 'Content-Type': 'application/json' }
-              });
-              setEditRowId(null);
-              setToast({ show: true, message: 'Student updated successfully!', type: 'success' });
-              invalidateStudentCache();
-              axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
-                .then(response => {
-                  setStudents(response.data);
-                  localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
-                  setTimeout(() => setIsLoading(false), 2000); // 2 seconds for updates
-                });
-            } catch (err) {
-              setToast({ show: true, message: 'Failed to update student', type: 'error' });
-              setTimeout(() => setIsLoading(false), 2000);
-            }
-          },
-          payload: null,
-          message: 'Are you sure you want to save these changes?'
+            show: true,
+            action: async () =>
+            {
+                setIsLoading(true);
+                try
+                {
+                    // Only send editable fields (name and student number)
+                    const updateData = {
+                        id: editData.id,
+                        fullname: editData.fullname,
+                        student_number: editData.student_number
+                    };
+
+                    await axios.put('https://tsu-id-schedule.rf.gd/backend/index.php', updateData, {
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    setEditRowId(null);
+                    setToast({ show: true, message: 'Student updated successfully!', type: 'success' });
+                    invalidateStudentCache();
+                    axios.get('https://tsu-id-schedule.rf.gd/backend/get_students.php')
+                        .then(response =>
+                        {
+                            setStudents(response.data);
+                            localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+                            setTimeout(() => setIsLoading(false), 2000); // 2 seconds for updates
+                        });
+                } catch (err)
+                {
+                    setToast({ show: true, message: 'Failed to update student', type: 'error' });
+                    setTimeout(() => setIsLoading(false), 2000);
+                }
+            },
+            payload: null,
+            message: 'Are you sure you want to save these changes?'
         });
     };
-    const handleEditCancel = () => {
+    const handleEditCancel = () =>
+    {
         setEditRowId(null);
         setEditData({});
     };
-    const handleDelete = (id) => {
+    const handleDelete = (id) =>
+    {
         setConfirmModal({
-          show: true,
-          action: async () => {
-            setIsLoading(true);
-            try {
-              await axios.delete('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', {
-                data: { id },
-                headers: { 'Content-Type': 'application/json' }
-              });
-              setToast({ show: true, message: 'Student deleted successfully!', type: 'success' });
-              invalidateStudentCache();
-              axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
-                .then(response => {
-                  setStudents(response.data);
-                  localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
-                  setTimeout(() => setIsLoading(false), 2000);
-                });
-            } catch (err) {
-              setToast({ show: true, message: 'Failed to delete student', type: 'error' });
-              setTimeout(() => setIsLoading(false), 2000);
-            }
-          },
-          payload: null,
-          message: 'Are you sure you want to delete this student? This action cannot be undone.'
+            show: true,
+            action: async () =>
+            {
+                setIsLoading(true);
+                try
+                {
+                    await axios.delete('https://tsu-id-schedule.rf.gd/backend/index.php', {
+                        data: { id },
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    setToast({ show: true, message: 'Student deleted successfully!', type: 'success' });
+                    invalidateStudentCache();
+                    axios.get('https://tsu-id-schedule.rf.gd/backend/get_students.php')
+                        .then(response =>
+                        {
+                            setStudents(response.data);
+                            localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+                            setTimeout(() => setIsLoading(false), 2000);
+                        });
+                } catch (err)
+                {
+                    setToast({ show: true, message: 'Failed to delete student', type: 'error' });
+                    setTimeout(() => setIsLoading(false), 2000);
+                }
+            },
+            payload: null,
+            message: 'Are you sure you want to delete this student? This action cannot be undone.'
         });
     };
-    const handleToggleStatus = async (student) => {
+    const handleToggleStatus = async (student) =>
+    {
         const newStatus = student.status === 'done' ? 'pending' : 'done';
-        await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', { ...student, status: newStatus }, {
+        await axios.put('https://tsu-id-schedule.rf.gd/backend/index.php', { ...student, status: newStatus }, {
             headers: { 'Content-Type': 'application/json' }
         });
         invalidateStudentCache();
-        axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
-            .then(response => {
-              setStudents(response.data);
-              localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+        axios.get('https://tsu-id-schedule.rf.gd/backend/get_students.php')
+            .then(response =>
+            {
+                setStudents(response.data);
+                localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
             });
         setToast({ show: true, message: `Student marked as ${newStatus}`, type: 'success' });
     };
 
-    const handleMarkCancelled = async (student) => {
+    const handleMarkCancelled = async (student) =>
+    {
         setConfirmModal({
-          show: true,
-          action: async () => {
-            try {
-              await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', { ...student, status: 'cancelled' }, {
-                headers: { 'Content-Type': 'application/json' }
-              });
-              setToast({ show: true, message: 'Student marked as cancelled', type: 'success' });
-              invalidateStudentCache();
-              axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
-                .then(response => {
-                  setStudents(response.data);
-                  localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
-                });
-            } catch (err) {
-              setToast({ show: true, message: 'Failed to mark student as cancelled', type: 'error' });
-            }
-          },
-          payload: null,
-          message: 'Are you sure you want to mark this student as cancelled?'
+            show: true,
+            action: async () =>
+            {
+                try
+                {
+                    await axios.put('https://tsu-id-schedule.rf.gd/backend/index.php', { ...student, status: 'cancelled' }, {
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    setToast({ show: true, message: 'Student marked as cancelled', type: 'success' });
+                    invalidateStudentCache();
+                    axios.get('https://tsu-id-schedule.rf.gd/backend/get_students.php')
+                        .then(response =>
+                        {
+                            setStudents(response.data);
+                            localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+                        });
+                } catch (err)
+                {
+                    setToast({ show: true, message: 'Failed to mark student as cancelled', type: 'error' });
+                }
+            },
+            payload: null,
+            message: 'Are you sure you want to mark this student as cancelled?'
         });
     };
 
-    const handleReschedule = (student) => {
+    const handleReschedule = (student) =>
+    {
         setRescheduleStudent(student);
         setRescheduleDate(student.schedule_date || '');
         setRescheduleTime(student.schedule_time || '8:00am - 9:00am');
         setShowRescheduleModal(true);
     };
 
-    const handleRescheduleSave = async () => {
-        if (!rescheduleDate || !rescheduleTime) {
+    const handleRescheduleSave = async () =>
+    {
+        if (!rescheduleDate || !rescheduleTime)
+        {
             setToast({ show: true, message: 'Please select both date and time', type: 'error' });
             return;
         }
 
-        try {
-            await axios.put('http://localhost/Projects/TSU-ID-Scheduling-System/backend/index.php', {
+        try
+        {
+            await axios.put('https://tsu-id-schedule.rf.gd/backend/index.php', {
                 ...rescheduleStudent,
                 schedule_date: rescheduleDate,
                 schedule_time: rescheduleTime,
@@ -409,84 +465,93 @@ const AdminPage = (props) =>
             }, {
                 headers: { 'Content-Type': 'application/json' }
             });
-            
+
             setToast({ show: true, message: 'Student rescheduled successfully', type: 'success' });
             setShowRescheduleModal(false);
             setRescheduleStudent(null);
             setRescheduleDate('');
             setRescheduleTime('8:00am - 9:00am');
-            
+
             invalidateStudentCache();
-            axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_students.php')
-                .then(response => {
+            axios.get('https://tsu-id-schedule.rf.gd/backend/get_students.php')
+                .then(response =>
+                {
                     setStudents(response.data);
                     localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
                 });
-        } catch (err) {
+        } catch (err)
+        {
             setToast({ show: true, message: 'Failed to reschedule student', type: 'error' });
         }
     };
 
-    const handleRescheduleCancel = () => {
+    const handleRescheduleCancel = () =>
+    {
         setShowRescheduleModal(false);
         setRescheduleStudent(null);
         setRescheduleDate('');
         setRescheduleTime('8:00am - 9:00am');
     };
 
-    const handleDateChange = (e) => {
+    const handleDateChange = (e) =>
+    {
         // Convert HTML date input (YYYY-MM-DD) to database format (Month Day, Year)
         const date = new Date(e.target.value);
-        const formattedDate = date.toLocaleDateString('en-US', { 
-            month: 'long', 
-            day: 'numeric', 
-            year: 'numeric' 
+        const formattedDate = date.toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
         });
         setRescheduleDate(formattedDate);
     };
 
     // Invalidate cache on student edit, delete, or status change
-    const invalidateStudentCache = () => {
-      localStorage.removeItem('admin_students_cache');
+    const invalidateStudentCache = () =>
+    {
+        localStorage.removeItem('admin_students_cache');
     };
 
     // Confirmation Modal
     const ConfirmModal = ({ show, message, onConfirm, onCancel }) => show ? (
-      <div className="fixed inset-0 z-[9998] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.15)' }}>
-        <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full flex flex-col items-center">
-          <h2 className="text-2xl font-bold mb-4 text-center">Confirmation</h2>
-          <p className="mb-6 text-center text-lg">{message}</p>
-          <div className="flex gap-6 justify-center">
-            <button onClick={onConfirm} className="bg-green-600 text-white px-6 py-2 rounded-lg font-bold text-lg hover:bg-green-800">Yes</button>
-            <button onClick={onCancel} className="bg-gray-400 text-white px-6 py-2 rounded-lg font-bold text-lg hover:bg-gray-600">No</button>
-          </div>
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.15)' }}>
+            <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full flex flex-col items-center">
+                <h2 className="text-2xl font-bold mb-4 text-center">Confirmation</h2>
+                <p className="mb-6 text-center text-lg">{message}</p>
+                <div className="flex gap-6 justify-center">
+                    <button onClick={onConfirm} className="bg-green-600 text-white px-6 py-2 rounded-lg font-bold text-lg hover:bg-green-800">Yes</button>
+                    <button onClick={onCancel} className="bg-gray-400 text-white px-6 py-2 rounded-lg font-bold text-lg hover:bg-gray-600">No</button>
+                </div>
+            </div>
         </div>
-      </div>
     ) : null;
 
     // Calculate pagination with sliding window
-    const getPaginationRange = () => {
+    const getPaginationRange = () =>
+    {
         const windowSize = 5; // Show 5 page numbers at a time
         const halfWindow = Math.floor(windowSize / 2);
-        
+
         let startPage = Math.max(1, page - halfWindow);
         let endPage = Math.min(totalPages, startPage + windowSize - 1);
-        
+
         // Adjust start if we're near the end
-        if (endPage - startPage < windowSize - 1) {
+        if (endPage - startPage < windowSize - 1)
+        {
             startPage = Math.max(1, endPage - windowSize + 1);
         }
-        
+
         return { startPage, endPage };
     };
 
     const { startPage, endPage } = getPaginationRange();
 
     // Add loading when time changes
-    const handleTimeChange = (newTime) => {
+    const handleTimeChange = (newTime) =>
+    {
         setSelectedTime(newTime);
         // Only show loading if a specific date is selected and time is not "No Time Chosen"
-        if (currentScheduleDate !== "No Date Chosen" && newTime !== "No Time Chosen") {
+        if (currentScheduleDate !== "No Date Chosen" && newTime !== "No Time Chosen")
+        {
             setIsFiltering(true);
             setTimeout(() => setIsFiltering(false), 1500);
         }
@@ -512,8 +577,8 @@ const AdminPage = (props) =>
                         <img src={kuruKuru} alt="Filtering..." className="w-20 h-20 mb-4" />
                         <p className="text-xl font-semibold text-gray-700 mb-2">Filtering students...</p>
                         <p className="text-base text-gray-500">
-                            {currentScheduleDate !== "No Date Chosen" 
-                                ? `${currentScheduleDate}, ${selectedTime}` 
+                            {currentScheduleDate !== "No Date Chosen"
+                                ? `${currentScheduleDate}, ${selectedTime}`
                                 : 'Loading all students...'}
                         </p>
                     </div>
@@ -524,121 +589,122 @@ const AdminPage = (props) =>
             {toast.show && <Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />}
             {/* Confirmation Modal */}
             <ConfirmModal
-              show={confirmModal.show}
-              message={confirmModal.message}
-              onConfirm={async () => {
-                setConfirmModal({ ...confirmModal, show: false });
-                if (typeof confirmModal.action === 'function') await confirmModal.action();
-              }}
-              onCancel={() => setConfirmModal({ ...confirmModal, show: false })}
+                show={confirmModal.show}
+                message={confirmModal.message}
+                onConfirm={async () =>
+                {
+                    setConfirmModal({ ...confirmModal, show: false });
+                    if (typeof confirmModal.action === 'function') await confirmModal.action();
+                }}
+                onCancel={() => setConfirmModal({ ...confirmModal, show: false })}
             />
             {/* Calendar Modal */}
-                {showCalendar && (
-                    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-20">
-                        <div className="bg-white p-6 opacity-100 rounded-lg shadow-xl h-fit flex flex-col justify-center items-center text-2xl">
-                            <Suspense fallback={<div className='text-xl font-bold text-gray-600'>Loading calendar...</div>}>
-                              <Calendar onDateSelect={setSelectedCalendarDate} onClose={() => setShowCalendar(false)} />
-                            </Suspense>
-                            <hr />
-                            <button
-                                onClick={HandleDateReplace}
-                                className="w-full p-5 text-2xl bg-red-500 text-white rounded-md hover:bg-red-600"
-                            >
-                                Change Date to: {selectedCalendarDate ? new Date(selectedCalendarDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'No Date Selected'}
-                            </button>
-                        </div>
+            {showCalendar && (
+                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-20">
+                    <div className="bg-white p-6 opacity-100 rounded-lg shadow-xl h-fit flex flex-col justify-center items-center text-2xl">
+                        <Suspense fallback={<div className='text-xl font-bold text-gray-600'>Loading calendar...</div>}>
+                            <Calendar onDateSelect={setSelectedCalendarDate} onClose={() => setShowCalendar(false)} />
+                        </Suspense>
+                        <hr />
+                        <button
+                            onClick={HandleDateReplace}
+                            className="w-full p-5 text-2xl bg-red-500 text-white rounded-md hover:bg-red-600"
+                        >
+                            Change Date to: {selectedCalendarDate ? new Date(selectedCalendarDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'No Date Selected'}
+                        </button>
                     </div>
-                )}
+                </div>
+            )}
 
-                {/* Generate List Popup - Improved Design */}
-                {showList && (
-                    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-20">
-                        <div className="bg-white p-8 rounded-lg shadow-xl w-96 flex flex-col justify-center items-center border-2 border-gray-200">
-                            <h1 className="text-3xl font-bold mb-6 text-gray-800">Generate List</h1>
-                            
-                            {currentScheduleDate === "No Date Chosen" ? (
-                                <div className="text-center mb-6">
-                                    <p className="text-lg text-gray-600 mb-2">Generate complete student list</p>
-                                    <p className="text-sm text-gray-500">All students will be included in the download</p>
+            {/* Generate List Popup - Improved Design */}
+            {showList && (
+                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-20">
+                    <div className="bg-white p-8 rounded-lg shadow-xl w-96 flex flex-col justify-center items-center border-2 border-gray-200">
+                        <h1 className="text-3xl font-bold mb-6 text-gray-800">Generate List</h1>
+
+                        {currentScheduleDate === "No Date Chosen" ? (
+                            <div className="text-center mb-6">
+                                <p className="text-lg text-gray-600 mb-2">Generate complete student list</p>
+                                <p className="text-sm text-gray-500">All students will be included in the download</p>
+                            </div>
+                        ) : (
+                            <div className="text-center mb-6">
+                                <p className="text-lg text-gray-600 mb-2">Generate filtered list</p>
+                                <div className="bg-gray-100 p-4 rounded-lg">
+                                    <p className="text-sm font-semibold text-gray-700">Date: {currentScheduleDate}</p>
+                                    <p className="text-sm font-semibold text-gray-700">Time: {selectedTime}</p>
                                 </div>
-                            ) : (
-                                <div className="text-center mb-6">
-                                    <p className="text-lg text-gray-600 mb-2">Generate filtered list</p>
-                                    <div className="bg-gray-100 p-4 rounded-lg">
-                                        <p className="text-sm font-semibold text-gray-700">Date: {currentScheduleDate}</p>
-                                        <p className="text-sm font-semibold text-gray-700">Time: {selectedTime}</p>
-                                    </div>
-                                </div>
-                            )}
-                            
-                            <div className="flex gap-4">
+                            </div>
+                        )}
+
+                        <div className="flex gap-4">
                             <button
                                 onClick={handleDownloadList}
-                                    className="px-6 py-3 bg-green-600 text-white rounded-lg font-bold text-lg hover:bg-green-700 transition-colors"
+                                className="px-6 py-3 bg-green-600 text-white rounded-lg font-bold text-lg hover:bg-green-700 transition-colors"
+                            >
+                                Download CSV
+                            </button>
+                            <button
+                                onClick={() => setShowList(false)}
+                                className="px-6 py-3 bg-gray-400 text-white rounded-lg font-bold text-lg hover:bg-gray-500 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Change Credentials Modal */}
+            {showChangeCredentials && (
+                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-30">
+                    <div className="bg-white p-8 rounded-lg shadow-xl flex flex-col items-center w-96 relative">
+                        {showSuccessPopup && (
+                            <div className="fixed inset-0 flex items-center justify-center z-50">
+                                <div className="flex flex-col items-center bg-green-600 text-white px-8 py-8 rounded-lg shadow-2xl text-lg font-bold">
+                                    <img src={checkImg} alt="check" className="w-16 h-16 mb-4" />
+                                    Credentials successfully updated!
+                                </div>
+                            </div>
+                        )}
+                        <h2 className="text-2xl font-bold mb-4">Change Admin Credentials</h2>
+                        <form onSubmit={handleChangeCredentials} className="flex flex-col gap-4 w-full">
+                            <input
+                                type="text"
+                                placeholder="Full Name (Username)"
+                                value={adminFullname}
+                                onChange={e => setAdminFullname(e.target.value)}
+                                className="border p-2 rounded w-full"
+                                required
+                            />
+                            <input
+                                type="text"
+                                placeholder="Student Number (Password)"
+                                value={adminStudentNumber}
+                                onChange={e => setAdminStudentNumber(e.target.value)}
+                                className="border p-2 rounded w-full"
+                                required
+                            />
+                            <div className="flex justify-center gap-4 mt-2">
+                                <button
+                                    type="submit"
+                                    className="w-fit text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:text-bold hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-8 py-2 text-lg"
                                 >
-                                    Download CSV
+                                    Update
                                 </button>
                                 <button
-                                    onClick={() => setShowList(false)}
-                                    className="px-6 py-3 bg-gray-400 text-white rounded-lg font-bold text-lg hover:bg-gray-500 transition-colors"
+                                    type="button"
+                                    onClick={handleCloseChangeCredentials}
+                                    className="w-fit text-center duration-150 rounded-md border-2 border-gray-400 bg-gray-200 text-gray-800 hover:bg-gray-300 hover:text-black px-8 py-2 text-lg"
                                 >
                                     Cancel
-                            </button>
+                                </button>
                             </div>
-                        </div>
+                        </form>
+                        {changeStatus && !showSuccessPopup && <div className="mt-4 text-center text-lg font-semibold">{changeStatus}</div>}
                     </div>
-                )}
-
-                {/* Change Credentials Modal */}
-                {showChangeCredentials && (
-                    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-30">
-                        <div className="bg-white p-8 rounded-lg shadow-xl flex flex-col items-center w-96 relative">
-                            {showSuccessPopup && (
-                                <div className="fixed inset-0 flex items-center justify-center z-50">
-                                    <div className="flex flex-col items-center bg-green-600 text-white px-8 py-8 rounded-lg shadow-2xl text-lg font-bold">
-                                        <img src={checkImg} alt="check" className="w-16 h-16 mb-4" />
-                                        Credentials successfully updated!
-                                    </div>
-                                </div>
-                            )}
-                            <h2 className="text-2xl font-bold mb-4">Change Admin Credentials</h2>
-                            <form onSubmit={handleChangeCredentials} className="flex flex-col gap-4 w-full">
-                                <input
-                                    type="text"
-                                    placeholder="Full Name (Username)"
-                                    value={adminFullname}
-                                    onChange={e => setAdminFullname(e.target.value)}
-                                    className="border p-2 rounded w-full"
-                                    required
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Student Number (Password)"
-                                    value={adminStudentNumber}
-                                    onChange={e => setAdminStudentNumber(e.target.value)}
-                                    className="border p-2 rounded w-full"
-                                    required
-                                />
-                                <div className="flex justify-center gap-4 mt-2">
-                                    <button
-                                        type="submit"
-                                        className="w-fit text-center duration-150 text-white rounded-md hover:border-2 border-2 hover:text-bold hover:border-[#AC0000] hover:text-[#AC0000] hover:bg-[#f5f5f5] bg-[#AC0000] px-8 py-2 text-lg"
-                                    >
-                                        Update
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={handleCloseChangeCredentials}
-                                        className="w-fit text-center duration-150 rounded-md border-2 border-gray-400 bg-gray-200 text-gray-800 hover:bg-gray-300 hover:text-black px-8 py-2 text-lg"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
-                            {changeStatus && !showSuccessPopup && <div className="mt-4 text-center text-lg font-semibold">{changeStatus}</div>}
-                        </div>
-                    </div>
-                )}
+                </div>
+            )}
 
             {/* Reschedule Modal */}
             {showRescheduleModal && (
@@ -653,7 +719,7 @@ const AdminPage = (props) =>
                                 <strong>Student Number:</strong> {rescheduleStudent?.student_number}
                             </p>
                         </div>
-                        
+
                         <div className="w-full mb-4">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 New Date
@@ -730,7 +796,8 @@ const AdminPage = (props) =>
                 {/* Show All Students Button */}
                 <div className="flex flex-col items-center gap-2 mt-4 ml-12">
                     <button
-                        onClick={() => {
+                        onClick={() =>
+                        {
                             setIsFiltering(true);
                             setCurrentScheduleDate("No Date Chosen");
                             setSelectedTime("No Time Chosen");
@@ -784,16 +851,16 @@ const AdminPage = (props) =>
                     {/* Filter Status Indicator */}
                     <div className="mb-4 p-3 bg-gray-100 rounded-lg">
                         <p className="text-sm text-gray-600">
-                            <strong>Current Filter:</strong> 
-                            {currentScheduleDate === "No Date Chosen" 
-                                ? " Showing all students" 
+                            <strong>Current Filter:</strong>
+                            {currentScheduleDate === "No Date Chosen"
+                                ? " Showing all students"
                                 : ` ${currentScheduleDate}${selectedTime !== "No Time Chosen" ? `, ${selectedTime}` : ''}`}
                             {filterStatus !== 'all' && ` | Status: ${filterStatus}`}
                             {search && ` | Search: "${search}"`}
                         </p>
                         <p className="text-sm text-gray-500 mt-1">
                             Showing {filteredStudents.length} of {students.filter(s => s.id !== 1).length} students
-                            {currentScheduleDate !== "No Date Chosen" && 
+                            {currentScheduleDate !== "No Date Chosen" &&
                                 (selectedTime !== "No Time Chosen" ? ' for selected date/time' : ' for selected date')}
                         </p>
                     </div>
@@ -822,110 +889,110 @@ const AdminPage = (props) =>
                     {/* Table with fixed height and scroll */}
                     <div className="flex-1 overflow-hidden flex flex-col">
                         <div className="flex-1 overflow-y-auto">
-                    <table className="w-full text-center border border-gray-300">
+                            <table className="w-full text-center border border-gray-300">
                                 <thead className="bg-[#971212] text-white text-lg sticky top-0">
-                            <tr>
-                                <th className="py-3 border">Name</th>
-                                <th className="py-3 border">Student Number</th>
-                                <th className="py-3 border">Date</th>
-                                <th className="py-3 border">Time</th>
-                                <th className="py-3 border">Status</th>
-                                <th className="py-3 border">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                                    {paginatedStudents.length > 0 ? (
-                                paginatedStudents.map((student, index) => (
-                                    <tr key={index} className="hover:bg-gray-100">
-                                        {editRowId === student.id ? (
-                                            <>
-                                                <td className="py-2 border"><input name="fullname" value={editData.fullname} onChange={handleEditChange} className="border p-1 rounded w-full" /></td>
-                                                <td className="py-2 border"><input name="student_number" value={editData.student_number} onChange={handleEditChange} className="border p-1 rounded w-full" /></td>
-                                                <td className="py-2 border">{editData.schedule_date}</td>
-                                                <td className="py-2 border">{editData.schedule_time}</td>
-                                                <td className="py-2 border">
-                                                    <span className={
-                                                        editData.status === 'done' ? 'bg-green-200 text-green-800 px-2 py-1 rounded' : 
-                                                        editData.status === 'cancelled' ? 'bg-red-200 text-red-800 px-2 py-1 rounded' :
-                                                        'bg-yellow-200 text-yellow-800 px-2 py-1 rounded'
-                                                    }>
-                                                    {editData.status || 'pending'}
-                                                </span>
-                                                </td>
-                                                <td className="py-2 border flex gap-2 justify-center">
-                                                    <button onClick={handleEditSave} className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-800">Save</button>
-                                                    <button onClick={handleEditCancel} className="bg-gray-400 text-white px-2 py-1 rounded hover:bg-gray-600">Cancel</button>
-                                                </td>
-                                            </>
-                                        ) : (
-                                            <>
-                                        <td className="py-2 border">{student.fullname}</td>
-                                        <td className="py-2 border">{student.student_number}</td>
-                                        <td className="py-2 border">{student.schedule_date}</td>
-                                        <td className="py-2 border">{student.schedule_time}</td>
-                                                <td className="py-2 border">
-                                                        <span className={
-                                                            student.status === 'done' ? 'bg-green-200 text-green-800 px-2 py-1 rounded' : 
-                                                            student.status === 'cancelled' ? 'bg-red-200 text-red-800 px-2 py-1 rounded' :
-                                                            'bg-yellow-200 text-yellow-800 px-2 py-1 rounded'
-                                                        }>
-                                                        {student.status || 'pending'}
-                                                    </span>
-                                                </td>
-                                                <td className="py-2 border flex gap-2 justify-center">
-                                                    <button onClick={() => handleEditClick(student)} className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-800">Edit</button>
-                                                    <button onClick={() => handleDelete(student.id)} className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-800">Delete</button>
-                                                    <button onClick={() => handleToggleStatus(student)} className={student.status === 'done' ? 'bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-700' : 'bg-green-500 text-white px-2 py-1 rounded hover:bg-green-700'}>
-                                                        {student.status === 'done' ? 'Mark Pending' : 'Mark Done'}
-                                                    </button>
-                                                        {student.status !== 'cancelled' && (
-                                                            <button onClick={() => handleMarkCancelled(student)} className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-700">
-                                                                Mark Cancelled
-                                                            </button>
-                                                        )}
-                                                        {student.status === 'cancelled' && (
-                                                            <button onClick={() => handleReschedule(student)} className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-700">
-                                                                Reschedule
-                                                            </button>
-                                                        )}
-                                                </td>
-                                            </>
-                                        )}
+                                    <tr>
+                                        <th className="py-3 border">Name</th>
+                                        <th className="py-3 border">Student Number</th>
+                                        <th className="py-3 border">Date</th>
+                                        <th className="py-3 border">Time</th>
+                                        <th className="py-3 border">Status</th>
+                                        <th className="py-3 border">Actions</th>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="6" className="py-4 text-gray-400">
-                                                {currentScheduleDate === "No Date Chosen" 
-                                                    ? "No students found matching your search criteria." 
+                                </thead>
+                                <tbody>
+                                    {paginatedStudents.length > 0 ? (
+                                        paginatedStudents.map((student, index) => (
+                                            <tr key={index} className="hover:bg-gray-100">
+                                                {editRowId === student.id ? (
+                                                    <>
+                                                        <td className="py-2 border"><input name="fullname" value={editData.fullname} onChange={handleEditChange} className="border p-1 rounded w-full" /></td>
+                                                        <td className="py-2 border"><input name="student_number" value={editData.student_number} onChange={handleEditChange} className="border p-1 rounded w-full" /></td>
+                                                        <td className="py-2 border">{editData.schedule_date}</td>
+                                                        <td className="py-2 border">{editData.schedule_time}</td>
+                                                        <td className="py-2 border">
+                                                            <span className={
+                                                                editData.status === 'done' ? 'bg-green-200 text-green-800 px-2 py-1 rounded' :
+                                                                    editData.status === 'cancelled' ? 'bg-red-200 text-red-800 px-2 py-1 rounded' :
+                                                                        'bg-yellow-200 text-yellow-800 px-2 py-1 rounded'
+                                                            }>
+                                                                {editData.status || 'pending'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-2 border flex gap-2 justify-center">
+                                                            <button onClick={handleEditSave} className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-800">Save</button>
+                                                            <button onClick={handleEditCancel} className="bg-gray-400 text-white px-2 py-1 rounded hover:bg-gray-600">Cancel</button>
+                                                        </td>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <td className="py-2 border">{student.fullname}</td>
+                                                        <td className="py-2 border">{student.student_number}</td>
+                                                        <td className="py-2 border">{student.schedule_date}</td>
+                                                        <td className="py-2 border">{student.schedule_time}</td>
+                                                        <td className="py-2 border">
+                                                            <span className={
+                                                                student.status === 'done' ? 'bg-green-200 text-green-800 px-2 py-1 rounded' :
+                                                                    student.status === 'cancelled' ? 'bg-red-200 text-red-800 px-2 py-1 rounded' :
+                                                                        'bg-yellow-200 text-yellow-800 px-2 py-1 rounded'
+                                                            }>
+                                                                {student.status || 'pending'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-2 border flex gap-2 justify-center">
+                                                            <button onClick={() => handleEditClick(student)} className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-800">Edit</button>
+                                                            <button onClick={() => handleDelete(student.id)} className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-800">Delete</button>
+                                                            <button onClick={() => handleToggleStatus(student)} className={student.status === 'done' ? 'bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-700' : 'bg-green-500 text-white px-2 py-1 rounded hover:bg-green-700'}>
+                                                                {student.status === 'done' ? 'Mark Pending' : 'Mark Done'}
+                                                            </button>
+                                                            {student.status !== 'cancelled' && (
+                                                                <button onClick={() => handleMarkCancelled(student)} className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-700">
+                                                                    Mark Cancelled
+                                                                </button>
+                                                            )}
+                                                            {student.status === 'cancelled' && (
+                                                                <button onClick={() => handleReschedule(student)} className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-700">
+                                                                    Reschedule
+                                                                </button>
+                                                            )}
+                                                        </td>
+                                                    </>
+                                                )}
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="6" className="py-4 text-gray-400">
+                                                {currentScheduleDate === "No Date Chosen"
+                                                    ? "No students found matching your search criteria."
                                                     : `No students found for ${currentScheduleDate}, ${selectedTime}.`}
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
 
                         {/* Pagination - Always at bottom */}
-                    {totalPages > 1 && (
+                        {totalPages > 1 && (
                             <div className="mt-4 pt-4 border-t border-gray-200">
                                 <div className="flex flex-col items-center gap-2">
                                     {/* Page info */}
                                     <div className="text-sm text-gray-600">
                                         Page {page} of {totalPages} • Showing {((page - 1) * perPage) + 1} to {Math.min(page * perPage, filteredStudents.length)} of {filteredStudents.length} students
                                     </div>
-                                    
+
                                     {/* Pagination buttons */}
                                     <div className="flex justify-center items-center gap-2">
                                         {/* Previous button */}
-                            <button
-                                onClick={() => setPage(page - 1)}
-                                disabled={page === 1}
+                                        <button
+                                            onClick={() => setPage(page - 1)}
+                                            disabled={page === 1}
                                             className="px-3 py-1 rounded bg-gray-200 text-gray-700 font-bold disabled:opacity-50 hover:bg-gray-300"
-                            >
-                                &lt;
-                            </button>
-                                        
+                                        >
+                                            &lt;
+                                        </button>
+
                                         {/* First page (if not in current window) */}
                                         {startPage > 1 && (
                                             <>
@@ -940,52 +1007,52 @@ const AdminPage = (props) =>
                                                 )}
                                             </>
                                         )}
-                                        
+
                                         {/* Page numbers in current window */}
-                                        {Array.from({ length: endPage - startPage + 1 }, (_, i) => {
+                                        {Array.from({ length: endPage - startPage + 1 }, (_, i) =>
+                                        {
                                             const pageNum = startPage + i;
                                             return (
                                                 <button
                                                     key={pageNum}
                                                     onClick={() => setPage(pageNum)}
-                                                    className={`px-3 py-1 rounded font-bold ${
-                                                        page === pageNum 
-                                                            ? 'bg-[#971212] text-white' 
-                                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                    }`}
+                                                    className={`px-3 py-1 rounded font-bold ${page === pageNum
+                                                        ? 'bg-[#971212] text-white'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                        }`}
                                                 >
                                                     {pageNum}
                                                 </button>
                                             );
                                         })}
-                                        
+
                                         {/* Last page (if not in current window) */}
                                         {endPage < totalPages && (
                                             <>
                                                 {endPage < totalPages - 1 && (
                                                     <span className="px-2 text-gray-500">...</span>
                                                 )}
-                                <button
+                                                <button
                                                     onClick={() => setPage(totalPages)}
                                                     className="px-3 py-1 rounded bg-gray-100 text-gray-700 font-bold hover:bg-gray-200"
-                                >
+                                                >
                                                     {totalPages}
-                                </button>
+                                                </button>
                                             </>
                                         )}
-                                        
+
                                         {/* Next button */}
-                            <button
-                                onClick={() => setPage(page + 1)}
-                                disabled={page === totalPages}
+                                        <button
+                                            onClick={() => setPage(page + 1)}
+                                            disabled={page === totalPages}
                                             className="px-3 py-1 rounded bg-gray-200 text-gray-700 font-bold disabled:opacity-50 hover:bg-gray-300"
-                            >
-                                &gt;
-                            </button>
+                                        >
+                                            &gt;
+                                        </button>
                                     </div>
                                 </div>
-                        </div>
-                    )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
