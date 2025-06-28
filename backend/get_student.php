@@ -19,7 +19,7 @@ try {
     $stmt->bindParam(':id', $student_id);
     $stmt->execute();
     $student = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if ($student) {
         echo json_encode(['status' => 1, 'data' => $student]);
     } else {
@@ -27,4 +27,4 @@ try {
     }
 } catch (Exception $e) {
     echo json_encode(['status' => 0, 'message' => 'Internal server error']);
-} 
+}
