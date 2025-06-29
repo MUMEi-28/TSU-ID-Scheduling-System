@@ -12,6 +12,7 @@ const AddStudentModal = React.lazy(() => import('./Modals/AddStudentModal'));/* 
 import SlotAdjustmentPanel from './Modals/SlotAdjustmentPanel';
 import RescheduleModal from './Modals/RescheduleModal';
 import CalendarModal from './Modals/CalendarModal'
+import StudentDetailModal from './Modals/StudentDetailModal';
 
 // Toast component
 function Toast({ message, type, onClose })
@@ -923,58 +924,10 @@ const AdminPage = (props) =>
             {/* Detail Modal */}
             {
                 detailModal.show && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-                        <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-xl font-bold">Student Details</h2>
-                                <button
-                                    onClick={() => setDetailModal({ show: false, student: null })}
-                                    className="text-gray-500 hover:text-gray-700 text-2xl"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                <div><strong>Name:</strong> {detailModal.student.fullname}</div>
-                                <div><strong>Student Number:</strong> {detailModal.student.student_number}</div>
-                                <div><strong>Email:</strong> {detailModal.student.email || 'N/A'}</div>
-                                <div><strong>ID Reason:</strong> {detailModal.student.id_reason || 'N/A'}</div>
-                                <div><strong>Schedule Date:</strong> {detailModal.student.schedule_date || 'Not scheduled'}</div>
-                                <div><strong>Schedule Time:</strong> {detailModal.student.schedule_time || 'Not scheduled'}</div>
-                                <div><strong>Status:</strong>
-                                    <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${detailModal.student.status === 'done' ? 'bg-green-100 text-green-800' :
-                                        detailModal.student.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                            'bg-yellow-100 text-yellow-800'
-                                        }`}>
-                                        {detailModal.student.status}
-                                    </span>
-                                </div>
-                                <div><strong>Privacy Agreed:</strong> {detailModal.student.data_privacy_agreed ? 'Yes' : 'No'}</div>
-                                <div><strong>Created:</strong> {detailModal.student.created_at ? new Date(detailModal.student.created_at).toLocaleDateString() : 'N/A'}</div>
-                                <div><strong>Updated:</strong> {detailModal.student.updated_at ? new Date(detailModal.student.updated_at).toLocaleDateString() : 'N/A'}</div>
-                            </div>
-
-                            <div className="flex gap-2 justify-end">
-                                <button
-                                    onClick={() =>
-                                    {
-                                        setDetailModal({ show: false, student: null });
-                                        showEditModal(detailModal.student);
-                                    }}
-                                    className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-4 py-2 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold"
-                                >
-                                    Edit Student
-                                </button>
-                                <button
-                                    onClick={() => setDetailModal({ show: false, student: null })}
-                                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
-                                >
-                                    Close
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <StudentDetailModal
+                        setDetailModal={setDetailModal}
+                        detailModal={detailModal}
+                    />
                 )
             }
 
