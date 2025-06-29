@@ -25,16 +25,20 @@ export default function Calendar({ onDateSelect, onClose })
     const startWeekday = startOfMonth.day();
     const daysInMonth = startOfMonth.daysInMonth();
 
-    const handleDateClick = (date) => {
-        if (onDateSelect) {
+    const handleDateClick = (date) =>
+    {
+        if (onDateSelect)
+        {
             onDateSelect(date.format('YYYY-MM-DD'));
         }
     };
 
-    const handlePrevMonth = () => {
+    const handlePrevMonth = () =>
+    {
         setCurrentDate(currentDate.subtract(1, 'month'));
     };
-    const handleNextMonth = () => {
+    const handleNextMonth = () =>
+    {
         setCurrentDate(currentDate.add(1, 'month'));
     };
 

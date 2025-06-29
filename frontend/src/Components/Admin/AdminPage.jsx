@@ -8,10 +8,8 @@ import kuruKuru from '../public/kurukuru-kururing.gif';
 import { displayToCanonical, normalizeDate } from '../../utils/timeUtils';
 
 
-
 //Modals
-import AddStudentModal from './Modals/AddStudentModal'
-// const AddStudentModal = React.lazy(() => import('./Modals/AddStudentModal')); [AYAW GUMANA E -_- FIX LATER ]
+const AddStudentModal = React.lazy(() => import('./Modals/AddStudentModal'));/* [AYAW GUMANA E - _ - FIX LATER] */
 
 // Toast component
 function Toast({ message, type, onClose })
@@ -47,7 +45,7 @@ const AdminPage = (props) =>
     const [selectedTimeforAdjustment, setSelectedTimeForAdjustment] = useState("No Time Chosen");
     const [slotAdjustmentDate, setSlotAdjustmentDate] = useState(null);
     const [currentMaxCapacity, setCurrentMaxCapacity] = useState(null);
-    
+
     // New state for modals
     const [detailModal, setDetailModal] = useState({ show: false, student: null });
     const [editModal, setEditModal] = useState({ show: false, student: null, data: {} });
@@ -124,8 +122,10 @@ const AdminPage = (props) =>
 
     // Add loading when date/time changes
 
-    useEffect(() => {
-        if (!isLoading && selectedTime !== "No Time Chosen") {
+    useEffect(() =>
+    {
+        if (!isLoading && selectedTime !== "No Time Chosen")
+        {
             setIsFiltering(true);
             setTimeout(() => setIsFiltering(false), 2000);
         }
@@ -224,10 +224,12 @@ const AdminPage = (props) =>
     {
         setShowList(false);
 
-        if (showAllStudents) {
+        if (showAllStudents)
+        {
             setToast({ show: true, message: 'Generating complete student list...', type: 'success' });
             downloadAllStudentsData();
-        } else {
+        } else
+        {
             const monthName = new Date(0, currentScheduleMonth).toLocaleString('en-US', { month: 'long' });
             setToast({ show: true, message: `Generating list for ${monthName} ${currentScheduleYear}${selectedTime !== 'No Time Chosen' ? ', ' + selectedTime : ''}`, type: 'success' });
             downloadFilteredStudentsData();
@@ -261,8 +263,10 @@ const AdminPage = (props) =>
     };
 
 
-    const downloadFilteredStudentsData = () => {
-        const filteredData = students.filter(student => {
+    const downloadFilteredStudentsData = () =>
+    {
+        const filteredData = students.filter(student =>
+        {
             if (student.id === 1) return false;
             if (!student.schedule_date) return false;
             const dateObj = new Date(student.schedule_date);
@@ -317,22 +321,24 @@ const AdminPage = (props) =>
     const [currentScheduleYear, setCurrentScheduleYear] = useState(new Date().getFullYear());
 
     // Update filteredStudents to filter by month/year if not showing all students
-    const filteredStudents = students.filter(student => {
-      if (
-        student.id === 1 ||
-        (adminFullname && student.fullname === adminFullname) ||
-        (adminStudentNumber && student.student_number === adminStudentNumber)
-      ) return false;
-      const matchesSearch = student.fullname.toLowerCase().includes(search.toLowerCase()) ||
-                           student.student_number.includes(search) ||
-                           (student.email && student.email.toLowerCase().includes(search.toLowerCase()));
-      const matchesStatus = filterStatus === 'all' || student.status === filterStatus;
-      let matchesMonth = true;
-      if (!showAllStudents && student.schedule_date) {
-        const dateObj = new Date(student.schedule_date);
-        matchesMonth = dateObj.getMonth() === currentScheduleMonth && dateObj.getFullYear() === currentScheduleYear;
-      }
-      return matchesSearch && matchesStatus && matchesMonth;
+    const filteredStudents = students.filter(student =>
+    {
+        if (
+            student.id === 1 ||
+            (adminFullname && student.fullname === adminFullname) ||
+            (adminStudentNumber && student.student_number === adminStudentNumber)
+        ) return false;
+        const matchesSearch = student.fullname.toLowerCase().includes(search.toLowerCase()) ||
+            student.student_number.includes(search) ||
+            (student.email && student.email.toLowerCase().includes(search.toLowerCase()));
+        const matchesStatus = filterStatus === 'all' || student.status === filterStatus;
+        let matchesMonth = true;
+        if (!showAllStudents && student.schedule_date)
+        {
+            const dateObj = new Date(student.schedule_date);
+            matchesMonth = dateObj.getMonth() === currentScheduleMonth && dateObj.getFullYear() === currentScheduleYear;
+        }
+        return matchesSearch && matchesStatus && matchesMonth;
     });
 
     const totalPages = Math.ceil(filteredStudents.length / perPage);
@@ -645,55 +651,64 @@ const AdminPage = (props) =>
         }
     };
 
-    const handleMonthChange = (e) => {
+    const handleMonthChange = (e) =>
+    {
         setCurrentScheduleMonth(Number(e.target.value));
         setShowAllStudents(false);
     };
-    const handleYearChange = (e) => {
+    const handleYearChange = (e) =>
+    {
         setCurrentScheduleYear(Number(e.target.value));
         setShowAllStudents(false);
     };
 
     const allStudentsList = students.filter(student =>
-      student.id !== 1 &&
-      (!adminFullname || student.fullname !== adminFullname) &&
-      (!adminStudentNumber || student.student_number !== adminStudentNumber)
+        student.id !== 1 &&
+        (!adminFullname || student.fullname !== adminFullname) &&
+        (!adminStudentNumber || student.student_number !== adminStudentNumber)
     );
     const totalAllPages = Math.ceil(allStudentsList.length / perPage);
     const studentsToShow = showAllStudents
-      ? allStudentsList.slice((page - 1) * perPage, (page - 1) * perPage + perPage)
-      : paginatedStudents;
+        ? allStudentsList.slice((page - 1) * perPage, (page - 1) * perPage + perPage)
+        : paginatedStudents;
     const totalPagesToShow = showAllStudents ? totalAllPages : totalPages;
 
-    const handleOpenSlotAdjustmentPanel = () => {
+    const handleOpenSlotAdjustmentPanel = () =>
+    {
         setSlotAdjustmentPanel(true);
     }
 
-    const handleCloseSlotAdjustmentPanel = () => {
+    const handleCloseSlotAdjustmentPanel = () =>
+    {
         setSlotAdjustmentDate(null);
         setSelectedTimeForAdjustment("No Time Chosen");
         setCurrentMaxCapacity(null);
         setSlotAdjustmentPanel(false);
     }
-    
-const formatDateLocal = (date) => {
-  if (typeof date === 'string') date = new Date(date);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
 
-    const fetchMaxCapacity = async (slotAdjustmentDate, selectedTimeforAdjustment) => {
-        if (!slotAdjustmentDate || !selectedTimeforAdjustment || selectedTimeforAdjustment === 'No Time Chosen') {
+    const formatDateLocal = (date) =>
+    {
+        if (typeof date === 'string') date = new Date(date);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const fetchMaxCapacity = async (slotAdjustmentDate, selectedTimeforAdjustment) =>
+    {
+        if (!slotAdjustmentDate || !selectedTimeforAdjustment || selectedTimeforAdjustment === 'No Time Chosen')
+        {
             setCurrentMaxCapacity(null);
             return null;
         }
         let formattedDate = slotAdjustmentDate;
-        if (slotAdjustmentDate instanceof Date || (typeof slotAdjustmentDate === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(slotAdjustmentDate))) {
+        if (slotAdjustmentDate instanceof Date || (typeof slotAdjustmentDate === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(slotAdjustmentDate)))
+        {
             formattedDate = formatDateLocal(slotAdjustmentDate);
         }
-        try {
+        try
+        {
             const response = await axios.get(buildApiUrl(API_ENDPOINTS.GET_MAX_SLOT_COUNT), {
                 params: {
                     schedule_date: formattedDate,
@@ -703,46 +718,54 @@ const formatDateLocal = (date) => {
             console.log('[DEBUG] fetchMaxCapacity API response:', response.data);
             setCurrentMaxCapacity(response.data.max_capacity); // <-- set state here
             return response.data.max_capacity;
-        } catch (error) {
+        } catch (error)
+        {
             console.error('[DEBUG] fetchMaxCapacity API error:', error);
             setCurrentMaxCapacity(null); // clear on error
             return null;
         }
     };
 
-    const handleSlotAdjustment = async (action) => {
-        if (!slotAdjustmentDate || !selectedTimeforAdjustment || selectedTimeforAdjustment === 'No Time Chosen') {
+    const handleSlotAdjustment = async (action) =>
+    {
+        if (!slotAdjustmentDate || !selectedTimeforAdjustment || selectedTimeforAdjustment === 'No Time Chosen')
+        {
             setToast({ show: true, message: 'Please select both date and time', type: 'error' });
             return;
         }
         let formattedDate = slotAdjustmentDate;
-        if (slotAdjustmentDate instanceof Date || (typeof slotAdjustmentDate === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(slotAdjustmentDate))) {
+        if (slotAdjustmentDate instanceof Date || (typeof slotAdjustmentDate === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(slotAdjustmentDate)))
+        {
             formattedDate = formatDateLocal(slotAdjustmentDate);
         }
         let timeString = selectedTimeforAdjustment;
         console.log('[DEBUG] handleSlotAdjustment called with:', { formattedDate, timeString, action });
-        try {
+        try
+        {
             const response = await axios.post(buildApiUrl(API_ENDPOINTS.ADJUST_SLOT_LIMIT), {
                 schedule_date: formattedDate,
                 schedule_time: displayToCanonical(timeString), // Send canonical format to backend
                 action: action // 'increase' or 'decrease'
             });
             console.log('[DEBUG] handleSlotAdjustment API response:', response.data);
-            if (response.data.success) {
+            if (response.data.success)
+            {
                 // Refetch the new max capacity
                 fetchMaxCapacity(formattedDate, selectedTimeforAdjustment);
                 setToast({ show: true, message: `Slot capacity ${action === 'increase' ? 'increased' : 'decreased'}!`, type: 'success' });
-            } else {
+            } else
+            {
                 setToast({ show: true, message: response.data.error || 'Failed to update slot capacity', type: 'error' });
             }
-        } catch (error) {
+        } catch (error)
+        {
             console.error('[DEBUG] handleSlotAdjustment API error:', error);
             setToast({ show: true, message: 'Server error adjusting slot capacity', type: 'error' });
         }
     };
 
     return (
-        <div className="min-h-screen w-full overflow-x-hidden flex flex-col">
+        <div className="min-h-screen w-full overflow-x-hidden flex flex-col bg-black"> {/* TANGGLAIN BG BLACK LATER */}
             {/* Header */}
             <header className='w-full bg-gradient-to-bl from-[#641500] from-100% to-[#CA2A00] to-0% py-4 px-6 shadow-lg relative z-40'>
                 <div className='flex justify-between items-center'>
@@ -1079,8 +1102,8 @@ const formatDateLocal = (date) => {
                             </button>
                         </div>
                     </div>
-               
-            )}
+
+                )}
 
             {slotAdjustmentPanel && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] ">
@@ -1088,82 +1111,83 @@ const formatDateLocal = (date) => {
                         <h2 className="text-xl font-bold mb-4">Adjust Slots</h2>
                         <div className="mb-4 absolute top-4 right-4">
                             <button onClick={handleCloseSlotAdjustmentPanel} className="block text-xl  rounded font-medium  text-gray-700 "> ✕ </button>
-                    </div>
+                        </div>
 
-                   <button className='w-full border rounded py-1 font-medium bg-gray-200 border-gray-300 text-gray-700' onClick={() => setShowCalendar(true)}>Choose Date</button>
-                    <div className='my-2 w-full text-center mt-2'>Date: <b className='text-lg text-center'>{slotAdjustmentDate}</b></div>
-                    <AdjustmentCustomDropdown 
-                        selectedTime={selectedTimeforAdjustment}
-                        setSelectedTime={setSelectedTimeForAdjustment}
-                        getTime={fetchMaxCapacity}
-                        date={slotAdjustmentDate}
-                 />
-                 <div className='w-full text-center mt-2'>Time: <b className='text-lg text-center'>{selectedTimeforAdjustment}</b></div>
-                 <div className='mt-4 text-center' >Current Maximum Slots:</div>
-                 <div className='flex w-full justify-between md:justify-evenly  mt-4'>
-                    <button className='text-4xl border-2 border-gray-300 rounded-full p-1 pb-3' onClick={() => handleSlotAdjustment('decrease')}> - </button>
-                    <div className='text-3xl font-bold text-gray-700'>{currentMaxCapacity !== null ? currentMaxCapacity : 'Loading...'}</div>
-                    <button className='text-2xl border-2 border-gray-300 rounded-full p-1 pb-3' onClick={() => handleSlotAdjustment('increase')}>+</button>
+                        <button className='w-full border rounded py-1 font-medium bg-gray-200 border-gray-300 text-gray-700' onClick={() => setShowCalendar(true)}>Choose Date</button>
+                        <div className='my-2 w-full text-center mt-2'>Date: <b className='text-lg text-center'>{slotAdjustmentDate}</b></div>
+                        <AdjustmentCustomDropdown
+                            selectedTime={selectedTimeforAdjustment}
+                            setSelectedTime={setSelectedTimeForAdjustment}
+                            getTime={fetchMaxCapacity}
+                            date={slotAdjustmentDate}
+                        />
+                        <div className='w-full text-center mt-2'>Time: <b className='text-lg text-center'>{selectedTimeforAdjustment}</b></div>
+                        <div className='mt-4 text-center' >Current Maximum Slots:</div>
+                        <div className='flex w-full justify-between md:justify-evenly  mt-4'>
+                            <button className='text-4xl border-2 border-gray-300 rounded-full p-1 pb-3' onClick={() => handleSlotAdjustment('decrease')}> - </button>
+                            <div className='text-3xl font-bold text-gray-700'>{currentMaxCapacity !== null ? currentMaxCapacity : 'Loading...'}</div>
+                            <button className='text-2xl border-2 border-gray-300 rounded-full p-1 pb-3' onClick={() => handleSlotAdjustment('increase')}>+</button>
+                        </div>
                     </div>
                 </div>
-            </div>
             )}
 
             {/* Reschedule Modal */}
             {showRescheduleModal && (
-              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-                <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                  <h2 className="text-xl font-bold mb-4">Reschedule Student</h2>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                    <div className="flex items-center gap-2">
-                      <span className="p-2 border border-gray-300 rounded-lg bg-gray-50 min-w-[140px]">
-                        {rescheduleDate ? rescheduleDate : 'No Date Chosen'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowCalendar(true);
-                        }}
-                        className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold border-2 border-blue-600 text-sm"
-                      >
-                        Pick Date
-                      </button>
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                        <h2 className="text-xl font-bold mb-4">Reschedule Student</h2>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                            <div className="flex items-center gap-2">
+                                <span className="p-2 border border-gray-300 rounded-lg bg-gray-50 min-w-[140px]">
+                                    {rescheduleDate ? rescheduleDate : 'No Date Chosen'}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                    {
+                                        setShowCalendar(true);
+                                    }}
+                                    className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold border-2 border-blue-600 text-sm"
+                                >
+                                    Pick Date
+                                </button>
+                            </div>
+                        </div>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                            <select
+                                value={rescheduleTime}
+                                onChange={e => setRescheduleTime(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 font-bold focus:outline-none focus:ring-2 focus:ring-gray-400"
+                            >
+                                <option value="8:00am - 9:00am">8:00am - 9:00am</option>
+                                <option value="9:00am -10:00am">9:00am -10:00am</option>
+                                <option value="10:00am-11:00am">10:00am-11:00am</option>
+                                <option value="11:00am-12:00pm">11:00am-12:00pm</option>
+                                <option value="1:00pm - 2:00pm">1:00pm - 2:00pm</option>
+                                <option value="2:00pm - 3:00pm">2:00pm - 3:00pm</option>
+                                <option value="3:00pm - 4:00pm">3:00pm - 4:00pm</option>
+                                <option value="4:00pm - 5:00pm">4:00pm - 5:00pm</option>
+                            </select>
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                            <button
+                                onClick={handleRescheduleCancel}
+                                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-bold border-2 border-gray-600"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleRescheduleSave}
+                                className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-bold border-2 border-yellow-600"
+                            >
+                                Save
+                            </button>
+                        </div>
                     </div>
-                  </div>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
-                    <select
-                      value={rescheduleTime}
-                      onChange={e => setRescheduleTime(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 font-bold focus:outline-none focus:ring-2 focus:ring-gray-400"
-                    >
-                      <option value="8:00am - 9:00am">8:00am - 9:00am</option>
-                      <option value="9:00am -10:00am">9:00am -10:00am</option>
-                      <option value="10:00am-11:00am">10:00am-11:00am</option>
-                      <option value="11:00am-12:00pm">11:00am-12:00pm</option>
-                      <option value="1:00pm - 2:00pm">1:00pm - 2:00pm</option>
-                      <option value="2:00pm - 3:00pm">2:00pm - 3:00pm</option>
-                      <option value="3:00pm - 4:00pm">3:00pm - 4:00pm</option>
-                      <option value="4:00pm - 5:00pm">4:00pm - 5:00pm</option>
-                    </select>
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                    <button
-                      onClick={handleRescheduleCancel}
-                      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-bold border-2 border-gray-600"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleRescheduleSave}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-bold border-2 border-yellow-600"
-                    >
-                      Save
-                    </button>
-                  </div>
                 </div>
-              </div>
             )}
 
             {/* Calendar Modal (shared for both normal and reschedule usage) */}
@@ -1171,9 +1195,10 @@ const formatDateLocal = (date) => {
                 <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999]">
                     <div className="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center max-w-md w-full mx-2">
                         <Suspense fallback={<div className='text-xl font-bold text-gray-600'>Loading calendar...</div>}>
-                            <Calendar 
-                                onDateSelect={date => {
-                                      const formatted = new Date(date).toLocaleDateString('en-US', {
+                            <Calendar
+                                onDateSelect={date =>
+                                {
+                                    const formatted = new Date(date).toLocaleDateString('en-US', {
                                         month: 'long',
                                         day: 'numeric',
                                         year: 'numeric'
@@ -1186,7 +1211,8 @@ const formatDateLocal = (date) => {
                         </Suspense>
                         <div className="flex gap-2 mt-3">
                             <button
-                                onClick={() => {
+                                onClick={() =>
+                                {
                                     setShowCalendar(false);
                                 }}
                                 className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold border-2 border-green-700 text-sm"
@@ -1208,13 +1234,14 @@ const formatDateLocal = (date) => {
             <div className="flex-1 p-6">
                 {/* Move the Show All Students button above the filters */}
                 <div className="flex flex-col sm:flex-row justify-end mb-4">
-                    <button  onClick={handleOpenSlotAdjustmentPanel}
-                        className="bg-blue-300 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold border-2 border-blue-600 transition-all duration-150 mb-2 sm:mb-0 sm:mr-2"> 
-                        
+                    <button onClick={handleOpenSlotAdjustmentPanel}
+                        className="bg-blue-300 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold border-2 border-blue-600 transition-all duration-150 mb-2 sm:mb-0 sm:mr-2">
+
                         Adjust Slots
                     </button>
                     <button
-                        onClick={() => {
+                        onClick={() =>
+                        {
                             setCurrentScheduleMonth(new Date().getMonth());
                             setCurrentScheduleYear(new Date().getFullYear());
                             setShowAllStudents(true);
@@ -1233,7 +1260,7 @@ const formatDateLocal = (date) => {
                             <input
                                 type="text"
                                 placeholder="Search by name, student number, or email..."
-                            value={search}
+                                value={search}
                                 onChange={(e) => { setSearch(e.target.value); setShowAllStudents(false); }}
                                 className="w-full p-2 border border-gray-300 rounded-lg"
                             />
@@ -1241,8 +1268,8 @@ const formatDateLocal = (date) => {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Status Filter</label>
-                        <select
-                            value={filterStatus}
+                            <select
+                                value={filterStatus}
                                 onChange={(e) => { setFilterStatus(e.target.value); setShowAllStudents(false); }}
                                 className="w-full p-2 border border-gray-300 rounded-lg"
                             >
@@ -1273,7 +1300,8 @@ const formatDateLocal = (date) => {
                                 onChange={e => { setCurrentScheduleYear(Number(e.target.value)); setShowAllStudents(false); }}
                                 className="w-full p-2 border border-gray-300 rounded-lg"
                             >
-                                {Array.from({ length: 5 }, (_, i) => {
+                                {Array.from({ length: 5 }, (_, i) =>
+                                {
                                     const year = new Date().getFullYear() - 2 + i;
                                     return <option key={year} value={year}>{year}</option>;
                                 })}
@@ -1281,9 +1309,10 @@ const formatDateLocal = (date) => {
                         </div>
                     </div>
                 </div>
-                
+
                 {/* Table logic: show all students if showAllStudents is true, else paginatedStudents */}
-                {(() => {
+                {(() =>
+                {
                     const studentsToShow = showAllStudents
                         ? allStudentsList.slice((page - 1) * perPage, (page - 1) * perPage + perPage)
                         : paginatedStudents;
@@ -1302,8 +1331,8 @@ const formatDateLocal = (date) => {
                                 </thead>
                                 <tbody>
                                     {studentsToShow.map((student) => (
-                                        <tr 
-                                            key={student.id} 
+                                        <tr
+                                            key={student.id}
                                             className="border-b hover:bg-gray-50 cursor-pointer"
                                             onClick={() => showStudentDetails(student)}
                                         >
@@ -1312,18 +1341,18 @@ const formatDateLocal = (date) => {
                                             <td className="py-2 px-2 border-r">{student.schedule_date || 'Not scheduled'}</td>
                                             <td className="py-2 px-2 border-r">{student.schedule_time || 'Not scheduled'}</td>
                                             <td className="py-2 px-2 border-r">
-                                                <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                                                    student.status === 'done' ? 'bg-green-100 text-green-800' :
+                                                <span className={`px-2 py-1 rounded text-xs font-semibold ${student.status === 'done' ? 'bg-green-100 text-green-800' :
                                                     student.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                                    'bg-yellow-100 text-yellow-800'
-                                                }`}>
+                                                        'bg-yellow-100 text-yellow-800'
+                                                    }`}>
                                                     {student.status}
                                                 </span>
                                             </td>
                                             <td className="py-2 px-2">
                                                 <div className="flex space-x-2">
-                                                    <button 
-                                                        onClick={(e) => {
+                                                    <button
+                                                        onClick={(e) =>
+                                                        {
                                                             e.stopPropagation();
                                                             showEditModal(student);
                                                         }}
@@ -1332,8 +1361,9 @@ const formatDateLocal = (date) => {
                                                     >
                                                         <span className="mr-1">✏️</span> Edit
                                                     </button>
-                                                    <button 
-                                                        onClick={(e) => {
+                                                    <button
+                                                        onClick={(e) =>
+                                                        {
                                                             e.stopPropagation();
                                                             handleDelete(student.id);
                                                         }}
@@ -1342,23 +1372,24 @@ const formatDateLocal = (date) => {
                                                     >
                                                         <span className="mr-1">🗑️</span> Delete
                                                     </button>
-                                                    <button 
-                                                        onClick={(e) => {
+                                                    <button
+                                                        onClick={(e) =>
+                                                        {
                                                             e.stopPropagation();
                                                             handleToggleStatus(student);
                                                         }}
-                                                        className={`flex items-center px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150 ${
-                                                            student.status === 'done' 
-                                                                ? 'bg-gray-400 hover:bg-gray-500 text-white' 
-                                                                : 'bg-green-500 hover:bg-green-600 text-white'
-                                                        }`}
+                                                        className={`flex items-center px-3 py-1 rounded shadow-sm text-sm font-medium transition-all duration-150 ${student.status === 'done'
+                                                            ? 'bg-gray-400 hover:bg-gray-500 text-white'
+                                                            : 'bg-green-500 hover:bg-green-600 text-white'
+                                                            }`}
                                                         title={student.status === 'done' ? 'Mark Pending' : 'Mark Done'}
                                                     >
                                                         <span className="mr-1">{student.status === 'done' ? '⏳' : '✅'}</span> {student.status === 'done' ? 'Pending' : 'Done'}
                                                     </button>
                                                     {student.status !== 'cancelled' && (
-                                                        <button 
-                                                            onClick={(e) => {
+                                                        <button
+                                                            onClick={(e) =>
+                                                            {
                                                                 e.stopPropagation();
                                                                 handleMarkCancelled(student);
                                                             }}
@@ -1369,8 +1400,9 @@ const formatDateLocal = (date) => {
                                                         </button>
                                                     )}
                                                     {student.status === 'cancelled' && (
-                                                        <button 
-                                                            onClick={(e) => {
+                                                        <button
+                                                            onClick={(e) =>
+                                                            {
                                                                 e.stopPropagation();
                                                                 handleReschedule(student);
                                                             }}
