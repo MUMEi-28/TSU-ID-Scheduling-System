@@ -1079,7 +1079,7 @@ const fetchMaxCapacity = async (slotAdjustmentDate, selectedTimeforAdjustment) =
                             </button>
                         </div>
                     </div>
-                </div>
+               
             )}
 
             {slotAdjustmentPanel && (
