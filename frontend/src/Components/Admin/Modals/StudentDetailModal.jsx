@@ -40,7 +40,7 @@ export default function StudentDetailModal(props)
                         onClick={() =>
                         {
                             props.setDetailModal({ show: false, student: null });
-                            showEditModal(props.detailModal.student);
+                            props.showEditModal(props.detailModal.student);
                         }}
                         className="bg-[#E1A500] hover:bg-[#C68C10] text-white px-4 py-2 rounded-lg border-2 border-[#C68C10] transition-all duration-200 font-bold"
                     >
