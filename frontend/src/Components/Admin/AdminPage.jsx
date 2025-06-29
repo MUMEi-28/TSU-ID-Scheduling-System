@@ -5,6 +5,7 @@ import { buildApiUrl, API_ENDPOINTS } from '../../config/api';
 import CustomDropdown from './CustomDropdown';
 import AdjustmentCustomDropdown from './adjustmentSlotDropDown';
 import kuruKuru from '../public/kurukuru-kururing.gif';
+import { displayToCanonical, normalizeDate } from '../../utils/timeUtils';
 
 
 
@@ -683,31 +684,31 @@ const formatDateLocal = (date) => {
   return `${year}-${month}-${day}`;
 };
 
-const fetchMaxCapacity = async (slotAdjustmentDate, selectedTimeforAdjustment) => {
-    let formattedDate = slotAdjustmentDate;
-    if (slotAdjustmentDate instanceof Date || (typeof slotAdjustmentDate === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(slotAdjustmentDate))) {
-      formattedDate = formatDateLocal(slotAdjustmentDate);
-    }
-    // Remove last 5 characters from selectedTimeforAdjustment if it exists and is a string
-    let trimmedTime = selectedTimeforAdjustment;
-    if (typeof selectedTimeforAdjustment === 'string' && selectedTimeforAdjustment.length > 5) {
-      trimmedTime = selectedTimeforAdjustment.slice(0, -5);
-    }
-    console.log('Calling API with:', formattedDate, trimmedTime);
-  try {
-    const response = await axios.get('http://localhost/Projects/TSU-ID-Scheduling-System/backend/get_max_slot_count.php', {
-      params: {
-        schedule_date: formattedDate,
-        schedule_time: trimmedTime
-      }
-    });
-    setCurrentMaxCapacity(response.data.max_capacity); // <-- set state here
-    return response.data.max_capacity;
-  } catch (error) {
-    setCurrentMaxCapacity(null); // clear on error
-    return null;
-  }
-};
+    const fetchMaxCapacity = async (slotAdjustmentDate, selectedTimeforAdjustment) => {
+        if (!slotAdjustmentDate || !selectedTimeforAdjustment || selectedTimeforAdjustment === 'No Time Chosen') {
+            setCurrentMaxCapacity(null);
+            return null;
+        }
+        let formattedDate = slotAdjustmentDate;
+        if (slotAdjustmentDate instanceof Date || (typeof slotAdjustmentDate === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(slotAdjustmentDate))) {
+            formattedDate = formatDateLocal(slotAdjustmentDate);
+        }
+        try {
+            const response = await axios.get(buildApiUrl(API_ENDPOINTS.GET_MAX_SLOT_COUNT), {
+                params: {
+                    schedule_date: formattedDate,
+                    schedule_time: displayToCanonical(selectedTimeforAdjustment) // Send canonical format to backend
+                }
+            });
+            console.log('[DEBUG] fetchMaxCapacity API response:', response.data);
+            setCurrentMaxCapacity(response.data.max_capacity); // <-- set state here
+            return response.data.max_capacity;
+        } catch (error) {
+            console.error('[DEBUG] fetchMaxCapacity API error:', error);
+            setCurrentMaxCapacity(null); // clear on error
+            return null;
+        }
+    };
 
     const handleSlotAdjustment = async (action) => {
         if (!slotAdjustmentDate || !selectedTimeforAdjustment || selectedTimeforAdjustment === 'No Time Chosen') {
@@ -718,17 +719,15 @@ const fetchMaxCapacity = async (slotAdjustmentDate, selectedTimeforAdjustment) =
         if (slotAdjustmentDate instanceof Date || (typeof slotAdjustmentDate === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(slotAdjustmentDate))) {
             formattedDate = formatDateLocal(slotAdjustmentDate);
         }
-        // Remove last 5 characters from selectedTimeforAdjustment if needed
-        let trimmedTime = selectedTimeforAdjustment;
-        if (typeof selectedTimeforAdjustment === 'string' && selectedTimeforAdjustment.length > 5) {
-            trimmedTime = selectedTimeforAdjustment.slice(0, -5);
-        }
+        let timeString = selectedTimeforAdjustment;
+        console.log('[DEBUG] handleSlotAdjustment called with:', { formattedDate, timeString, action });
         try {
-            const response = await axios.post('http://localhost/Projects/TSU-ID-Scheduling-System/backend/adjustLimitofSlots.php', {
+            const response = await axios.post(buildApiUrl(API_ENDPOINTS.ADJUST_SLOT_LIMIT), {
                 schedule_date: formattedDate,
-                schedule_time: trimmedTime,
+                schedule_time: displayToCanonical(timeString), // Send canonical format to backend
                 action: action // 'increase' or 'decrease'
             });
+            console.log('[DEBUG] handleSlotAdjustment API response:', response.data);
             if (response.data.success) {
                 // Refetch the new max capacity
                 fetchMaxCapacity(formattedDate, selectedTimeforAdjustment);
@@ -737,6 +736,7 @@ const fetchMaxCapacity = async (slotAdjustmentDate, selectedTimeforAdjustment) =
                 setToast({ show: true, message: response.data.error || 'Failed to update slot capacity', type: 'error' });
             }
         } catch (error) {
+            console.error('[DEBUG] handleSlotAdjustment API error:', error);
             setToast({ show: true, message: 'Server error adjusting slot capacity', type: 'error' });
         }
     };

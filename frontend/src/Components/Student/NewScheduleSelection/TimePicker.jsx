@@ -1,34 +1,44 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { format } from 'date-fns';
 import kuruKuru from '../../public/kurukuru-kururing.gif';
 import { buildApiUrl, API_ENDPOINTS } from '../../../config/api';
+import { getDisplayTimeSlots, displayToCanonical, normalizeDate } from '../../../utils/timeUtils';
 
 const TimePicker = (props) =>
 {
     const navigate = useNavigate();
-    const [isAM, setIsAm] = useState(true);
-    const [slotCounts, setSlotCounts] = useState({});
+    const [isAM, setIsAM] = useState(true);
+    const [slotData, setSlotData] = useState({});
     const [loading, setLoading] = useState(true);
     const [errorMsg, setErrorMsg] = useState("");
+    const [refreshing, setRefreshing] = useState(false);
+    const autoRefreshInterval = useRef(null);
 
-    const timeSlots = [
-        "8:00am - 9:00am", "9:00am -10:00am",
-        "10:00am-11:00am", "11:00am-12:00pm",
-        "1:00pm - 2:00pm", "2:00pm - 3:00pm",
-        "3:00pm - 4:00pm", "4:00pm - 5:00pm"
-    ];
+    // Use canonical time slots from utility
+    const timeSlots = getDisplayTimeSlots();
+
+    // Debug: Log AM/PM state and displayed times
+    useEffect(() => {
+        const displayedTimes = isAM ? timeSlots.slice(0, 4) : timeSlots.slice(4, 8);
+        console.log('[DEBUG] isAM:', isAM);
+        console.log('[DEBUG] displayedTimes:', displayedTimes);
+        console.log('[DEBUG] selectedTime:', props.selectedTime);
+    }, [isAM, props.selectedTime, timeSlots]);
 
     const handleChangePeriod = () =>
     {
-        setIsAm(!isAM);
-        props.setSelectedTime(null);
+        console.log('[DEBUG] Toggle AM/PM. Current isAM:', isAM);
+        setIsAM(prev => {
+            props.setSelectedTime(null);
+            return !prev;
+        });
     };
 
     const handleChooseTime = (e) =>
     {
-        const selected = e.target.value;
+        const selected = e.currentTarget.value;
         if (props.selectedTime === selected)
         {
             props.setSelectedTime(null);
@@ -40,8 +50,95 @@ const TimePicker = (props) =>
 
     const getSlotAvailability = (time) =>
     {
-        return slotCounts[time];
+        const canonicalTime = displayToCanonical(time);
+        const slotInfo = slotData[canonicalTime];
+        if (!slotInfo) return 0;
+        return Math.max(0, slotInfo.max_capacity - slotInfo.count);
     };
+
+    const getSlotMaxCapacity = (time) =>
+    {
+        const canonicalTime = displayToCanonical(time);
+        return slotData[canonicalTime]?.max_capacity || 12;
+    };
+
+    // Function to fetch slot data
+    const fetchSlotData = async (date, forceRefresh = false) => {
+        if (!date) {
+            setLoading(false);
+            return;
+        }
+
+        // Always normalize the date for cache and API
+        const normalizedDate = normalizeDate(date);
+
+        if (forceRefresh) {
+            setRefreshing(true);
+        } else {
+            setLoading(true);
+        }
+        
+        setErrorMsg("");
+        const cacheKey = `slot_data_${normalizedDate}`;
+        
+        // Check cache unless force refresh is requested
+        if (!forceRefresh) {
+            const cache = localStorage.getItem(cacheKey);
+            if (cache) {
+                const { data, timestamp } = JSON.parse(cache);
+                if (Date.now() - timestamp < 30000) { // 30 seconds
+                    setSlotData(data);
+                    setLoading(false);
+                    return;
+                }
+            }
+        }
+
+        const data = {};
+        for (const time of timeSlots) {
+            const canonicalTime = displayToCanonical(time);
+            try {
+                const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.GET_SLOT_COUNT)}`, {
+                    params: {
+                        schedule_date: normalizedDate,
+                        schedule_time: canonicalTime
+                    }
+                });
+                data[canonicalTime] = {
+                    count: res.data.count || 0,
+                    max_capacity: res.data.max_capacity || 12
+                };
+            } catch (e) {
+                data[canonicalTime] = { count: 0, max_capacity: 12 };
+            }
+        }
+        setSlotData(data);
+        localStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now() }));
+        setLoading(false);
+        setRefreshing(false);
+    };
+
+    // Auto-refresh mechanism
+    useEffect(() => {
+        if (props.selectedDate) {
+            // Clear any existing interval
+            if (autoRefreshInterval.current) {
+                clearInterval(autoRefreshInterval.current);
+            }
+            
+            // Set up auto-refresh every 10 seconds
+            autoRefreshInterval.current = setInterval(() => {
+                fetchSlotData(props.selectedDate, true);
+            }, 10000);
+        }
+
+        // Cleanup on unmount or when date changes
+        return () => {
+            if (autoRefreshInterval.current) {
+                clearInterval(autoRefreshInterval.current);
+            }
+        };
+    }, [props.selectedDate]);
 
     useEffect(() =>
     {
@@ -51,48 +148,8 @@ const TimePicker = (props) =>
             setLoading(false);
             return;
         }
-        setErrorMsg("");
-        setLoading(true);
-        const cacheKey = `slot_counts_${props.selectedDate}`;
-        const cache = localStorage.getItem(cacheKey);
-        let shouldFetch = true;
-        if (cache)
-        {
-            const { data, timestamp } = JSON.parse(cache);
-            if (Date.now() - timestamp < 30000)
-            { // 30 seconds
-                setSlotCounts(data);
-                setLoading(false);
-                shouldFetch = false;
-            }
-        }
-        if (shouldFetch)
-        {
-            const fetchCounts = async () =>
-            {
-                const counts = {};
-                const formattedDate = format(new Date(props.selectedDate), "MMMM d, yyyy");
-                for (const time of timeSlots) {
-                    try {
-                        const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.GET_SLOT_COUNT)}`, {
-
-                            params: {
-                                schedule_date: formattedDate,
-                                schedule_time: time
-                            }
-                        });
-                        counts[time] = res.data.count || 0;
-                    } catch (e)
-                    {
-                        counts[time] = 0;
-                    }
-                }
-                setSlotCounts(counts);
-                localStorage.setItem(cacheKey, JSON.stringify({ data: counts, timestamp: Date.now() }));
-                setLoading(false);
-            };
-            fetchCounts();
-        }
+        // Always normalize the date before passing
+        fetchSlotData(normalizeDate(props.selectedDate));
     }, [props.selectedDate]);
 
     const handleSchedule = async () =>
@@ -101,59 +158,25 @@ const TimePicker = (props) =>
         {
             return;
         }
+        
         const slotsLeft = getSlotAvailability(props.selectedTime);
-        if (slotsLeft >= 12)
+        if (slotsLeft <= 0)
         {
             setErrorMsg('Selected slot is already full. Please choose another slot.');
-            const formattedDate = format(new Date(props.selectedDate), "MMMM d, yyyy");
-            const counts = {};
-            for (const time of timeSlots) {
-                try {
-                    const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.GET_SLOT_COUNT)}`, {
-
-                        params: {
-                            schedule_date: formattedDate,
-                            schedule_time: time
-                        }
-                    });
-                    counts[time] = res.data.count || 0;
-                } catch (e)
-                {
-                    counts[time] = 0;
-                }
-            }
-            setSlotCounts(counts);
-            localStorage.setItem(`slot_counts_${props.selectedDate}`, JSON.stringify({ data: counts, timestamp: Date.now() }));
+            // Refresh slot data to get latest counts
+            await fetchSlotData(props.selectedDate, true);
             return;
         }
+        
         setErrorMsg("");
         try
         {
             props.setRegistrationInputs(prev => ({
                 ...prev,
-                schedule_time: props.selectedTime
+                schedule_time: displayToCanonical(props.selectedTime) // Store canonical format
             }));
             props.handlingDataObjectsTest();
             navigate('/receipt');
-            const formattedDate = format(new Date(props.selectedDate), "MMMM d, yyyy");
-            const counts = {};
-            for (const time of timeSlots) {
-                try {
-                    const res = await axios.get(`${buildApiUrl(API_ENDPOINTS.GET_SLOT_COUNT)}`, {
-
-                        params: {
-                            schedule_date: formattedDate,
-                            schedule_time: time
-                        }
-                    });
-                    counts[time] = res.data.count || 0;
-                } catch (e)
-                {
-                    counts[time] = 0;
-                }
-            }
-            setSlotCounts(counts);
-            localStorage.setItem(`slot_counts_${props.selectedDate}`, JSON.stringify({ data: counts, timestamp: Date.now() }));
         } catch (err)
         {
             if (err.response && err.response.data && err.response.data.message)
@@ -172,8 +195,9 @@ const TimePicker = (props) =>
     const renderButton = (time) =>
     {
         const slotsLeft = getSlotAvailability(time);
+        const maxCapacity = getSlotMaxCapacity(time);
         const isSelected = props.selectedTime === time;
-        const isFull = slotsLeft >= 12;
+        const isFull = slotsLeft <= 0;
 
         return (
             <button
@@ -182,22 +206,19 @@ const TimePicker = (props) =>
                 onClick={handleChooseTime}
                 disabled={isFull}
                 className={`
-                    ${isFull ? 'opacity-50 cursor-not-allowed' : ''}
-                    shadow-md rounded-lg transition-all py-2 p-2 sm:px-10 duration-200 border-2 text-base
-                    ${isSelected
-                        ? isAM
-                            ? 'bg-[#E1A500] border-[#C68C10] text-white'
-                            : 'text-white bg-purple-400 border-purple-500'
-                        : 'bg-[#EBEBEB] text-[#7B7B7B] border-[#D4D4D4]'
-                    }`}
+                    w-44 sm:w-56 md:w-64 lg:w-72
+                    flex flex-col items-center justify-center
+                    bg-white border-2
+                    ${isSelected ? 'border-yellow-500 bg-yellow-400 text-white font-bold shadow-lg' : 'border-gray-200 text-gray-700'}
+                    rounded-xl shadow-md mb-2 py-4 px-2 transition-all duration-200
+                    ${isFull ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-xl hover:border-yellow-400'}
+                `}
+                style={{ minHeight: 90 }}
             >
-                <p className='pointer-events-none text-base'>{time}</p>
-                {isFull ? (
-                    <p className='pointer-events-none text-red-600 font-bold text-sm mt-1'>Slots are Full!</p>
-                ) : (
-                    <p className={`pointer-events-none  ${getSlotAvailability(props.selectedTime) >= 8 ? 'text-[#b11616]' : getSlotAvailability(props.selectedTime) >= 4 ? 'text-[#d7e427]' : isSelected ? 'text-white' : 'text-[#27732A]'} text-sm mt-1`}>Slots: {slotsLeft}/12</p>
-                )}
-            </button >
+                <span className="text-lg sm:text-xl font-semibold tracking-tight mb-1">{time}</span>
+                <span className={`font-medium text-base ${slotsLeft === 0 ? 'text-red-600' : 'text-green-700'}`}>Slots: {slotsLeft}/{maxCapacity}</span>
+                {isFull && <span className="mt-1 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-bold">Full</span>}
+            </button>
         );
     };
 
@@ -214,24 +235,41 @@ const TimePicker = (props) =>
                 </div>
             ) : props.selectedDate ? (
                 <>
-                    <h1 className='league-font text-[#686868] text-2xl sm:text-3xl font-medium mb-1 mt-4'>
+                    <h1 className='league-font text-[#686868] text-2xl sm:text-3xl font-medium mb-0 mt-4'>
                         Choose your Availability
                     </h1>
+                    {refreshing && (
+                        <div className="text-blue-600 font-semibold text-center mb-2 mt-1 text-sm">
+                            🔄 Updating slot availability...
+                        </div>
+                    )}
                     {errorMsg ? (
-                        <div className="text-red-600 font-semibold text-center mb-2 mt-1 text-base">
+                        <div className="text-red-600 font-semibold text-center mt-1 text-base">
                             {errorMsg}
                         </div>
                     ) :
                         !props.selectedTime && (
-                            <div className="text-red-600 font-semibold text-center mb-2 mt-1 text-base">
+                            <div className="text-red-600 font-semibold text-center mt-1 text-base">
                                 Please select a slot before scheduling.
                             </div>
                         )
                     }
                     <div className='flex h-fit league-font w-full justify-center text-sm sm:text-md mb-3'>
-                        <button onClick={handleChangePeriod} className='bg-[#BDBDBD] flex transition-all duration-300 rounded-lg shadow-md'>
-                            <div className={`font-bold rounded-l-lg px-4 pt-2 ${isAM ? 'bg-[#E1A500] text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]'}`}>AM</div>
-                            <div className={`font-bold rounded-r-lg px-4 pt-2 ${!isAM ? 'bg-purple-400 text-white' : 'bg-[#BDBDBD] text-[#BDBDBD]'}`}>PM</div>
+                        <button
+                            onClick={() => { setIsAM(true); props.setSelectedTime(null); }}
+                            className={`font-bold rounded-l-lg px-4 pt-2 transition-all duration-300 border-none focus:outline-none ${isAM ? 'bg-[#E1A500] text-white' : 'bg-[#D1D1D1] text-gray-700 hover:bg-[#FFD54F]'}`}
+                            style={{ borderTopLeftRadius: '0.75rem', borderBottomLeftRadius: '0.75rem', cursor: 'pointer' }}
+                            type="button"
+                        >
+                            AM
+                        </button>
+                        <button
+                            onClick={() => { setIsAM(false); props.setSelectedTime(null); }}
+                            className={`font-bold rounded-r-lg px-4 pt-2 transition-all duration-300 border-none focus:outline-none ${!isAM ? 'bg-purple-400 text-white' : 'bg-[#D1D1D1] text-gray-700 hover:bg-purple-200'}`}
+                            style={{ borderTopRightRadius: '0.75rem', borderBottomRightRadius: '0.75rem', cursor: 'pointer' }}
+                            type="button"
+                        >
+                            PM
                         </button>
                     </div>
                     <div className='flex-col flex gap-y-3 text-xs md:text-lg lg:text-xl mb-3'>
@@ -244,13 +282,22 @@ const TimePicker = (props) =>
                             {renderButton(displayedTimes[3])}
                         </div>
                     </div>
-                    <button
-                        className='bg-[#E1A500] border-[#C68C10] league-font text-base px-6 py-2 font-bold border-2 text-white rounded-md hover:bg-amber-600 duration-200 mt-2'
-                        onClick={handleSchedule}
-                        disabled={!props.selectedTime}
-                    >
-                        Schedule
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            className='bg-[#E1A500] border-[#C68C10] league-font text-base px-6 py-2 font-bold border-2 text-white rounded-md hover:bg-amber-600 duration-200 mt-2'
+                            onClick={handleSchedule}
+                            disabled={!props.selectedTime}
+                        >
+                            Schedule
+                        </button>
+                        <button
+                            className='bg-gray-500 border-gray-600 league-font text-base px-4 py-2 font-bold border-2 text-white rounded-md hover:bg-gray-600 duration-200 mt-2'
+                            onClick={() => fetchSlotData(props.selectedDate, true)}
+                            disabled={loading || refreshing}
+                        >
+                            {refreshing ? 'Refreshing...' : 'Refresh'}
+                        </button>
+                    </div>
                 </>
             ) : (
                 <div className="text-center py-12">

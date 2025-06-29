@@ -31,6 +31,8 @@ export const API_ENDPOINTS = {
   GET_STUDENTS: 'get_students.php',
   GET_STUDENT: 'get_student.php',
   GET_SLOT_COUNT: 'get_slot_count.php',
+  GET_MAX_SLOT_COUNT: 'get_max_slot_count.php',
+  ADJUST_SLOT_LIMIT: 'adjustLimitofSlots.php',
   BOOKING: 'booking.php',
   UPDATE_ADMIN: 'update_admin.php',
   INDEX: 'index.php',

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { buildApiUrl, API_ENDPOINTS } from '../../../config/api';
+import { canonicalToDisplay, normalizeDate } from '../../../utils/timeUtils';
 
 const AnimatedOverlay = ({ type, show, appointment, onClose }) => {
   // type: 'success' | 'existing'
@@ -114,7 +115,7 @@ const ScheduleReceipt = (props) =>
         id,
         fullname: displayData.fullname,
         student_number: displayData.student_number,
-        schedule_date: displayData.schedule_date,
+        schedule_date: normalizeDate(displayData.schedule_date),
         schedule_time: displayData.schedule_time,
         email: displayData.email,
         id_reason: displayData.id_reason,
@@ -128,8 +129,14 @@ const ScheduleReceipt = (props) =>
       if (response.data.status === 1) {
         setConfirmed(true);
         localStorage.setItem('confirmedSlot', 'true');
+        localStorage.setItem('student_id', id);
         setShowSuccessOverlay(true);
         setTimeout(() => setShowSuccessOverlay(false), 2000);
+        
+        // Invalidate slot cache to ensure other users see updated counts
+        const cacheKey = `slot_data_${displayData.schedule_date}`;
+        localStorage.removeItem(cacheKey);
+        console.log('Invalidated slot cache for date:', displayData.schedule_date);
       } else if (response.data.message && response.data.message.toLowerCase().includes('existing appointment')) {
         setShowExistingModal(true);
       } else {
@@ -176,7 +183,10 @@ const ScheduleReceipt = (props) =>
           <h1 className="text-2xl sm:text-3xl md:text-4xl tracking-tighter font-semibold underline text-[#5B0000]">Slot Information</h1>
           <div className="h-3" />
           <h2 className="mt-2 mb-2 font-medium underline text-[#656565] text-sm sm:text-base">Date and Time:</h2>
-          <h3 className="mb-4 font-light text-[#656565] text-sm sm:text-base">{displayData.schedule_date},<br></br>{displayData.schedule_time}</h3>
+          <h3 className="mb-4 font-light text-[#656565] text-sm sm:text-base">
+            {displayData.schedule_date},<br></br>
+            {canonicalToDisplay(displayData.schedule_time)}
+          </h3>
           <h2 className="mb-2 font-medium underline text-[#656565] text-sm sm:text-base">Your Details:</h2>
           <h3 className="mb-2 font-light text-[#656565] text-sm sm:text-base">Student Number: {displayData.student_number} </h3>
           <h3 className="mb-6 font-light text-[#656565] text-sm sm:text-base">Student Name: {displayData.fullname}</h3>

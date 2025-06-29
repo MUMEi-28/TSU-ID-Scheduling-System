@@ -432,6 +432,7 @@ export default function RegistrationForm(props)
                                     id="FullName"
                                     type="text"
                                     name="fullname"
+                                    value={props.registrationInputs.fullname || ''}
                                     onChange={props.handleChange}
                                     placeholder='Juan Dela Cruz'
                                     className='p-4 bg-[#BABABA] w-full'
@@ -444,6 +445,7 @@ export default function RegistrationForm(props)
                                     id='StudentNum'
                                     type="text"
                                     name="student_number"
+                                    value={props.registrationInputs.student_number || ''}
                                     onChange={props.handleChange}
                                     placeholder='2025300000'
                                     className='p-4 bg-[#BABABA] w-full'

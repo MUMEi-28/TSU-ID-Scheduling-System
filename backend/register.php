@@ -1,57 +1,58 @@
 <?php
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type");
-header("Access-Control-Allow-Methods: POST");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Content-Type: application/json");
 
 include 'config.php';
+include 'utils.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 try {
-    // Get raw input and decode JSON
-    $json = file_get_contents('php://input');
-    $input = json_decode($json);
-
-    // Add debugging
-    error_log("[register.php] Received data: " . $json . "\n", 3, __DIR__ . '/error_log.txt');
-
-    // Validate JSON decoding
-    if ($input === null) {
-        throw new Exception("Invalid JSON data received");
-    }
-
+    $input = json_decode(file_get_contents('php://input'));
+    
     // Validate required fields
-    if (!isset($input->fullname) || !isset($input->student_number)) {
-        throw new Exception("Full name and student number are required");
+    if (empty($input->fullname)) {
+        echo json_encode(['status' => 0, 'message' => 'Full name is required']);
+        exit;
     }
-
-    // Validate email for new users
-    if (!isset($input->email) || !filter_var($input->email, FILTER_VALIDATE_EMAIL)) {
-        throw new Exception("Valid email address is required");
+    if (empty($input->student_number)) {
+        echo json_encode(['status' => 0, 'message' => 'Student number is required']);
+        exit;
     }
-
-    // Validate ID reason
-    if (!isset($input->id_reason) || empty($input->id_reason)) {
-        throw new Exception("Reason for ID creation is required");
+    if (empty($input->id_reason)) {
+        echo json_encode(['status' => 0, 'message' => 'ID reason is required']);
+        exit;
     }
-
-    // Validate data privacy agreement
     if (!isset($input->data_privacy_agreed) || !$input->data_privacy_agreed) {
-        throw new Exception("You must agree to the data privacy terms");
+        echo json_encode(['status' => 0, 'message' => 'Data privacy agreement is required']);
+        exit;
     }
 
-    // Check for existing student
-    $checkSql = "SELECT id FROM students WHERE fullname = :fullname AND student_number = :student_number";
+    // Check if student number already exists
+    $checkSql = "SELECT id FROM students WHERE student_number = :student_number";
     $checkStmt = $conn->prepare($checkSql);
-    $checkStmt->bindParam(':fullname', $input->fullname);
     $checkStmt->bindParam(':student_number', $input->student_number);
     $checkStmt->execute();
     
     if ($checkStmt->fetch()) {
-        echo json_encode([
-            'status' => 0,
-            'message' => 'A student with this information already exists. Please try logging in instead.'
-        ]);
+        echo json_encode(['status' => 0, 'message' => 'Student number already exists']);
         exit;
+    }
+
+    // Normalize schedule data if provided
+    $normalized_schedule_date = null;
+    $normalized_schedule_time = null;
+    
+    if (!empty($input->schedule_date)) {
+        $normalized_schedule_date = normalize_schedule_date($input->schedule_date);
+    }
+    if (!empty($input->schedule_time)) {
+        $normalized_schedule_time = normalize_slot_time($input->schedule_time);
     }
 
     // Prepare and execute SQL - save the complete student data
@@ -64,8 +65,8 @@ try {
     $stmt->bindValue(':email', $input->email);
     $stmt->bindValue(':id_reason', $input->id_reason);
     $stmt->bindValue(':data_privacy_agreed', $input->data_privacy_agreed, PDO::PARAM_BOOL);
-    $stmt->bindValue(':schedule_time', $input->schedule_time ?? null);
-    $stmt->bindValue(':schedule_date', $input->schedule_date ?? null);
+    $stmt->bindValue(':schedule_time', $normalized_schedule_time);
+    $stmt->bindValue(':schedule_date', $normalized_schedule_date);
 
     if ($stmt->execute()) {
         $studentId = $conn->lastInsertId();

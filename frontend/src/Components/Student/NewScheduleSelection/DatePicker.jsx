@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'; // Add
 import { addDays, subDays, format, nextTuesday, previousTuesday, isToday, isBefore, isEqual } from 'date-fns'; // Added isEqual, isBefore
 import axios from 'axios';
 import { buildApiUrl, API_ENDPOINTS } from '../../../config/api';
+import { getCanonicalTimeSlots } from '../../../utils/timeUtils';
 
 function DatePicker(props) {
   // Normalize 'today' to the start of the day for consistent comparisons
@@ -71,14 +72,9 @@ function DatePicker(props) {
           console.error("Skipping invalid date in checkFullDates loop:", date);
           continue;
         }
-        const formattedDate = format(date, 'MMMM d,yyyy');
+        const formattedDate = format(date, 'yyyy-MM-dd');
         let allFull = true;
-        for (const time of [
-          "8:00am - 9:00am", "9:00am -10:00am",
-          "10:00am-11:00am", "11:00am-12:00pm",
-          "1:00pm - 2:00pm", "2:00pm - 3:00pm",
-          "3:00pm - 4:00pm", "4:00pm - 5:00pm"
-        ]) {
+        for (const time of getCanonicalTimeSlots()) {
           try {
             const res = await axios.get(buildApiUrl(API_ENDPOINTS.GET_SLOT_COUNT), {
               params: {
@@ -86,7 +82,7 @@ function DatePicker(props) {
                 schedule_time: time
               }
             });
-            if ((res.data.count || 0) < 12) {
+            if ((res.data.count || 0) < (res.data.max_capacity || 12)) {
               allFull = false;
               break;
             }
@@ -95,7 +91,7 @@ function DatePicker(props) {
             break;
           }
         }
-        if (allFull) results.push(formattedDate);
+        if (allFull) results.push(format(date, 'MMMM d,yyyy'));
       }
       setFullDates(results);
       localStorage.setItem(cacheKey, JSON.stringify({ data: results, timestamp: Date.now() }));
@@ -189,8 +185,8 @@ function DatePicker(props) {
             const year = format(date, "yyyy");
             const isSelected = props.selectedDate && format(props.selectedDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
             const isCurrentDay = isToday(date);
-            const formattedDate = format(date, 'MMMM d,yyyy');
-            const isFull = fullDates.includes(formattedDate);
+            const formattedDate = format(date, 'yyyy-MM-dd');
+            const isFull = fullDates.includes(format(date, 'MMMM d,yyyy'));
 
             return (
               <button
