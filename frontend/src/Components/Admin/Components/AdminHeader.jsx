@@ -1,5 +1,5 @@
 import React from 'react'
-
+import kurukuru from '../../public/kurukuru-logo.png'
 export default function AdminHeader(props)
 {
     return (
@@ -7,12 +7,14 @@ export default function AdminHeader(props)
             <div className='flex justify-between items-center'>
                 {/* Logo/Title */}
                 <div className='flex items-center space-x-4'>
+                    <img
+                        src={kurukuru}
+                        alt="Logo"
+                        className='size-15 rounded-full border-2 border-yellow-500' />
+
                     <div className='text-white league-font'>
-                        <h1 className='text-2xl sm:text-3xl md:text-4xl font-bold m-0'>2025</h1>
-                        <h2 className='text-sm sm:text-lg md:text-xl font-bold m-0'>Calendar</h2>
-                        <h3 className='text-xs sm:text-sm md:text-base font-sans m-0'>TSU ID</h3>
-                        <h4 className='text-xs sm:text-sm md:text-base font-sans m-0'>Scheduling</h4>
-                        <h5 className='text-xs sm:text-sm md:text-base font-sans m-0'>System</h5>
+                        <h1 className='text-2xl sm:text-3xl md:text-4xl font-bold m-0'>Admin Interface</h1>
+                        <h3 className='text-xs sm:text-sm md:text-base font-sans m-0'>TSU ID Scheduling System</h3>
                     </div>
                 </div>
 
