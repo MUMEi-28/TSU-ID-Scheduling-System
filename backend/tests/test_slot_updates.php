@@ -1,11 +1,16 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+echo "[DEBUG] Script started\n";
 /**
  * Test script to verify slot update logic
  * This demonstrates how the slot counting and updating works
  */
 
-include __DIR__ . '/../config.php';
-include __DIR__ . '/../utils.php';
+include_once __DIR__ . '/../config.php';
+echo "[DEBUG] config.php included successfully\n";
+include_once __DIR__ . '/../utils.php';
+echo "[DEBUG] utils.php included successfully\n";
 
 echo "=== Slot Update Logic Test ===\n\n";
 
@@ -17,12 +22,16 @@ echo "Testing slot logic for date: $testDate, time: $testTime\n\n";
 
 try {
     // 1. Check initial slot count
-    echo "1. Initial slot count:\n";
+    echo "[DEBUG] Checking initial slot count...\n";
+    echo "[DEBUG] About to prepare initial slot count query...\n";
     $stmt = $conn->prepare("SELECT 
         (SELECT COUNT(*) FROM students WHERE schedule_date = :date AND schedule_time = :time AND (status IS NULL OR status = 'pending')) as count,
         (SELECT max_capacity FROM slots WHERE slot_date = :date AND slot_time = :time LIMIT 1) as max_capacity");
+    echo "[DEBUG] Query prepared, about to execute...\n";
     $stmt->execute(['date' => $testDate, 'time' => $testTime]);
+    echo "[DEBUG] Query executed, about to fetch result...\n";
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    echo "[DEBUG] Result fetched.\n";
     
     $currentCount = $result['count'] ?? 0;
     $maxCapacity = $result['max_capacity'] ?? 12;
@@ -30,25 +39,40 @@ try {
     
     echo "   - Current bookings: $currentCount\n";
     echo "   - Max capacity: $maxCapacity\n";
-    echo "   - Available slots: $available\n\n";
+    echo "   - Available slots: $available\n";
+    echo "[DEBUG] Initial slot count calculation completed\n";
     
     // 2. Simulate a booking (add a test student)
-    echo "2. Simulating a booking...\n";
+    echo "[DEBUG] Simulating a booking...\n";
+    $uniqueId = time(); // Generate unique identifier
     $testStudent = [
         'fullname' => 'Test Student',
-        'student_number' => 'TEST123',
+        'student_number' => strval(1000000000 + ($uniqueId % 9000000000)), // 10 digits, unique
+        'email' => 'testslot' . $uniqueId . '@example.com',
+        'id_reason' => 'test_reason',
+        'data_privacy_agreed' => true,
         'schedule_date' => $testDate,
         'schedule_time' => $testTime,
         'status' => 'pending'
     ];
-    
-    $insertStmt = $conn->prepare("INSERT INTO students (fullname, student_number, schedule_date, schedule_time, status) VALUES (:fullname, :student_number, :schedule_date, :schedule_time, :status)");
-    $insertStmt->execute($testStudent);
-    $newStudentId = $conn->lastInsertId();
-    echo "   - Added test student with ID: $newStudentId\n\n";
+    echo "[DEBUG] About to enter try/catch for insert...\n";
+    try {
+        echo "[DEBUG] About to prepare insert statement...\n";
+        $insertStmt = $conn->prepare("INSERT INTO students (fullname, student_number, email, id_reason, data_privacy_agreed, schedule_date, schedule_time, status) VALUES (:fullname, :student_number, :email, :id_reason, :data_privacy_agreed, :schedule_date, :schedule_time, :status)");
+        echo "[DEBUG] Insert statement prepared.\n";
+        $insertStmt->execute($testStudent);
+        echo "[DEBUG] Insert executed.\n";
+        $newStudentId = $conn->lastInsertId();
+        echo "   - Added test student with ID: $newStudentId\n\n";
+    } catch (Exception $e) {
+        echo "[DEBUG] Inside catch block for insert.\n";
+        echo "[EXCEPTION during insert] " . $e->getMessage() . "\n";
+        echo $e->getTraceAsString() . "\n";
+        exit(1);
+    }
     
     // 3. Check updated slot count
-    echo "3. Updated slot count:\n";
+    echo "[DEBUG] Checking updated slot count...\n";
     $stmt->execute(['date' => $testDate, 'time' => $testTime]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -61,7 +85,7 @@ try {
     echo "   - Change: " . ($newCount - $currentCount) . " bookings\n\n";
     
     // 4. Test the get_slot_count.php endpoint
-    echo "4. Testing get_slot_count.php endpoint:\n";
+    echo "[DEBUG] Testing get_slot_count.php endpoint...\n";
     $_GET['schedule_date'] = $testDate;
     $_GET['schedule_time'] = $testTime;
     
@@ -76,13 +100,13 @@ try {
     echo "   - Available: " . ($data['available'] ?? 'N/A') . "\n\n";
     
     // 5. Clean up test data
-    echo "5. Cleaning up test data...\n";
+    echo "[DEBUG] Cleaning up test data...\n";
     $deleteStmt = $conn->prepare("DELETE FROM students WHERE id = :id");
     $deleteStmt->execute(['id' => $newStudentId]);
     echo "   - Removed test student\n\n";
     
     // 6. Final verification
-    echo "6. Final slot count (after cleanup):\n";
+    echo "[DEBUG] Final slot count (after cleanup)...\n";
     $stmt->execute(['date' => $testDate, 'time' => $testTime]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -99,8 +123,10 @@ try {
     echo "- Available slots = max_capacity - current_bookings\n";
     echo "- The API returns real-time data\n";
     echo "- Cache invalidation ensures other users see updates\n";
+    echo "\n";
     
 } catch (Exception $e) {
-    echo "Error: " . $e->getMessage() . "\n";
+    echo "[EXCEPTION] " . $e->getMessage() . "\n";
+    echo $e->getTraceAsString() . "\n";
 }
 ?> 

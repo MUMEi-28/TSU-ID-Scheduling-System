@@ -37,11 +37,19 @@ try {
     }
 
     // Check required fields
-    if (!isset($input->fullname)) {
-        throw new Exception("Please enter your full name.");
+    if (empty($input->fullname)) {
+        echo json_encode([
+            'status' => 0,
+            'message' => 'Please enter your full name.'
+        ]);
+        exit;
     }
-    if (!isset($input->student_number)) {
-        throw new Exception("Please enter your student number.");
+    if (empty($input->student_number)) {
+        echo json_encode([
+            'status' => 0,
+            'message' => 'Please enter your student number.'
+        ]);
+        exit;
     }
 
     // Check if student_number is a 10-digit number
@@ -84,8 +92,12 @@ try {
         exit;
     }
 
-    // Check for existing student
-    $studentSql = "SELECT id, fullname, student_number, status, schedule_date, schedule_time, email, id_reason FROM students WHERE fullname = :fullname AND student_number = :student_number LIMIT 1";
+    // Check for existing student - use COALESCE to handle NULL email values
+    $studentSql = "SELECT id, fullname, student_number, status, schedule_date, schedule_time, 
+                          COALESCE(email, '') as email, id_reason 
+                   FROM students 
+                   WHERE fullname = :fullname AND student_number = :student_number 
+                   LIMIT 1";
     $studentStmt = $conn->prepare($studentSql);
     $studentStmt->bindParam(':fullname', $input->fullname);
     $studentStmt->bindParam(':student_number', $input->student_number);
@@ -167,7 +179,6 @@ try {
     error_log("[login.php] " . $e->getMessage() . "\n", 3, __DIR__ . '/error_log.txt');
     echo json_encode([
         'status' => 0,
-        'message' => 'Something went wrong. Please check your information and try again.',
-        'received_data' => $json ?? null
+        'message' => 'Please check your information and try again.'
     ]);
 }
