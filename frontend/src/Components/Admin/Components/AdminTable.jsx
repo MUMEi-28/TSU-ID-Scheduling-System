@@ -11,7 +11,10 @@ export default function AdminTable({
     handleDelete,
     handleToggleStatus,
     handleMarkCancelled,
-    handleReschedule
+    handleReschedule,
+    sortBy,
+    sortDirection,
+    handleSort
 })
 {
     return (
@@ -22,16 +25,30 @@ export default function AdminTable({
                 const studentsToShow = showAllStudents
                     ? allStudentsList.slice((page - 1) * perPage, (page - 1) * perPage + perPage)
                     : paginatedStudents;
+                const getSortIcon = (column) => {
+                    if (sortBy !== column) return '';
+                    return sortDirection === 'asc' ? '▲' : '▼';
+                };
                 return (
                     <div className="bg-white border border-gray-200 overflow-x-auto">
                         <table className="table-auto w-full">
                             <thead className="bg-gray-100 border-b border-gray-300">
                                 <tr>
-                                    <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Name</th>
-                                    <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Student Number</th>
-                                    <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Schedule Date</th>
-                                    <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Schedule Time</th>
-                                    <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">Status</th>
+                                    <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r cursor-pointer select-none" onClick={() => handleSort('fullname')}>
+                                        Name <span className="ml-1">{getSortIcon('fullname')}</span>
+                                    </th>
+                                    <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r cursor-pointer select-none" onClick={() => handleSort('student_number')}>
+                                        Student Number <span className="ml-1">{getSortIcon('student_number')}</span>
+                                    </th>
+                                    <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r cursor-pointer select-none" onClick={() => handleSort('schedule_date')}>
+                                        Schedule Date <span className="ml-1">{getSortIcon('schedule_date')}</span>
+                                    </th>
+                                    <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r cursor-pointer select-none" onClick={() => handleSort('schedule_time')}>
+                                        Schedule Time <span className="ml-1">{getSortIcon('schedule_time')}</span>
+                                    </th>
+                                    <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r cursor-pointer select-none" onClick={() => handleSort('status')}>
+                                        Status <span className="ml-1">{getSortIcon('status')}</span>
+                                    </th>
                                     <th className="py-2 px-2 text-left font-semibold text-gray-700">Actions</th>
                                 </tr>
                             </thead>

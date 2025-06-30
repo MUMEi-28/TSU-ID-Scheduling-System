@@ -88,6 +88,56 @@ const AdminPage = (props) =>
         setIsMenuOpen(!isMenuOpen);
     };
 
+    // Add sorting state
+    const [sortBy, setSortBy] = useState('fullname');
+    const [sortDirection, setSortDirection] = useState('asc');
+
+    // Sorting function
+    const sortStudents = (studentsArr) => {
+        // Helper to convert time slot to minutes since midnight
+        const timeToMinutes = (timeStr) => {
+            if (!timeStr || timeStr === 'Not scheduled') return null;
+            // Example: '8:00am - 9:00am' => 480
+            const match = timeStr.match(/(\d{1,2}):(\d{2})(am|pm)/i);
+            if (!match) return null;
+            let [_, hour, minute, period] = match;
+            hour = parseInt(hour, 10);
+            minute = parseInt(minute, 10);
+            if (period.toLowerCase() === 'pm' && hour !== 12) hour += 12;
+            if (period.toLowerCase() === 'am' && hour === 12) hour = 0;
+            return hour * 60 + minute;
+        };
+        return [...studentsArr].sort((a, b) => {
+            let aValue = a[sortBy] || '';
+            let bValue = b[sortBy] || '';
+            // Always put 'Not scheduled' or empty at the bottom for date/time columns
+            if (sortBy === 'schedule_date' || sortBy === 'schedule_time') {
+                const isANotScheduled = !aValue || aValue === 'Not scheduled';
+                const isBNotScheduled = !bValue || bValue === 'Not scheduled';
+                if (isANotScheduled && !isBNotScheduled) return 1;
+                if (!isANotScheduled && isBNotScheduled) return -1;
+                if (isANotScheduled && isBNotScheduled) return 0;
+                // For date, compare as Date
+                if (sortBy === 'schedule_date') {
+                    aValue = new Date(aValue);
+                    bValue = new Date(bValue);
+                } else if (sortBy === 'schedule_time') {
+                    aValue = timeToMinutes(aValue);
+                    bValue = timeToMinutes(bValue);
+                } else {
+                    aValue = aValue.toString().toLowerCase();
+                    bValue = bValue.toString().toLowerCase();
+                }
+            } else {
+                aValue = aValue.toString().toLowerCase();
+                bValue = bValue.toString().toLowerCase();
+            }
+            if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+    };
+
     // Fetch students from backend on mount
     useEffect(() =>
     {
@@ -346,9 +396,29 @@ const AdminPage = (props) =>
         return matchesSearch && matchesStatus && matchesMonth;
     });
 
-    const totalPages = Math.ceil(filteredStudents.length / perPage);
+    // Apply sorting before pagination
+    const sortedFilteredStudents = sortStudents(filteredStudents);
+    const sortedAllStudentsList = sortStudents(students.filter(student => student.id !== 1));
+
+    const totalPages = Math.ceil(sortedFilteredStudents.length / perPage);
     const startIndex = (page - 1) * perPage;
-    const paginatedStudents = filteredStudents.slice(startIndex, startIndex + perPage);
+    const paginatedStudents = sortedFilteredStudents.slice(startIndex, startIndex + perPage);
+
+    const totalAllPages = Math.ceil(sortedAllStudentsList.length / perPage);
+    const studentsToShow = showAllStudents
+        ? sortedAllStudentsList.slice((page - 1) * perPage, (page - 1) * perPage + perPage)
+        : paginatedStudents;
+    const totalPagesToShow = showAllStudents ? totalAllPages : totalPages;
+
+    // Sorting handler
+    const handleSort = (column) => {
+        if (sortBy === column) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortBy(column);
+            setSortDirection('asc');
+        }
+    };
 
     // Existing CRUD functions (keep all your existing functions)
     const handleOpenChangeCredentials = () =>
@@ -667,17 +737,6 @@ const AdminPage = (props) =>
         setShowAllStudents(false);
     };
 
-    const allStudentsList = students.filter(student =>
-        student.id !== 1 &&
-        (!adminFullname || student.fullname !== adminFullname) &&
-        (!adminStudentNumber || student.student_number !== adminStudentNumber)
-    );
-    const totalAllPages = Math.ceil(allStudentsList.length / perPage);
-    const studentsToShow = showAllStudents
-        ? allStudentsList.slice((page - 1) * perPage, (page - 1) * perPage + perPage)
-        : paginatedStudents;
-    const totalPagesToShow = showAllStudents ? totalAllPages : totalPages;
-
     const handleOpenSlotAdjustmentPanel = () =>
     {
         setSlotAdjustmentPanel(true);
@@ -926,7 +985,7 @@ const AdminPage = (props) =>
                 {/* Table logic: show all students if showAllStudents is true, else paginatedStudents */}
                 <AdminTable
                     showAllStudents={showAllStudents}
-                    allStudentsList={allStudentsList}
+                    allStudentsList={sortedAllStudentsList}
                     paginatedStudents={paginatedStudents}
                     page={page}
                     perPage={perPage}
@@ -936,6 +995,9 @@ const AdminPage = (props) =>
                     handleToggleStatus={handleToggleStatus}
                     handleMarkCancelled={handleMarkCancelled}
                     handleReschedule={handleReschedule}
+                    sortBy={sortBy}
+                    sortDirection={sortDirection}
+                    handleSort={handleSort}
                 />
 
 
