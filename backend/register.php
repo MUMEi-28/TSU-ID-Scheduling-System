@@ -63,25 +63,30 @@ try {
         echo json_encode(['status' => 0, 'message' => 'ID reason is required']);
         return;
     }
-    if (empty($input->schedule_date)) {
-        error_log("[register.php] Schedule date is required\n", 3, __DIR__ . '/error_log.txt');
-        echo json_encode(['status' => 0, 'message' => 'Schedule date is required']);
-        return;
-    }
-    if (empty($input->schedule_time)) {
-        error_log("[register.php] Schedule time is required\n", 3, __DIR__ . '/error_log.txt');
-        echo json_encode(['status' => 0, 'message' => 'Schedule time is required']);
-        return;
-    }
-    if (empty($input->status)) {
-        error_log("[register.php] Status is required\n", 3, __DIR__ . '/error_log.txt');
-        echo json_encode(['status' => 0, 'message' => 'Status is required']);
-        return;
-    }
     if (!isset($input->data_privacy_agreed) || !$input->data_privacy_agreed) {
         error_log("[register.php] Data privacy agreement is required\n", 3, __DIR__ . '/error_log.txt');
         echo json_encode(['status' => 0, 'message' => 'Data privacy agreement is required']);
         return;
+    }
+
+    // Only require schedule fields if any of them is present (i.e., user is scheduling)
+    $isScheduling = !empty($input->schedule_date) || !empty($input->schedule_time) || !empty($input->status);
+    if ($isScheduling) {
+        if (empty($input->schedule_date)) {
+            error_log("[register.php] Schedule date is required when scheduling\n", 3, __DIR__ . '/error_log.txt');
+            echo json_encode(['status' => 0, 'message' => 'Schedule date is required when scheduling']);
+            return;
+        }
+        if (empty($input->schedule_time)) {
+            error_log("[register.php] Schedule time is required when scheduling\n", 3, __DIR__ . '/error_log.txt');
+            echo json_encode(['status' => 0, 'message' => 'Schedule time is required when scheduling']);
+            return;
+        }
+        if (empty($input->status)) {
+            error_log("[register.php] Status is required when scheduling\n", 3, __DIR__ . '/error_log.txt');
+            echo json_encode(['status' => 0, 'message' => 'Status is required when scheduling']);
+            return;
+        }
     }
 
     // Validate student number format
@@ -147,7 +152,7 @@ try {
     $stmt->bindValue(':data_privacy_agreed', $input->data_privacy_agreed, PDO::PARAM_BOOL);
     $stmt->bindValue(':schedule_time', $normalized_schedule_time);
     $stmt->bindValue(':schedule_date', $normalized_schedule_date);
-    $stmt->bindValue(':status', $input->status);
+    $stmt->bindValue(':status', $input->status ?? null);
 
     if ($stmt->execute()) {
         $studentId = $conn->lastInsertId();
