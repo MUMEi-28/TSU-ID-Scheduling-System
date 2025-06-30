@@ -12,6 +12,7 @@ import checkImg from './Components/public/check.png';
 
 import axios from "axios";
 import { useEffect, useState, useRef } from "react";
+import React from 'react';
 
 function AdminRoute({ children }) {
   const token = localStorage.getItem('admin_token');
@@ -262,7 +263,51 @@ export default function App()
       {/* Existing User Modal */}
       {showExistingModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
+          <div
+            className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            tabIndex={-1}
+            ref={existingModalRef => {
+              if (existingModalRef) {
+                existingModalRef.focus();
+              }
+            }}
+          >
+            {/* Focus trap and Escape key */}
+            {(() => {
+              const modalRef = useRef(null);
+              useEffect(() => {
+                if (modalRef.current) {
+                  modalRef.current.focus();
+                }
+                function handleKeyDown(e) {
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    setShowExistingModal(false);
+                  }
+                  if (e.key === 'Tab') {
+                    const focusableEls = modalRef.current.querySelectorAll(
+                      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                    );
+                    const focusable = Array.prototype.slice.call(focusableEls);
+                    if (focusable.length === 0) return;
+                    const first = focusable[0];
+                    const last = focusable[focusable.length - 1];
+                    if (!e.shiftKey && document.activeElement === last) {
+                      e.preventDefault();
+                      first.focus();
+                    } else if (e.shiftKey && document.activeElement === first) {
+                      e.preventDefault();
+                      last.focus();
+                    }
+                  }
+                }
+                document.addEventListener('keydown', handleKeyDown);
+                return () => document.removeEventListener('keydown', handleKeyDown);
+              }, []);
+              return null;
+            })()}
             <div className="text-center mb-6">
               <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4">
                 <img src={checkImg} alt="Existing User" className="w-full h-auto" />

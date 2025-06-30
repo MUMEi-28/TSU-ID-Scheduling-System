@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
 import { idReasonOptions } from '../../constants/IdReasonOptions';
 import { buildApiUrl, API_ENDPOINTS } from '../../../config/api';
@@ -16,6 +16,40 @@ export default function AddStudentModal(props)
         }
     )
     const [error, setError] = useState('');
+
+    // Focus trap and Escape key
+    const modalRef = useRef(null);
+    useEffect(() => {
+        // Focus modal on mount
+        if (modalRef.current) {
+            modalRef.current.focus();
+        }
+        function handleKeyDown(e) {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                props.onClose();
+            }
+            // Focus trap
+            if (e.key === 'Tab') {
+                const focusableEls = modalRef.current.querySelectorAll(
+                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                );
+                const focusable = Array.prototype.slice.call(focusableEls);
+                if (focusable.length === 0) return;
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                } else if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                }
+            }
+        }
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [props]);
 
     function handleChange(e)
     {
@@ -57,9 +91,13 @@ export default function AddStudentModal(props)
     }
     return (
         <div className='bg-black/50 fixed inset-0 z-[9999] flex items-center justify-center'>
-
-
-            <div className='bg-white rounded-lg p-6 w-full mx-4 max-w-md flex-col shadow-2xl'>
+            <div
+                className='bg-white rounded-lg p-6 w-full mx-4 max-w-md flex-col shadow-2xl'
+                tabIndex={-1}
+                ref={modalRef}
+                aria-modal="true"
+                role="dialog"
+            >
                 <h2 className='text-xl font-black mb-4 text-slate-700 text-center border-b'>Add Student</h2>
                 <form action="POST" onSubmit={handleSubmit}>
                     <p className='mb-2'>

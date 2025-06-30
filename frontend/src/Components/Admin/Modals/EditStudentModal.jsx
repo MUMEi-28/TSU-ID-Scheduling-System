@@ -1,10 +1,47 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 
 export default function EditStudentModal(props)
 {
+    // Focus trap and Escape key
+    const modalRef = useRef(null);
+    useEffect(() => {
+        if (modalRef.current) {
+            modalRef.current.focus();
+        }
+        function handleKeyDown(e) {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                props.setEditModal({ show: false, student: null, data: {} });
+            }
+            if (e.key === 'Tab') {
+                const focusableEls = modalRef.current.querySelectorAll(
+                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                );
+                const focusable = Array.prototype.slice.call(focusableEls);
+                if (focusable.length === 0) return;
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                } else if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                }
+            }
+        }
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [props]);
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div
+                className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+                tabIndex={-1}
+                ref={modalRef}
+                aria-modal="true"
+                role="dialog"
+            >
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold">Edit Student</h2>
                     <button
