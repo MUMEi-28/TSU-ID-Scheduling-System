@@ -712,12 +712,16 @@ const AdminPage = (props) =>
         {
             formattedDate = formatDateLocal(slotAdjustmentDate);
         }
+        let trimmedTime = selectedTimeforAdjustment;
+          if (typeof selectedTimeforAdjustment === 'string' && selectedTimeforAdjustment.length > 5) {
+            trimmedTime = selectedTimeforAdjustment.slice(0, -5);
+    }
         try
         {
             const response = await axios.get(buildApiUrl(API_ENDPOINTS.GET_MAX_SLOT_COUNT), {
                 params: {
                     schedule_date: formattedDate,
-                    schedule_time: displayToCanonical(selectedTimeforAdjustment) // Send canonical format to backend
+                    schedule_time: trimmedTime // Send canonical format to backend
                 }
             });
             console.log('[DEBUG] fetchMaxCapacity API response:', response.data);
@@ -744,12 +748,16 @@ const AdminPage = (props) =>
             formattedDate = formatDateLocal(slotAdjustmentDate);
         }
         let timeString = selectedTimeforAdjustment;
+        if (typeof selectedTimeforAdjustment === 'string' && selectedTimeforAdjustment.length > 5)
+        {
+            timeString = selectedTimeforAdjustment.slice(0, -5);
+        }
         console.log('[DEBUG] handleSlotAdjustment called with:', { formattedDate, timeString, action });
         try
         {
             const response = await axios.post(buildApiUrl(API_ENDPOINTS.ADJUST_SLOT_LIMIT), {
                 schedule_date: formattedDate,
-                schedule_time: displayToCanonical(timeString), // Send canonical format to backend
+                schedule_time: timeString, // Send canonical format to backend
                 action: action // 'increase' or 'decrease'
             });
             console.log('[DEBUG] handleSlotAdjustment API response:', response.data);
