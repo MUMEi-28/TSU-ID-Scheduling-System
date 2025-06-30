@@ -19,18 +19,34 @@ export default function AddStudentModal(props)
 
     // Focus trap and Escape key
     const modalRef = useRef(null);
+    const formRef = useRef(null);
+    
     useEffect(() => {
-        // Focus modal on mount
-        if (modalRef.current) {
-            modalRef.current.focus();
-        }
         function handleKeyDown(e) {
+            // Only handle Escape, Tab, and Enter keys
             if (e.key === 'Escape') {
                 e.preventDefault();
                 props.onClose();
-            }
-            // Focus trap
-            if (e.key === 'Tab') {
+            } else if (e.key === 'Enter') {
+                // Only submit on Enter if focused on a button or the last input field
+                const focusableEls = modalRef.current.querySelectorAll(
+                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                );
+                const focusable = Array.prototype.slice.call(focusableEls);
+                const currentIndex = Array.from(focusable).indexOf(document.activeElement);
+                const isLastInput = currentIndex === focusable.length - 1;
+                const isButton = e.target.tagName === 'BUTTON';
+                
+                if (isButton || isLastInput) {
+                    // Allow submission
+                    return; // Let the form submit naturally
+                } else {
+                    // Prevent form submission for other inputs
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            } else if (e.key === 'Tab') {
+                // Focus trap
                 const focusableEls = modalRef.current.querySelectorAll(
                     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
                 );
@@ -46,6 +62,7 @@ export default function AddStudentModal(props)
                     last.focus();
                 }
             }
+            // Don't handle other keys - let them pass through normally
         }
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
@@ -93,13 +110,12 @@ export default function AddStudentModal(props)
         <div className='bg-black/50 fixed inset-0 z-[9999] flex items-center justify-center'>
             <div
                 className='bg-white rounded-lg p-6 w-full mx-4 max-w-md flex-col shadow-2xl'
-                tabIndex={-1}
                 ref={modalRef}
                 aria-modal="true"
                 role="dialog"
             >
                 <h2 className='text-xl font-black mb-4 text-slate-700 text-center border-b'>Add Student</h2>
-                <form action="POST" onSubmit={handleSubmit}>
+                <form ref={formRef} action="POST" onSubmit={handleSubmit}>
                     <p className='mb-2'>
                         <label
                             className='block text-md '>Fullname</label>

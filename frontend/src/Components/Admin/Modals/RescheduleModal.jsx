@@ -5,15 +5,27 @@ export default function RescheduleModal(props)
     // Focus trap and Escape key
     const modalRef = useRef(null);
     useEffect(() => {
-        if (modalRef.current) {
-            modalRef.current.focus();
-        }
         function handleKeyDown(e) {
+            // Only handle Escape, Tab, and Enter keys
             if (e.key === 'Escape') {
                 e.preventDefault();
                 props.handleRescheduleCancel();
-            }
-            if (e.key === 'Tab') {
+            } else if (e.key === 'Enter') {
+                // Only submit on Enter if focused on a button or the last input field
+                const focusableEls = modalRef.current.querySelectorAll(
+                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                );
+                const focusable = Array.prototype.slice.call(focusableEls);
+                const currentIndex = Array.from(focusable).indexOf(document.activeElement);
+                const isLastInput = currentIndex === focusable.length - 1;
+                const isButton = e.target.tagName === 'BUTTON';
+                
+                if (isButton || isLastInput) {
+                    e.preventDefault();
+                    props.handleRescheduleSave();
+                }
+                // If not on button or last input, let Enter work normally
+            } else if (e.key === 'Tab') {
                 const focusableEls = modalRef.current.querySelectorAll(
                     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
                 );
@@ -29,6 +41,7 @@ export default function RescheduleModal(props)
                     last.focus();
                 }
             }
+            // Don't handle other keys - let them pass through normally
         }
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
@@ -37,7 +50,6 @@ export default function RescheduleModal(props)
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
             <div
                 className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
-                tabIndex={-1}
                 ref={modalRef}
                 aria-modal="true"
                 role="dialog"

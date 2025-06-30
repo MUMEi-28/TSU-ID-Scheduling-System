@@ -282,11 +282,11 @@ export default function App()
                   modalRef.current.focus();
                 }
                 function handleKeyDown(e) {
+                  // Only handle Escape and Tab keys
                   if (e.key === 'Escape') {
                     e.preventDefault();
                     setShowExistingModal(false);
-                  }
-                  if (e.key === 'Tab') {
+                  } else if (e.key === 'Tab') {
                     const focusableEls = modalRef.current.querySelectorAll(
                       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
                     );
@@ -302,6 +302,7 @@ export default function App()
                       last.focus();
                     }
                   }
+                  // Don't handle other keys - let them pass through normally
                 }
                 document.addEventListener('keydown', handleKeyDown);
                 return () => document.removeEventListener('keydown', handleKeyDown);

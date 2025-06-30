@@ -9,11 +9,11 @@ export default function StudentDetailModal(props)
             modalRef.current.focus();
         }
         function handleKeyDown(e) {
+            // Only handle Escape and Tab keys
             if (e.key === 'Escape') {
                 e.preventDefault();
                 props.setDetailModal({ show: false, student: null });
-            }
-            if (e.key === 'Tab') {
+            } else if (e.key === 'Tab') {
                 const focusableEls = modalRef.current.querySelectorAll(
                     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
                 );
@@ -29,6 +29,7 @@ export default function StudentDetailModal(props)
                     last.focus();
                 }
             }
+            // Don't handle other keys - let them pass through normally
         }
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);

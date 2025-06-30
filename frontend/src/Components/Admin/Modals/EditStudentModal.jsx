@@ -4,16 +4,33 @@ export default function EditStudentModal(props)
 {
     // Focus trap and Escape key
     const modalRef = useRef(null);
+    const formRef = useRef(null);
+    
     useEffect(() => {
-        if (modalRef.current) {
-            modalRef.current.focus();
-        }
         function handleKeyDown(e) {
+            // Only handle Escape, Tab, and Enter keys
             if (e.key === 'Escape') {
                 e.preventDefault();
                 props.setEditModal({ show: false, student: null, data: {} });
-            }
-            if (e.key === 'Tab') {
+            } else if (e.key === 'Enter') {
+                // Only submit on Enter if focused on a button or the last input field
+                const focusableEls = modalRef.current.querySelectorAll(
+                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                );
+                const focusable = Array.prototype.slice.call(focusableEls);
+                const currentIndex = Array.from(focusable).indexOf(document.activeElement);
+                const isLastInput = currentIndex === focusable.length - 1;
+                const isButton = e.target.tagName === 'BUTTON';
+                
+                if (isButton || isLastInput) {
+                    // Allow submission
+                    return; // Let the form submit naturally
+                } else {
+                    // Prevent form submission for other inputs
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            } else if (e.key === 'Tab') {
                 const focusableEls = modalRef.current.querySelectorAll(
                     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
                 );
@@ -29,15 +46,21 @@ export default function EditStudentModal(props)
                     last.focus();
                 }
             }
+            // Don't handle other keys - let them pass through normally
         }
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [props]);
+    
+    const handleFormSubmit = (e) => {
+        e.preventDefault();
+        props.handleEditSave();
+    };
+    
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
             <div
                 className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
-                tabIndex={-1}
                 ref={modalRef}
                 aria-modal="true"
                 role="dialog"
@@ -52,7 +75,7 @@ export default function EditStudentModal(props)
                     </button>
                 </div>
 
-                <form onSubmit={(e) => { e.preventDefault(); props.handleEditSave(); }}>
+                <form ref={formRef} onSubmit={handleFormSubmit}>
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
