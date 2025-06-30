@@ -14,8 +14,8 @@ export default function AdminPagination({
 {
     return (
         < div >
-            {/* Hide pagination if showAllStudents is true */}
-            {!showAllStudents && totalPagesToShow > 1 && (
+            {/* Always show pagination if there are multiple pages */}
+            {totalPagesToShow > 1 && (
                 <div className="px-4 py-3 border-t border-gray-200">
                     <div className="flex items-center justify-between">
                         <div className="text-sm text-gray-700">
