@@ -20,6 +20,7 @@ import AdminHeader from './Components/AdminHeader';
 import AdminFilters from './Components/AdminFilters';
 import AdminTable from './Components/AdminTable';
 import AdminPagination from './Components/AdminPagination';
+import DownloadListModal from './Modals/DownloadListModal';
 
 // Toast component
 function Toast({ message, type, onClose })
@@ -37,7 +38,7 @@ const AdminPage = (props) =>
 {
     const location = useLocation();
     const [showCalendar, setShowCalendar] = useState(false);
-    const [showList, setShowList] = useState(false);
+    const [showList, setShowList] = useState(true);
     const [placeHolderDate, setPlaceHolderDate] = useState("No Date Chosen");
     const [selectedTime, setSelectedTime] = useState("No Time Chosen");
     const [students, setStudents] = useState([]);
@@ -291,6 +292,9 @@ const AdminPage = (props) =>
 
     const downloadAllStudentsData = () =>
     {
+
+        console.log("PRESSED DOWNLOAD LIST");
+
         const allStudents = students.filter(student => student.id !== 1);
         const csvData = [
             ['Name', 'Student Number', 'Email', 'ID Reason', 'Date', 'Time', 'Status'],
@@ -1082,6 +1086,12 @@ const AdminPage = (props) =>
                 }}
                 onCancel={() => setConfirmModal({ ...confirmModal, show: false })}
             />
+            {showList && (
+                <DownloadListModal
+                    students={students}
+                    onClose={() => setShowList(false)}
+                />
+            )}
 
             {showAddStudent && (
                 <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-black/50 text-white text-xl z-[9999]">Loading Add Form...</div>}>
@@ -1236,6 +1246,9 @@ const AdminPage = (props) =>
                     endPage={endPage}
                 />
             </div>
+
+
+
 
             {/* Confirmation Modal for bulk actions */}
             <ConfirmModal
