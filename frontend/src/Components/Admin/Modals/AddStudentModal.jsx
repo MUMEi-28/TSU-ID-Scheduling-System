@@ -95,15 +95,56 @@ export default function AddStudentModal(props)
             }
         ));
 
+        // Clear error when user starts typing
+        if (error) {
+            setError('');
+        }
+
         console.log(student);
     }
+
+    // Real-time validation functions
+    const validateStudentNumber = (studentNumber) => {
+        if (!studentNumber) return '';
+        if (!/^\d{10}$/.test(studentNumber)) {
+            return 'Student number must be exactly 10 digits';
+        }
+        return '';
+    };
+
+    const validateEmail = (email) => {
+        if (!email) return '';
+        const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+        if (!emailRegex.test(email)) {
+            return 'Please enter a valid email address';
+        }
+        return '';
+    };
+
     async function handleSubmit(e)
     {
         e.preventDefault();
 
+        // Clear previous errors
+        setError('');
+
+        // Basic required field validation
         if (!student.fullname || !student.student_number || !student.email || !student.id_reason || !student.schedule_date || !student.schedule_time || !student.status)
         {
             setError("All fields are required.");
+            return;
+        }
+
+        // Student number format validation (must be exactly 10 digits)
+        if (!/^\d{10}$/.test(student.student_number)) {
+            setError("Student number must be exactly 10 digits.");
+            return;
+        }
+
+        // Email format validation
+        const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+        if (!emailRegex.test(student.email)) {
+            setError("Please enter a valid email address.");
             return;
         }
 
@@ -122,11 +163,15 @@ export default function AddStudentModal(props)
             props.onSuccess();
         } catch (err)
         {
-            setError(err.response?.data?.message || 'Failed to add student.');
+            // Handle specific backend validation errors
+            if (err.response?.data?.message) {
+                setError(err.response.data.message);
+            } else {
+                setError('Failed to add student. Please try again.');
+            }
         }
 
-
-        console.log("SUBMMITED WITHOUT ERRORS");
+        console.log("SUBMITTED WITHOUT ERRORS");
     }
     return (
         <div className='bg-black/50 fixed inset-0 z-[9999] flex items-center justify-center'>
@@ -158,9 +203,12 @@ export default function AddStudentModal(props)
                             name='student_number'
                             onChange={handleChange}
                             required
-                            className='border p-2 rounded-md w-full'
+                            className={`border p-2 rounded-md w-full ${validateStudentNumber(student.student_number) ? 'border-red-500' : ''}`}
                             type="text"
                             placeholder='Student Number' />
+                        {validateStudentNumber(student.student_number) && (
+                            <p className='text-red-500 text-sm mt-1'>{validateStudentNumber(student.student_number)}</p>
+                        )}
                     </p>
                     <p className='mb-2'>
                         <label
@@ -170,9 +218,12 @@ export default function AddStudentModal(props)
                             name='email'
                             onChange={handleChange}
                             required
-                            className='border p-2 rounded-md w-full'
+                            className={`border p-2 rounded-md w-full ${validateEmail(student.email) ? 'border-red-500' : ''}`}
                             type="email"
                             placeholder='Email' />
+                        {validateEmail(student.email) && (
+                            <p className='text-red-500 text-sm mt-1'>{validateEmail(student.email)}</p>
+                        )}
                     </p>
 
                     <p className='mb-2'>

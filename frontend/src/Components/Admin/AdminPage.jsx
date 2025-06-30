@@ -4,7 +4,7 @@ import axios from 'axios';
 import { buildApiUrl, API_ENDPOINTS } from '../../config/api';
 import CustomDropdown from './CustomDropdown';
 import kuruKuru from '../public/kurukuru-kururing.gif';
-import { displayToCanonical, normalizeDate } from '../../utils/timeUtils';
+import { displayToCanonical, normalizeDate, getDisplayTimeSlots } from '../../utils/timeUtils';
 
 
 //Modals
@@ -175,17 +175,6 @@ const AdminPage = (props) =>
         }
     }, []);
 
-    // Add loading when date/time changes
-
-    useEffect(() =>
-    {
-        if (!isLoading && selectedTime !== "No Time Chosen")
-        {
-            setIsFiltering(true);
-            setTimeout(() => setIsFiltering(false), 2000);
-        }
-    }, [selectedTime, isLoading]);
-
     // Auto-dismiss toast after 3 seconds
     useEffect(() =>
     {
@@ -286,7 +275,7 @@ const AdminPage = (props) =>
         } else
         {
             const monthName = new Date(0, currentScheduleMonth).toLocaleString('en-US', { month: 'long' });
-            setToast({ show: true, message: `Generating list for ${monthName} ${currentScheduleYear}${selectedTime !== 'No Time Chosen' ? ', ' + selectedTime : ''}`, type: 'success' });
+            setToast({ show: true, message: `Generating list for ${monthName} ${currentScheduleYear}${currentScheduleTime !== 'all' ? ', ' + currentScheduleTime : ''}`, type: 'success' });
             downloadFilteredStudentsData();
         }
     };
@@ -326,7 +315,7 @@ const AdminPage = (props) =>
             if (!student.schedule_date) return false;
             const dateObj = new Date(student.schedule_date);
             const matchesMonth = dateObj.getMonth() === currentScheduleMonth && dateObj.getFullYear() === currentScheduleYear;
-            const matchesTime = selectedTime === 'No Time Chosen' || student.schedule_time === selectedTime;
+            const matchesTime = currentScheduleTime === 'all' || student.schedule_time === currentScheduleTime;
             return matchesMonth && matchesTime;
         });
         const monthName = new Date(0, currentScheduleMonth).toLocaleString('en-US', { month: 'long' });
@@ -348,7 +337,7 @@ const AdminPage = (props) =>
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${monthName}_${currentScheduleYear}${selectedTime !== 'No Time Chosen' ? '_' + selectedTime.replace(/\s+/g, '') : ''}_students.csv`;
+        a.download = `${monthName}_${currentScheduleYear}${currentScheduleTime !== 'all' ? '_' + currentScheduleTime.replace(/\s+/g, '') : ''}_students.csv`;
         a.click();
         window.URL.revokeObjectURL(url);
     };
@@ -374,8 +363,10 @@ const AdminPage = (props) =>
     // Add month/year state for filtering
     const [currentScheduleMonth, setCurrentScheduleMonth] = useState(new Date().getMonth()); // 0-indexed
     const [currentScheduleYear, setCurrentScheduleYear] = useState(new Date().getFullYear());
+    const [currentScheduleDay, setCurrentScheduleDay] = useState(new Date().getDate());
+    const [currentScheduleTime, setCurrentScheduleTime] = useState('all');
 
-    // Update filteredStudents to filter by month/year if not showing all students
+    // Update filteredStudents to filter by month/year/day if not showing all students
     const filteredStudents = students.filter(student =>
     {
         if (
@@ -388,12 +379,22 @@ const AdminPage = (props) =>
             (student.email && student.email.toLowerCase().includes(search.toLowerCase()));
         const matchesStatus = filterStatus === 'all' || student.status === filterStatus;
         let matchesMonth = true;
+        let matchesYear = true;
+        let matchesDay = true;
+        let matchesTime = true;
         if (!showAllStudents && student.schedule_date)
         {
             const dateObj = new Date(student.schedule_date);
-            matchesMonth = dateObj.getMonth() === currentScheduleMonth && dateObj.getFullYear() === currentScheduleYear;
+            matchesMonth = currentScheduleMonth === 'all' || dateObj.getMonth() === Number(currentScheduleMonth);
+            matchesYear = currentScheduleYear === 'all' || dateObj.getFullYear() === Number(currentScheduleYear);
+            if (currentScheduleDay !== 'all') {
+                matchesDay = dateObj.getDate() === Number(currentScheduleDay);
+            }
         }
-        return matchesSearch && matchesStatus && matchesMonth;
+        if (!showAllStudents && student.schedule_time) {
+            matchesTime = currentScheduleTime === 'all' || student.schedule_time === currentScheduleTime;
+        }
+        return matchesSearch && matchesStatus && matchesMonth && matchesYear && matchesDay && matchesTime;
     });
 
     // Apply sorting before pagination
@@ -716,16 +717,6 @@ const AdminPage = (props) =>
 
     const { startPage, endPage } = getPaginationRange();
 
-    const handleTimeChange = (newTime) =>
-    {
-        setSelectedTime(newTime);
-        if (currentScheduleDate !== "No Date Chosen" && newTime !== "No Time Chosen")
-        {
-            setIsFiltering(true);
-            setTimeout(() => setIsFiltering(false), 1500);
-        }
-    };
-
     const handleMonthChange = (e) =>
     {
         setCurrentScheduleMonth(Number(e.target.value));
@@ -934,6 +925,17 @@ const AdminPage = (props) =>
     const confirmBulkDelete = () => setBulkConfirm({ show: true, action: handleBulkDelete, message: `Are you sure you want to delete ${selectedStudentIds.length} selected students? This action cannot be undone.` });
     const confirmBulkMarkCancelled = () => setBulkConfirm({ show: true, action: handleBulkMarkCancelled, message: `Are you sure you want to mark ${selectedStudentIds.length} selected students as cancelled?` });
 
+    // Add this function to reset filters and show all students
+    const handleShowAllStudents = () => {
+        setSearch('');
+        setFilterStatus('all');
+        setCurrentScheduleMonth('all');
+        setCurrentScheduleYear('all');
+        setCurrentScheduleDay('all');
+        setCurrentScheduleTime('all');
+        setShowAllStudents(true);
+    };
+
     return (
         <div className="min-h-screen w-full overflow-x-hidden flex flex-col "> {/* TANGGLAIN BG BLACK LATER */}
 
@@ -968,7 +970,7 @@ const AdminPage = (props) =>
                             <p className="text-xl font-semibold text-gray-700 mb-2">Filtering students...</p>
                             <p className="text-base text-gray-500">
                                 {currentScheduleDate !== "No Date Chosen"
-                                    ? `${currentScheduleDate}, ${selectedTime}`
+                                    ? `${currentScheduleDate}, ${currentScheduleTime}`
                                     : 'Loading all students...'}
                             </p>
                         </div>
@@ -1076,6 +1078,7 @@ const AdminPage = (props) =>
             <div className="flex-1 p-6">
                 <AdminFilters
                     handleOpenSlotAdjustmentPanel={handleOpenSlotAdjustmentPanel}
+                    handleShowAllStudents={handleShowAllStudents}
                     setCurrentScheduleMonth={setCurrentScheduleMonth}
                     setCurrentScheduleYear={setCurrentScheduleYear}
                     setShowAllStudents={setShowAllStudents}
@@ -1085,7 +1088,10 @@ const AdminPage = (props) =>
                     setFilterStatus={setFilterStatus}
                     currentScheduleMonth={currentScheduleMonth}
                     currentScheduleYear={currentScheduleYear}
-
+                    currentScheduleDay={currentScheduleDay}
+                    setCurrentScheduleDay={setCurrentScheduleDay}
+                    currentScheduleTime={currentScheduleTime}
+                    setCurrentScheduleTime={setCurrentScheduleTime}
                 />
 
                 {/* Bulk Action Bar */}
