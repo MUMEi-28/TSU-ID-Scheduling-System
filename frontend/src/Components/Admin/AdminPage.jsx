@@ -38,7 +38,7 @@ const AdminPage = (props) =>
 {
     const location = useLocation();
     const [showCalendar, setShowCalendar] = useState(false);
-    const [showList, setShowList] = useState(true);
+    const [showList, setShowList] = useState(false);
     const [placeHolderDate, setPlaceHolderDate] = useState("No Date Chosen");
     const [selectedTime, setSelectedTime] = useState("No Time Chosen");
     const [students, setStudents] = useState([]);
