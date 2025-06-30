@@ -17,7 +17,7 @@ export default function RegistrationForm(props)
     const [isNewUser, setIsNewUser] = useState(false);
 
     // New state for additional info form
-    const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
+    const [showAdditionalInfo, setShowAdditionalInfo] = useState(true);
     const [additionalInfo, setAdditionalInfo] = useState({
         email: '',
         id_reason: '',
@@ -261,7 +261,7 @@ export default function RegistrationForm(props)
 
             {/* Left Panel Form */}
             <div className='w-full lg:w-3/6 min-h-screen flex justify-center items-center px-6'>
-                <div className="relative w-full max-w-md sm:max-w-lg md:max-w-xl rounded-xl flex flex-col justify-center items-center gap-y-6 px-6 sm:px-10 pt-16 pb-1">
+                <div className="relative w-full max-w-md sm:max-w-lg md:max-w-xl rounded-xl flex flex-col justify-center items-center gap-y-6 px-6 sm:px-10 pt-16 pb-1 ">
                     <div className='w-full h-full bg-[#ECECEC] absolute z-10 rounded-xl opacity-[.83] pb-10'></div>
                     <div className="h-8 w-full bg-[#5C0101] rounded-t-xl absolute top-0 z-10 mt-3"></div>
 
@@ -275,7 +275,7 @@ export default function RegistrationForm(props)
                             Existing Appointment Found
                         </div>
                     ) : showAdditionalInfo ? (
-                        <div className="poppins-font text-[#5B0000] text-2xl sm:text-3xl md:text-4xl font-medium tracking-tight z-20 text-center">
+                        <div className="poppins-font text-[#5B0000] text-xl sm:text-3xl md:text-4xl font-medium tracking-tight z-20 text-center ">
                             Additional Information
                         </div>
                     ) : (
@@ -339,10 +339,10 @@ export default function RegistrationForm(props)
                         // Additional Information Form for New Users
                         <form
                             onSubmit={handleAdditionalInfoSubmit}
-                            className="flex flex-col gap-y-6 w-full px-6 sm:px-10 z-20">
+                            className="flex flex-col gap-y-3 sm:gap-y-6 w-screen sm:w-full px-10 sm:px-10 z-20">
 
-                            <div className="text-center text-[#5B0000] mb-4">
-                                <p className="text-lg">
+                            <div className="text-center text-[#5B0000] ">
+                                <p className="text-sm sm:text-lg">
                                     Welcome! Please provide additional information to complete your registration.
                                 </p>
                             </div>
@@ -356,7 +356,7 @@ export default function RegistrationForm(props)
                                     value={additionalInfo.email}
                                     onChange={handleAdditionalInfoChange}
                                     placeholder='your.email@example.com'
-                                    className='p-4 bg-[#BABABA] w-full'
+                                    className='p-2 sm:p-4 bg-[#BABABA] w-full'
                                     required
                                 />
                             </div>
@@ -368,7 +368,7 @@ export default function RegistrationForm(props)
                                     name="id_reason"
                                     value={additionalInfo.id_reason}
                                     onChange={handleAdditionalInfoChange}
-                                    className='p-4 bg-[#BABABA] w-full'
+                                    className='p-2 sm:p-4 bg-[#BABABA] w-full'
                                     required
                                 >
                                     <option value="">Select a reason</option>
@@ -408,7 +408,7 @@ export default function RegistrationForm(props)
                                 <button
                                     type="submit"
                                     disabled={!isAdditionalInfoComplete || isSubmitting}
-                                    className={`py-3 px-6 text-sm sm:text-base md:text-lg
+                                    className={`py-1 sm:py-3 px-6 text-sm sm:text-base md:text-lg
                                         istok-font text-white font-bold rounded-xl shadow-lg border-2 transition-all duration-200
                                         ${(!isAdditionalInfoComplete || isSubmitting) ? 'bg-[#E1A500]/50 border-[#C68C10]/50 cursor-not-allowed' : 'bg-[#E1A500] hover:bg-[#C68C10] border-[#C68C10]'}`}>
                                     {isSubmitting ? 'Processing...' : 'Continue to Schedule'}
