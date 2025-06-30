@@ -125,13 +125,11 @@ const TimePicker = (props) =>
             if (autoRefreshInterval.current) {
                 clearInterval(autoRefreshInterval.current);
             }
-            
             // Set up auto-refresh every 10 seconds
             autoRefreshInterval.current = setInterval(() => {
                 fetchSlotData(props.selectedDate, true);
             }, 10000);
         }
-
         // Cleanup on unmount or when date changes
         return () => {
             if (autoRefreshInterval.current) {
@@ -289,13 +287,6 @@ const TimePicker = (props) =>
                             disabled={!props.selectedTime}
                         >
                             Schedule
-                        </button>
-                        <button
-                            className='bg-gray-500 border-gray-600 league-font text-base px-4 py-2 font-bold border-2 text-white rounded-md hover:bg-gray-600 duration-200 mt-2'
-                            onClick={() => fetchSlotData(props.selectedDate, true)}
-                            disabled={loading || refreshing}
-                        >
-                            {refreshing ? 'Refreshing...' : 'Refresh'}
                         </button>
                     </div>
                 </>

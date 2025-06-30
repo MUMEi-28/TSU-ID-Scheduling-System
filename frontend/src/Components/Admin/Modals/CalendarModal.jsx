@@ -38,17 +38,15 @@ export default function CalendarModal(props)
     }, [props]);
 
     const handleDateSelect = (date) => {
-        const formatted = new Date(date).toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric'
-        });
+        // Always use canonical format YYYY-MM-DD
+        const d = new Date(date);
+        const canonical = d.toISOString().split('T')[0];
 
         // Handle both reschedule and slot adjustment cases
         if (props.setRescheduleDate) {
-            props.setRescheduleDate(formatted);
+            props.setRescheduleDate(canonical);
         } else if (props.setSlotAdjustmentDate) {
-            props.setSlotAdjustmentDate(formatted);
+            props.setSlotAdjustmentDate(canonical);
         }
         props.setShowCalendar(false);
     };
