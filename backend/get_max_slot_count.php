@@ -9,6 +9,13 @@ $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $date = normalize_schedule_date($_GET['schedule_date'] ?? '');
 $time = normalize_slot_time($_GET['schedule_time'] ?? '');
 
+if (!empty($date)) {
+    $date = normalize_schedule_date($date);
+}
+if (!empty($time)) {
+    $time = normalize_slot_time($time);
+}
+
 if ($date && $time) {
     // First, check if the slot exists, if not create it
     $checkSlot = $conn->prepare("SELECT id FROM slots WHERE TRIM(slot_date) = TRIM(:schedule_date) AND slot_time = :schedule_time LIMIT 1");

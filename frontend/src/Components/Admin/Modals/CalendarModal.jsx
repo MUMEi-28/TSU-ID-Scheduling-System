@@ -36,6 +36,23 @@ export default function CalendarModal(props)
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [props]);
+
+    const handleDateSelect = (date) => {
+        const formatted = new Date(date).toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
+        });
+
+        // Handle both reschedule and slot adjustment cases
+        if (props.setRescheduleDate) {
+            props.setRescheduleDate(formatted);
+        } else if (props.setSlotAdjustmentDate) {
+            props.setSlotAdjustmentDate(formatted);
+        }
+        props.setShowCalendar(false);
+    };
+
     return (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999]">
             <div
@@ -47,33 +64,16 @@ export default function CalendarModal(props)
             >
                 <Suspense fallback={<div className='text-xl font-bold text-gray-600'>Loading calendar...</div>}>
                     <Calendar
-                        onDateSelect={date =>
-                        {
-                            const formatted = new Date(date).toLocaleDateString('en-US', {
-                                month: 'long',
-                                day: 'numeric',
-                                year: 'numeric'
-                            });
-                            props.setSlotAdjustmentDate(formatted);
-                            props.setShowCalendar(false);
-                        }}
+                        onDateSelect={handleDateSelect}
                         onClose={() => props.setShowCalendar(false)}
                     />
                 </Suspense>
                 <div className="flex gap-2 mt-3">
                     <button
-                        onClick={() => {
-                            props.setShowCalendar(false);
-                        }}
-                        className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold border-2 border-green-700 text-sm"
-                    >
-                        Confirm
-                    </button>
-                    <button
-                        onClick={() => { props.setShowCalendar(false); }}
+                        onClick={() => props.setShowCalendar(false)}
                         className="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-bold border-2 border-gray-600 text-sm"
                     >
-                        Cancel
+                        Close
                     </button>
                 </div>
             </div>

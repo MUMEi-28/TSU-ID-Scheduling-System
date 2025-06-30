@@ -210,6 +210,109 @@ try {
     
     echo "Triggers created successfully.\n";
     
+    // DATA NORMALIZATION: Merge and normalize all slot_date and slot_time in slots
+    require_once __DIR__ . '/utils.php';
+    echo "Merging and normalizing all slot_date and slot_time in slots to canonical format...\n";
+    // Step 1: Find all slots and group by normalized slot_date and slot_time
+    $stmt = $conn->query("SELECT id, slot_date, slot_time, booked_count, max_capacity FROM slots WHERE slot_time IS NOT NULL AND slot_time != '' AND slot_date IS NOT NULL AND slot_date != ''");
+    $allSlots = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $merged = [];
+    foreach ($allSlots as $slot) {
+        $norm_time = normalize_slot_time($slot['slot_time']);
+        $norm_date = normalize_schedule_date($slot['slot_date']);
+        $key = $norm_date . '|' . $norm_time;
+        if (!isset($merged[$key])) {
+            $merged[$key] = [
+                'slot_date' => $norm_date,
+                'slot_time' => $norm_time,
+                'booked_count' => (int)$slot['booked_count'],
+                'max_capacity' => (int)$slot['max_capacity'],
+                'ids' => [$slot['id']]
+            ];
+        } else {
+            $merged[$key]['booked_count'] += (int)$slot['booked_count'];
+            $merged[$key]['max_capacity'] = max($merged[$key]['max_capacity'], (int)$slot['max_capacity']);
+            $merged[$key]['ids'][] = $slot['id'];
+        }
+    }
+    // Step 2: Delete all original slots that would be merged
+    $allIds = [];
+    foreach ($merged as $m) {
+        $allIds = array_merge($allIds, $m['ids']);
+    }
+    if (count($allIds) > 0) {
+        $in = implode(',', array_map('intval', $allIds));
+        $conn->exec("DELETE FROM slots WHERE id IN ($in)");
+    }
+    // Step 3: Insert merged/normalized slots
+    $insert = $conn->prepare("INSERT INTO slots (slot_date, slot_time, booked_count, max_capacity) VALUES (:slot_date, :slot_time, :booked_count, :max_capacity)");
+    foreach ($merged as $m) {
+        $insert->execute([
+            'slot_date' => $m['slot_date'],
+            'slot_time' => $m['slot_time'],
+            'booked_count' => $m['booked_count'],
+            'max_capacity' => $m['max_capacity']
+        ]);
+        echo "Inserted/merged slot: {$m['slot_date']} {$m['slot_time']} (booked: {$m['booked_count']}, max: {$m['max_capacity']})\n";
+    }
+    echo "Slot merging and normalization complete.\n";
+    
+    // DATA NORMALIZATION: Normalize all schedule_time in students and slot_time in slots
+    require_once __DIR__ . '/utils.php';
+    echo "Normalizing all schedule_time in students and slot_time in slots to canonical format...\n";
+    // Normalize students.schedule_time
+    $stmt = $conn->query("SELECT id, schedule_time FROM students WHERE schedule_time IS NOT NULL AND schedule_time != ''");
+    $studentsToUpdate = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($studentsToUpdate as $student) {
+        $normalized = normalize_slot_time($student['schedule_time']);
+        if ($normalized !== $student['schedule_time']) {
+            $update = $conn->prepare("UPDATE students SET schedule_time = :normalized WHERE id = :id");
+            $update->execute(['normalized' => $normalized, 'id' => $student['id']]);
+            echo "Updated student ID {$student['id']} schedule_time to $normalized\n";
+        }
+    }
+    // Normalize slots.slot_time
+    $stmt = $conn->query("SELECT id, slot_time FROM slots WHERE slot_time IS NOT NULL AND slot_time != ''");
+    $slotsToUpdate = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($slotsToUpdate as $slot) {
+        $normalized = normalize_slot_time($slot['slot_time']);
+        if ($normalized !== $slot['slot_time']) {
+            $update = $conn->prepare("UPDATE slots SET slot_time = :normalized WHERE id = :id");
+            $update->execute(['normalized' => $normalized, 'id' => $slot['id']]);
+            echo "Updated slot ID {$slot['id']} slot_time to $normalized\n";
+        }
+    }
+    echo "Normalization complete.\n";
+    
+    // DATA NORMALIZATION: Normalize all schedule_date in students and slot_date in slots to canonical YYYY-MM-DD format
+    echo "Normalizing all schedule_date in students and slot_date in slots to YYYY-MM-DD format...\n";
+    // Normalize students.schedule_date
+    $stmt = $conn->query("SELECT id, schedule_date FROM students WHERE schedule_date IS NOT NULL AND schedule_date != ''");
+    $studentsToUpdate = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($studentsToUpdate as $student) {
+        $normalized = normalize_schedule_date($student['schedule_date']);
+        if ($normalized !== $student['schedule_date']) {
+            $update = $conn->prepare("UPDATE students SET schedule_date = :normalized WHERE id = :id");
+            $update->execute(['normalized' => $normalized, 'id' => $student['id']]);
+            echo "Updated student ID {$student['id']} schedule_date to $normalized\n";
+        }
+    }
+    // Normalize slots.slot_date
+    $stmt = $conn->query("SELECT id, slot_date FROM slots WHERE slot_date IS NOT NULL AND slot_date != ''");
+    $slotsToUpdate = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($slotsToUpdate as $slot) {
+        $normalized = normalize_schedule_date($slot['slot_date']);
+        if ($normalized !== $slot['slot_date']) {
+            $update = $conn->prepare("UPDATE slots SET slot_date = :normalized WHERE id = :id");
+            $update->execute(['normalized' => $normalized, 'id' => $slot['id']]);
+            echo "Updated slot ID {$slot['id']} slot_date to $normalized\n";
+        }
+    }
+    echo "Date normalization complete.\n";
+    
+    // Add a comment for developers:
+    echo "\n[NOTE] To prevent future inconsistencies, always use normalize_slot_time() and normalize_schedule_date() before inserting or updating slot or schedule data in the backend.\n";
+    
     echo "Database migration completed successfully!\n";
     
 } catch (PDOException $e) {

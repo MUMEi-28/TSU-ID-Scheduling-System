@@ -9,6 +9,7 @@ include 'config.php';
 var_dump($conn);
  */
 
+require_once __DIR__ . '/utils.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 /* 
@@ -126,6 +127,8 @@ switch ($method) {
                     echo json_encode(['status' => 0, 'message' => 'Schedule time is required']);
                     exit;
                 }
+                $input->schedule_date = normalize_schedule_date($input->schedule_date);
+                $input->schedule_time = normalize_slot_time($input->schedule_time);
                 $sql = "UPDATE students SET fullname = :fullname, student_number = :student_number, email = :email, id_reason = :id_reason, data_privacy_agreed = :data_privacy_agreed, schedule_date = :schedule_date, schedule_time = :schedule_time, status = :status WHERE id = :id";
                 $stmt = $conn->prepare($sql);
                 $stmt->bindParam(':fullname', $input->fullname);

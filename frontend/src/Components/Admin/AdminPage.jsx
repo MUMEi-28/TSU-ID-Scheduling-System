@@ -1,4 +1,4 @@
-import React, { useEffect, useState, lazy, Suspense } from 'react';
+import React, { useEffect, useState, lazy, Suspense, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { buildApiUrl, API_ENDPOINTS } from '../../config/api';
@@ -596,8 +596,11 @@ const AdminPage = (props) =>
 
     const handleToggleStatus = async (student) =>
     {
+        // Always normalize before API calls
+        const canonicalDate = normalizeDate(student.schedule_date);
+        const canonicalTime = displayToCanonical(student.schedule_time);
         const newStatus = student.status === 'done' ? 'pending' : 'done';
-        await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), { ...student, status: newStatus }, {
+        await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), { ...student, schedule_date: canonicalDate, schedule_time: canonicalTime, status: newStatus }, {
             headers: { 'Content-Type': 'application/json' }
         });
         invalidateStudentCache();
@@ -618,7 +621,10 @@ const AdminPage = (props) =>
             {
                 try
                 {
-                    await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), { ...student, status: 'cancelled' }, {
+                    // Always normalize before API calls
+                    const canonicalDate = normalizeDate(student.schedule_date);
+                    const canonicalTime = displayToCanonical(student.schedule_time);
+                    await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), { ...student, schedule_date: canonicalDate, schedule_time: canonicalTime, status: 'cancelled' }, {
                         headers: { 'Content-Type': 'application/json' }
                     });
                     setToast({ show: true, message: 'Student marked as cancelled', type: 'success' });
@@ -657,10 +663,27 @@ const AdminPage = (props) =>
 
         try
         {
+            // Always normalize before API calls
+            const canonicalDate = normalizeDate(rescheduleDate);
+            const canonicalTime = displayToCanonical(rescheduleTime);
+            // Check slot availability first
+            const slotResponse = await axios.get(buildApiUrl(API_ENDPOINTS.GET_SLOT_COUNT), {
+                params: {
+                    schedule_date: canonicalDate,
+                    schedule_time: canonicalTime
+                }
+            });
+
+            if (slotResponse.data.count >= (slotResponse.data.max_capacity || 12)) {
+                setToast({ show: true, message: 'Selected slot is already full. Please choose another slot.', type: 'error' });
+                return;
+            }
+
+            // Proceed with rescheduling
             await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), {
                 ...rescheduleStudent,
-                schedule_date: rescheduleDate,
-                schedule_time: rescheduleTime,
+                schedule_date: canonicalDate,
+                schedule_time: canonicalTime,
                 status: 'pending'
             }, {
                 headers: { 'Content-Type': 'application/json' }
@@ -681,7 +704,8 @@ const AdminPage = (props) =>
                 });
         } catch (err)
         {
-            setToast({ show: true, message: 'Failed to reschedule student', type: 'error' });
+            const errorMessage = err.response?.data?.message || 'Failed to reschedule student';
+            setToast({ show: true, message: errorMessage, type: 'error' });
         }
     };
 
@@ -980,6 +1004,16 @@ const AdminPage = (props) =>
         setShowAllStudents(true);
     };
 
+    const rescheduleModalRef = useRef();
+
+    // When a date is picked in the calendar modal for reschedule, update date and fetch slot data
+    const handleRescheduleDatePicked = (dateString) => {
+        setRescheduleDate(dateString);
+        if (rescheduleModalRef.current && rescheduleModalRef.current.fetchSlotCounts) {
+            rescheduleModalRef.current.fetchSlotCounts(dateString);
+        }
+    };
+
     return (
         <div className="min-h-screen w-full overflow-x-hidden flex flex-col "> {/* TANGGLAIN BG BLACK LATER */}
 
@@ -1101,6 +1135,7 @@ const AdminPage = (props) =>
             {/* Reschedule Modal */}
             {showRescheduleModal && (
                 <RescheduleModal
+                    innerRef={rescheduleModalRef}
                     rescheduleDate={rescheduleDate}
                     setShowCalendar={setShowCalendar}
                     rescheduleTime={rescheduleTime}
@@ -1114,6 +1149,7 @@ const AdminPage = (props) =>
             {showCalendar && (
                 <CalendarModal
                     setSlotAdjustmentDate={setSlotAdjustmentDate}
+                    setRescheduleDate={showRescheduleModal ? handleRescheduleDatePicked : undefined}
                     setShowCalendar={setShowCalendar}
                 />
             )}

@@ -32,8 +32,6 @@ export default function AddStudentModal(props)
     // Status options for the dropdown
     const statusOptions = [
         { value: 'pending', label: 'Pending' },
-        { value: 'confirmed', label: 'Confirmed' },
-        { value: 'completed', label: 'Completed' },
         { value: 'cancelled', label: 'Cancelled' }
     ];
 

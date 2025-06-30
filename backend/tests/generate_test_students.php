@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../utils.php';
 
 $students = [];
 $timeSlots = [
@@ -31,7 +32,6 @@ function generateUniqueStudentNumber(&$usedNumbers)
     return $num;
 }
 
-
 for ($i = 1; $i <= 10; $i++) {
     // Randomly decide if this student has a schedule
     $hasSchedule = rand(0, 1) === 1;
@@ -40,7 +40,9 @@ for ($i = 1; $i <= 10; $i++) {
     if ($hasSchedule) {
         $randomTimestamp = rand($startDate, $endDate);
         $schedule_date = date('Y-m-d', $randomTimestamp);
+        $schedule_date = normalize_schedule_date($schedule_date); // Ensure canonical format
         $schedule_time = $timeSlots[array_rand($timeSlots)];
+        $schedule_time = normalize_slot_time($schedule_time); // Ensure canonical format
     }
     $student_number = generateUniqueStudentNumber($usedNumbers);
     $students[] = [
