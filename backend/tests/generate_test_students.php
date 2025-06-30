@@ -15,14 +15,22 @@ $timeSlots = [
 $startDate = strtotime('2024-07-01');
 $endDate = strtotime('2024-07-10');
 
+$status = [
+    'pending',
+    'done',
+    'cancelled'
+];
+
 $usedNumbers = [];
-function generateUniqueStudentNumber(&$usedNumbers) {
+function generateUniqueStudentNumber(&$usedNumbers)
+{
     do {
         $num = strval(rand(1000000000, 9999999999));
     } while (in_array($num, $usedNumbers));
     $usedNumbers[] = $num;
     return $num;
 }
+
 
 for ($i = 1; $i <= 10; $i++) {
     // Randomly decide if this student has a schedule
@@ -41,7 +49,7 @@ for ($i = 1; $i <= 10; $i++) {
         'email' => "teststudent$student_number@example.com",
         'id_reason' => 're_id',
         'data_privacy_agreed' => true,
-        'status' => 'pending',
+        'status' => $status[rand(0, 2)],
         'schedule_date' => $schedule_date,
         'schedule_time' => $schedule_time
     ];
@@ -63,4 +71,4 @@ try {
     echo "Inserted student IDs: " . implode(", ", $insertedIds) . "\n";
 } catch (Exception $e) {
     echo "Error inserting students: " . $e->getMessage() . "\n";
-} 
+}

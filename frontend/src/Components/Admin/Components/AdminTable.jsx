@@ -16,19 +16,22 @@ export default function AdminTable({
     sortDirection,
     handleSort,
     selectedStudentIds = [],
-    handleSelectStudent = () => {},
-    handleSelectAll = () => {},
+    handleSelectStudent = () => { },
+    handleSelectAll = () => { },
     studentsToShow = []
 })
 {
     // Keyboard handler for table rows
-    const handleRowKeyDown = (e, student) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+    const handleRowKeyDown = (e, student) =>
+    {
+        if (e.key === 'Enter' || e.key === ' ')
+        {
             e.preventDefault();
             showStudentDetails(student);
         }
         // Blur row on Escape
-        if (e.key === 'Escape') {
+        if (e.key === 'Escape')
+        {
             e.preventDefault();
             e.currentTarget.blur();
         }
@@ -41,7 +44,8 @@ export default function AdminTable({
                 const studentsToShowLocal = studentsToShow.length > 0 ? studentsToShow : (showAllStudents
                     ? allStudentsList.slice((page - 1) * perPage, (page - 1) * perPage + perPage)
                     : paginatedStudents);
-                const getSortIcon = (column) => {
+                const getSortIcon = (column) =>
+                {
                     if (sortBy !== column) return '';
                     return sortDirection === 'asc' ? '▲' : '▼';
                 };

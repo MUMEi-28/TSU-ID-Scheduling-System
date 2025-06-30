@@ -6,6 +6,8 @@ import CustomDropdown from './CustomDropdown';
 import kuruKuru from '../public/kurukuru-kururing.gif';
 import { displayToCanonical, normalizeDate, getDisplayTimeSlots } from '../../utils/timeUtils';
 
+import { format } from 'date-fns'
+
 
 //Modals
 const AddStudentModal = React.lazy(() => import('./Modals/AddStudentModal'));/* [AYAW GUMANA E - _ - FIX LATER] */
@@ -93,9 +95,11 @@ const AdminPage = (props) =>
     const [sortDirection, setSortDirection] = useState('asc');
 
     // Sorting function
-    const sortStudents = (studentsArr) => {
+    const sortStudents = (studentsArr) =>
+    {
         // Helper to convert time slot to minutes since midnight
-        const timeToMinutes = (timeStr) => {
+        const timeToMinutes = (timeStr) =>
+        {
             if (!timeStr || timeStr === 'Not scheduled') return null;
             // Example: '8:00am - 9:00am' => 480
             const match = timeStr.match(/(\d{1,2}):(\d{2})(am|pm)/i);
@@ -107,28 +111,34 @@ const AdminPage = (props) =>
             if (period.toLowerCase() === 'am' && hour === 12) hour = 0;
             return hour * 60 + minute;
         };
-        return [...studentsArr].sort((a, b) => {
+        return [...studentsArr].sort((a, b) =>
+        {
             let aValue = a[sortBy] || '';
             let bValue = b[sortBy] || '';
             // Always put 'Not scheduled' or empty at the bottom for date/time columns
-            if (sortBy === 'schedule_date' || sortBy === 'schedule_time') {
+            if (sortBy === 'schedule_date' || sortBy === 'schedule_time')
+            {
                 const isANotScheduled = !aValue || aValue === 'Not scheduled';
                 const isBNotScheduled = !bValue || bValue === 'Not scheduled';
                 if (isANotScheduled && !isBNotScheduled) return 1;
                 if (!isANotScheduled && isBNotScheduled) return -1;
                 if (isANotScheduled && isBNotScheduled) return 0;
                 // For date, compare as Date
-                if (sortBy === 'schedule_date') {
+                if (sortBy === 'schedule_date')
+                {
                     aValue = new Date(aValue);
                     bValue = new Date(bValue);
-                } else if (sortBy === 'schedule_time') {
+                } else if (sortBy === 'schedule_time')
+                {
                     aValue = timeToMinutes(aValue);
                     bValue = timeToMinutes(bValue);
-                } else {
+                } else
+                {
                     aValue = aValue.toString().toLowerCase();
                     bValue = bValue.toString().toLowerCase();
                 }
-            } else {
+            } else
+            {
                 aValue = aValue.toString().toLowerCase();
                 bValue = bValue.toString().toLowerCase();
             }
@@ -366,6 +376,10 @@ const AdminPage = (props) =>
     const [currentScheduleDay, setCurrentScheduleDay] = useState(new Date().getDate());
     const [currentScheduleTime, setCurrentScheduleTime] = useState('all');
 
+
+
+    // DITO OR YUNG FILTERED DATA PAG IEEDIT YUNG NOT SCHEDULED PROBLEM
+    // Update filteredStudents to filter by month/year if not showing all students
     // Update filteredStudents to filter by month/year/day if not showing all students
     const filteredStudents = students.filter(student =>
     {
@@ -374,6 +388,12 @@ const AdminPage = (props) =>
             (adminFullname && student.fullname === adminFullname) ||
             (adminStudentNumber && student.student_number === adminStudentNumber)
         ) return false;
+        // Exclude students with "Not scheduled" or empty/null schedule_date
+        if (!student.schedule_date || student.schedule_date === 'Not scheduled')
+        {
+            return false;
+        }
+
         const matchesSearch = student.fullname.toLowerCase().includes(search.toLowerCase()) ||
             student.student_number.includes(search) ||
             (student.email && student.email.toLowerCase().includes(search.toLowerCase()));
@@ -382,18 +402,28 @@ const AdminPage = (props) =>
         let matchesYear = true;
         let matchesDay = true;
         let matchesTime = true;
+
+        // DATE COMPARISON
         if (!showAllStudents && student.schedule_date)
         {
             const dateObj = new Date(student.schedule_date);
+
             matchesMonth = currentScheduleMonth === 'all' || dateObj.getMonth() === Number(currentScheduleMonth);
             matchesYear = currentScheduleYear === 'all' || dateObj.getFullYear() === Number(currentScheduleYear);
-            if (currentScheduleDay !== 'all') {
+            if (currentScheduleDay !== 'all')
+            {
                 matchesDay = dateObj.getDate() === Number(currentScheduleDay);
             }
+
         }
-        if (!showAllStudents && student.schedule_time) {
-            matchesTime = currentScheduleTime === 'all' || student.schedule_time === currentScheduleTime;
+
+        // TIME COMPARISON
+        const normalizedCurrentTime = currentScheduleTime.replace(/\s+/g, '');
+        if (!showAllStudents && student.schedule_time)
+        {
+            matchesTime = currentScheduleTime === 'all' || student.schedule_time === normalizedCurrentTime;
         }
+        console.log("SELECTED: " + normalizedCurrentTime + "  COMPARE: " + student.schedule_time);
         return matchesSearch && matchesStatus && matchesMonth && matchesYear && matchesDay && matchesTime;
     });
 
@@ -412,10 +442,13 @@ const AdminPage = (props) =>
     const totalPagesToShow = showAllStudents ? totalAllPages : totalPages;
 
     // Sorting handler
-    const handleSort = (column) => {
-        if (sortBy === column) {
+    const handleSort = (column) =>
+    {
+        if (sortBy === column)
+        {
             setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-        } else {
+        } else
+        {
             setSortBy(column);
             setSortDirection('asc');
         }
@@ -823,18 +856,22 @@ const AdminPage = (props) =>
     const [selectedStudentIds, setSelectedStudentIds] = useState([]);
 
     // Handler to select/deselect a single student
-    const handleSelectStudent = (id) => {
+    const handleSelectStudent = (id) =>
+    {
         setSelectedStudentIds((prev) =>
             prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
         );
     };
     // Handler to select/deselect all students on current page
-    const handleSelectAll = (studentsOnPage) => {
+    const handleSelectAll = (studentsOnPage) =>
+    {
         const pageIds = studentsOnPage.map((s) => s.id);
         const allSelected = pageIds.every((id) => selectedStudentIds.includes(id));
-        if (allSelected) {
+        if (allSelected)
+        {
             setSelectedStudentIds((prev) => prev.filter((id) => !pageIds.includes(id)));
-        } else {
+        } else
+        {
             setSelectedStudentIds((prev) => Array.from(new Set([...prev, ...pageIds])));
         }
     };
@@ -842,10 +879,12 @@ const AdminPage = (props) =>
     const clearSelection = () => setSelectedStudentIds([]);
 
     // Bulk action handlers
-    const handleBulkDelete = async () => {
+    const handleBulkDelete = async () =>
+    {
         if (!selectedStudentIds.length) return;
         setIsLoading(true);
-        try {
+        try
+        {
             await Promise.all(selectedStudentIds.map(id =>
                 axios.delete(buildApiUrl(API_ENDPOINTS.INDEX), {
                     data: { id },
@@ -858,17 +897,22 @@ const AdminPage = (props) =>
             const response = await axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS));
             setStudents(response.data);
             localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
-        } catch (err) {
+        } catch (err)
+        {
             setToast({ show: true, message: 'Failed to delete selected students', type: 'error' });
-        } finally {
+        } finally
+        {
             setIsLoading(false);
         }
     };
-    const handleBulkMarkDone = async () => {
+    const handleBulkMarkDone = async () =>
+    {
         if (!selectedStudentIds.length) return;
         setIsLoading(true);
-        try {
-            await Promise.all(selectedStudentIds.map(id => {
+        try
+        {
+            await Promise.all(selectedStudentIds.map(id =>
+            {
                 const student = students.find(s => s.id === id);
                 return axios.put(buildApiUrl(API_ENDPOINTS.INDEX), { ...student, status: 'done' }, { headers: { 'Content-Type': 'application/json' } });
             }));
@@ -878,17 +922,22 @@ const AdminPage = (props) =>
             const response = await axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS));
             setStudents(response.data);
             localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
-        } catch (err) {
+        } catch (err)
+        {
             setToast({ show: true, message: 'Failed to mark selected students as done', type: 'error' });
-        } finally {
+        } finally
+        {
             setIsLoading(false);
         }
     };
-    const handleBulkMarkCancelled = async () => {
+    const handleBulkMarkCancelled = async () =>
+    {
         if (!selectedStudentIds.length) return;
         setIsLoading(true);
-        try {
-            await Promise.all(selectedStudentIds.map(id => {
+        try
+        {
+            await Promise.all(selectedStudentIds.map(id =>
+            {
                 const student = students.find(s => s.id === id);
                 return axios.put(buildApiUrl(API_ENDPOINTS.INDEX), { ...student, status: 'cancelled' }, { headers: { 'Content-Type': 'application/json' } });
             }));
@@ -898,9 +947,11 @@ const AdminPage = (props) =>
             const response = await axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS));
             setStudents(response.data);
             localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
-        } catch (err) {
+        } catch (err)
+        {
             setToast({ show: true, message: 'Failed to mark selected students as cancelled', type: 'error' });
-        } finally {
+        } finally
+        {
             setIsLoading(false);
         }
     };
@@ -926,7 +977,8 @@ const AdminPage = (props) =>
     const confirmBulkMarkCancelled = () => setBulkConfirm({ show: true, action: handleBulkMarkCancelled, message: `Are you sure you want to mark ${selectedStudentIds.length} selected students as cancelled?` });
 
     // Add this function to reset filters and show all students
-    const handleShowAllStudents = () => {
+    const handleShowAllStudents = () =>
+    {
         setSearch('');
         setFilterStatus('all');
         setCurrentScheduleMonth('all');
@@ -1147,7 +1199,8 @@ const AdminPage = (props) =>
             <ConfirmModal
                 show={bulkConfirm.show}
                 message={bulkConfirm.message}
-                onConfirm={async () => {
+                onConfirm={async () =>
+                {
                     setBulkConfirm({ ...bulkConfirm, show: false });
                     if (typeof bulkConfirm.action === 'function') await bulkConfirm.action();
                 }}
