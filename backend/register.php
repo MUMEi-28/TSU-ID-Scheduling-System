@@ -63,6 +63,21 @@ try {
         echo json_encode(['status' => 0, 'message' => 'ID reason is required']);
         return;
     }
+    if (empty($input->schedule_date)) {
+        error_log("[register.php] Schedule date is required\n", 3, __DIR__ . '/error_log.txt');
+        echo json_encode(['status' => 0, 'message' => 'Schedule date is required']);
+        return;
+    }
+    if (empty($input->schedule_time)) {
+        error_log("[register.php] Schedule time is required\n", 3, __DIR__ . '/error_log.txt');
+        echo json_encode(['status' => 0, 'message' => 'Schedule time is required']);
+        return;
+    }
+    if (empty($input->status)) {
+        error_log("[register.php] Status is required\n", 3, __DIR__ . '/error_log.txt');
+        echo json_encode(['status' => 0, 'message' => 'Status is required']);
+        return;
+    }
     if (!isset($input->data_privacy_agreed) || !$input->data_privacy_agreed) {
         error_log("[register.php] Data privacy agreement is required\n", 3, __DIR__ . '/error_log.txt');
         echo json_encode(['status' => 0, 'message' => 'Data privacy agreement is required']);
@@ -114,7 +129,7 @@ try {
 
     // Prepare and execute SQL - save the complete student data
     $sql = "INSERT INTO students (fullname, student_number, email, id_reason, data_privacy_agreed, schedule_time, schedule_date, status) 
-            VALUES (:fullname, :student_number, :email, :id_reason, :data_privacy_agreed, :schedule_time, :schedule_date, 'pending')";
+            VALUES (:fullname, :student_number, :email, :id_reason, :data_privacy_agreed, :schedule_time, :schedule_date, :status)";
 
     $stmt = $conn->prepare($sql);
     $stmt->bindValue(':fullname', $input->fullname);
@@ -124,6 +139,7 @@ try {
     $stmt->bindValue(':data_privacy_agreed', $input->data_privacy_agreed, PDO::PARAM_BOOL);
     $stmt->bindValue(':schedule_time', $normalized_schedule_time);
     $stmt->bindValue(':schedule_date', $normalized_schedule_date);
+    $stmt->bindValue(':status', $input->status);
 
     if ($stmt->execute()) {
         $studentId = $conn->lastInsertId();

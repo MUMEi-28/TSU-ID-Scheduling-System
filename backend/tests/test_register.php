@@ -10,8 +10,9 @@ $data = [
     'email' => 'testuser' . $uniqueId . '@example.com',
     'id_reason' => 're_id',
     'data_privacy_agreed' => true,
-    'schedule_time' => '8:00am - 9:00am',
-    'schedule_date' => 'June 25, 2025'
+    'schedule_date' => '2025-06-25', // New date format (YYYY-MM-DD)
+    'schedule_time' => '08:00', // New time format (HH:MM)
+    'status' => 'pending' // New status field
 ];
 $options = [
     'http' => [

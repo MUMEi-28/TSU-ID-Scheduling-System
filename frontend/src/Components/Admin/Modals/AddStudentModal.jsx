@@ -1,8 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, Suspense } from 'react'
 
 import { idReasonOptions } from '../../constants/IdReasonOptions';
 import { buildApiUrl, API_ENDPOINTS } from '../../../config/api';
 import axios from 'axios';
+import { displayToCanonical } from '../../../utils/timeUtils';
+
+// Lazy load the Calendar component
+const Calendar = React.lazy(() => import('../../Student/ScheduleSelection/Calendar'));
 
 export default function AddStudentModal(props)
 {
@@ -12,15 +16,27 @@ export default function AddStudentModal(props)
             student_number: '',
             email: '',
             id_reason: '',
+            schedule_date: '',
+            schedule_time: '',
+            status: 'pending',
             data_privacy_agreed: true
         }
     )
     const [error, setError] = useState('');
+    const [showCalendar, setShowCalendar] = useState(false);
 
     // Focus trap and Escape key
     const modalRef = useRef(null);
     const formRef = useRef(null);
     
+    // Status options for the dropdown
+    const statusOptions = [
+        { value: 'pending', label: 'Pending' },
+        { value: 'confirmed', label: 'Confirmed' },
+        { value: 'completed', label: 'Completed' },
+        { value: 'cancelled', label: 'Cancelled' }
+    ];
+
     useEffect(() => {
         function handleKeyDown(e) {
             // Only handle Escape, Tab, and Enter keys
@@ -85,15 +101,21 @@ export default function AddStudentModal(props)
     {
         e.preventDefault();
 
-        if (!student.fullname || !student.student_number || !student.email || !student.id_reason)
+        if (!student.fullname || !student.student_number || !student.email || !student.id_reason || !student.schedule_date || !student.schedule_time || !student.status)
         {
             setError("All fields are required.");
             return;
         }
 
+        // Convert time from display format to canonical format for backend
+        const submissionData = {
+            ...student,
+            schedule_time: displayToCanonical(student.schedule_time)
+        };
+
         try
         {
-            await axios.post(buildApiUrl(API_ENDPOINTS.REGISTER), student, {
+            await axios.post(buildApiUrl(API_ENDPOINTS.REGISTER), submissionData, {
                 headers: { 'Content-Type': 'application/json' }
             })
             props.onClose();
@@ -168,6 +190,58 @@ export default function AddStudentModal(props)
                         </select>
                     </p>
 
+                    <p className='mb-2'>
+                        <label className="block text-sm font-medium text-gray-700">Appointment Date</label>
+                        <div className="flex items-center gap-2">
+                            <input
+                                value={student.schedule_date}
+                                readOnly
+                                className="border p-2 rounded-md w-full bg-gray-50"
+                                placeholder="No Date Chosen"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowCalendar(true)}
+                                className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-bold border-2 border-blue-600 text-sm whitespace-nowrap"
+                            >
+                                Pick Date
+                            </button>
+                        </div>
+                    </p>
+
+                    <p className='mb-2'>
+                        <label className="block text-sm font-medium text-gray-700">Appointment Time</label>
+                        <select
+                            value={student.schedule_time}
+                            onChange={(e) => setStudent(prev => ({ ...prev, schedule_time: e.target.value }))}
+                            required
+                            className="border p-2 rounded-md w-full"
+                        >
+                            <option value="">Select Time</option>
+                            <option value="8:00am - 9:00am">8:00am - 9:00am</option>
+                            <option value="9:00am - 10:00am">9:00am - 10:00am</option>
+                            <option value="10:00am - 11:00am">10:00am - 11:00am</option>
+                            <option value="11:00am - 12:00pm">11:00am - 12:00pm</option>
+                            <option value="1:00pm - 2:00pm">1:00pm - 2:00pm</option>
+                            <option value="2:00pm - 3:00pm">2:00pm - 3:00pm</option>
+                            <option value="3:00pm - 4:00pm">3:00pm - 4:00pm</option>
+                            <option value="4:00pm - 5:00pm">4:00pm - 5:00pm</option>
+                        </select>
+                    </p>
+
+                    <p className='mb-2'>
+                        <label className="block text-sm font-medium text-gray-700">Status</label>
+                        <select name="status" className='border w-full p-2 rounded-md'
+                            required
+                            value={student.status}
+                            onChange={handleChange}>
+                            {statusOptions.map(options => (
+                                <option key={options.value}
+                                    value={options.value}>
+                                    {options.label}</option>
+                            ))}
+                        </select>
+                    </p>
 
                     {error && <p className='text-red-700 font-semibold'>{error}</p>}
                     <div className='flex items-center justify-center gap-2'>
@@ -185,6 +259,47 @@ export default function AddStudentModal(props)
 
                 </form>
             </div>
+            
+            {/* Calendar Modal */}
+            {showCalendar && (
+                <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-[9999]">
+                    <div
+                        className="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center max-w-md w-full mx-2"
+                        tabIndex={-1}
+                        aria-modal="true"
+                        role="dialog"
+                    >
+                        <Suspense fallback={<div className='text-xl font-bold text-gray-600'>Loading calendar...</div>}>
+                            <Calendar
+                                onDateSelect={date => {
+                                    const formatted = new Date(date).toLocaleDateString('en-US', {
+                                        month: 'long',
+                                        day: 'numeric',
+                                        year: 'numeric'
+                                    });
+                                    setStudent(prev => ({ ...prev, schedule_date: formatted }));
+                                    setShowCalendar(false);
+                                }}
+                                onClose={() => setShowCalendar(false)}
+                            />
+                        </Suspense>
+                        <div className="flex gap-2 mt-3">
+                            <button
+                                onClick={() => setShowCalendar(false)}
+                                className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold border-2 border-green-700 text-sm"
+                            >
+                                Confirm
+                            </button>
+                            <button
+                                onClick={() => setShowCalendar(false)}
+                                className="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-bold border-2 border-gray-600 text-sm"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
