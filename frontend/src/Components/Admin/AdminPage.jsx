@@ -228,40 +228,32 @@ const AdminPage = (props) =>
         }));
     };
 
-    const handleEditSave = async () =>
-    {
+    const handleEditSave = async (data, setError) => {
         setIsLoading(true);
-        try
-        {
-            const updateData = {
-                id: editModal.student.id,
-                fullname: editModal.data.fullname,
-                student_number: editModal.data.student_number,
-                email: editModal.data.email,
-                id_reason: editModal.data.id_reason,
-                status: editModal.data.status
-            };
-
-            await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), updateData, {
+        try {
+            const response = await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), data, {
                 headers: { 'Content-Type': 'application/json' }
             });
-
-            setEditModal({ show: false, student: null, data: {} });
-            setToast({ show: true, message: 'Student updated successfully!', type: 'success' });
+            // Refresh the students list if successful
+            if (response.data && response.data.status === 1) {
             invalidateStudentCache();
-
-            // Refresh the students list
-            const response = await axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS));
-            setStudents(response.data);
+                const studentsRes = await axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS));
+                setStudents(studentsRes.data);
             localStorage.setItem('admin_students_cache', JSON.stringify({
-                data: response.data,
+                    data: studentsRes.data,
                 timestamp: Date.now()
             }));
-        } catch (err)
-        {
-            setToast({ show: true, message: 'Failed to update student', type: 'error' });
-        } finally
-        {
+            }
+            return response.data;
+        } catch (err) {
+            if (err.response && err.response.data && err.response.data.message) {
+                setError(err.response.data.message);
+                return err.response.data;
+            } else {
+                setError('Failed to update student. Please try again.');
+                return { status: 0, message: 'Failed to update student. Please try again.' };
+            }
+        } finally {
             setIsLoading(false);
         }
     };

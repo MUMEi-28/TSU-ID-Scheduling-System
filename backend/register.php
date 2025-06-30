@@ -90,6 +90,14 @@ try {
         return;
     }
 
+    // Validate id_reason value
+    $allowed_id_reasons = ['re_id', 'lost_id', 'masters_doctors_law'];
+    if (!in_array($input->id_reason, $allowed_id_reasons, true)) {
+        error_log("[register.php] Invalid ID reason: {$input->id_reason}\n", 3, __DIR__ . '/error_log.txt');
+        echo json_encode(['status' => 0, 'message' => 'Invalid ID reason selected.']);
+        return;
+    }
+
     // Check if student number already exists
     $checkSql = "SELECT id FROM students WHERE student_number = :student_number";
     $checkStmt = $conn->prepare($checkSql);
