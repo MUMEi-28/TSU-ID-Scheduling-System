@@ -14,7 +14,11 @@ export default function AdminTable({
     handleReschedule,
     sortBy,
     sortDirection,
-    handleSort
+    handleSort,
+    selectedStudentIds = [],
+    handleSelectStudent = () => {},
+    handleSelectAll = () => {},
+    studentsToShow = []
 })
 {
     return (
@@ -22,18 +26,27 @@ export default function AdminTable({
             {/* Table logic: show all students if showAllStudents is true, else paginatedStudents */}
             {(() =>
             {
-                const studentsToShow = showAllStudents
+                const studentsToShowLocal = studentsToShow.length > 0 ? studentsToShow : (showAllStudents
                     ? allStudentsList.slice((page - 1) * perPage, (page - 1) * perPage + perPage)
-                    : paginatedStudents;
+                    : paginatedStudents);
                 const getSortIcon = (column) => {
                     if (sortBy !== column) return '';
                     return sortDirection === 'asc' ? '▲' : '▼';
                 };
+                const allSelected = studentsToShowLocal.length > 0 && studentsToShowLocal.every(s => selectedStudentIds.includes(s.id));
                 return (
                     <div className="bg-white border border-gray-200 overflow-x-auto">
                         <table className="table-auto w-full">
                             <thead className="bg-gray-100 border-b border-gray-300">
                                 <tr>
+                                    <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r">
+                                        <input
+                                            type="checkbox"
+                                            checked={allSelected}
+                                            onChange={() => handleSelectAll(studentsToShowLocal)}
+                                            aria-label="Select all students on this page"
+                                        />
+                                    </th>
                                     <th className="py-2 px-2 text-left font-semibold text-gray-700 border-r cursor-pointer select-none" onClick={() => handleSort('fullname')}>
                                         Name <span className="ml-1">{getSortIcon('fullname')}</span>
                                     </th>
@@ -53,12 +66,20 @@ export default function AdminTable({
                                 </tr>
                             </thead>
                             <tbody>
-                                {studentsToShow.map((student) => (
+                                {studentsToShowLocal.map((student) => (
                                     <tr
                                         key={student.id}
                                         className="border-b hover:bg-gray-50 cursor-pointer"
                                         onClick={() => showStudentDetails(student)}
                                     >
+                                        <td className="py-2 px-2 border-r" onClick={e => e.stopPropagation()}>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedStudentIds.includes(student.id)}
+                                                onChange={() => handleSelectStudent(student.id)}
+                                                aria-label={`Select student ${student.fullname}`}
+                                            />
+                                        </td>
                                         <td className="py-2 px-2 border-r">{student.fullname}</td>
                                         <td className="py-2 px-2 border-r">{student.student_number}</td>
                                         <td className="py-2 px-2 border-r">{student.schedule_date || 'Not scheduled'}</td>

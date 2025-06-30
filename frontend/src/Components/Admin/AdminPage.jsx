@@ -828,6 +828,112 @@ const AdminPage = (props) =>
         }
     };
 
+    // Bulk selection state
+    const [selectedStudentIds, setSelectedStudentIds] = useState([]);
+
+    // Handler to select/deselect a single student
+    const handleSelectStudent = (id) => {
+        setSelectedStudentIds((prev) =>
+            prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
+        );
+    };
+    // Handler to select/deselect all students on current page
+    const handleSelectAll = (studentsOnPage) => {
+        const pageIds = studentsOnPage.map((s) => s.id);
+        const allSelected = pageIds.every((id) => selectedStudentIds.includes(id));
+        if (allSelected) {
+            setSelectedStudentIds((prev) => prev.filter((id) => !pageIds.includes(id)));
+        } else {
+            setSelectedStudentIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+        }
+    };
+    // Handler to clear selection
+    const clearSelection = () => setSelectedStudentIds([]);
+
+    // Bulk action handlers
+    const handleBulkDelete = async () => {
+        if (!selectedStudentIds.length) return;
+        setIsLoading(true);
+        try {
+            await Promise.all(selectedStudentIds.map(id =>
+                axios.delete(buildApiUrl(API_ENDPOINTS.INDEX), {
+                    data: { id },
+                    headers: { 'Content-Type': 'application/json' }
+                })
+            ));
+            setToast({ show: true, message: 'Selected students deleted!', type: 'success' });
+            clearSelection();
+            invalidateStudentCache();
+            const response = await axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS));
+            setStudents(response.data);
+            localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+        } catch (err) {
+            setToast({ show: true, message: 'Failed to delete selected students', type: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    const handleBulkMarkDone = async () => {
+        if (!selectedStudentIds.length) return;
+        setIsLoading(true);
+        try {
+            await Promise.all(selectedStudentIds.map(id => {
+                const student = students.find(s => s.id === id);
+                return axios.put(buildApiUrl(API_ENDPOINTS.INDEX), { ...student, status: 'done' }, { headers: { 'Content-Type': 'application/json' } });
+            }));
+            setToast({ show: true, message: 'Selected students marked as done!', type: 'success' });
+            clearSelection();
+            invalidateStudentCache();
+            const response = await axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS));
+            setStudents(response.data);
+            localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+        } catch (err) {
+            setToast({ show: true, message: 'Failed to mark selected students as done', type: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    const handleBulkMarkCancelled = async () => {
+        if (!selectedStudentIds.length) return;
+        setIsLoading(true);
+        try {
+            await Promise.all(selectedStudentIds.map(id => {
+                const student = students.find(s => s.id === id);
+                return axios.put(buildApiUrl(API_ENDPOINTS.INDEX), { ...student, status: 'cancelled' }, { headers: { 'Content-Type': 'application/json' } });
+            }));
+            setToast({ show: true, message: 'Selected students marked as cancelled!', type: 'success' });
+            clearSelection();
+            invalidateStudentCache();
+            const response = await axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS));
+            setStudents(response.data);
+            localStorage.setItem('admin_students_cache', JSON.stringify({ data: response.data, timestamp: Date.now() }));
+        } catch (err) {
+            setToast({ show: true, message: 'Failed to mark selected students as cancelled', type: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // BulkActionBar component
+    const BulkActionBar = ({ count, onDelete, onDone, onCancel, onClear }) => (
+        <div className="mb-2 flex flex-wrap items-center justify-between bg-yellow-50 border border-yellow-300 rounded-lg px-4 py-2 shadow">
+            <span className="font-bold text-yellow-900">Bulk Actions: {count} selected</span>
+            <div className="flex gap-2 ml-auto">
+                <button onClick={onDelete} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded font-bold">Delete</button>
+                <button onClick={onDone} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded font-bold">Mark as Done</button>
+                <button onClick={onCancel} className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded font-bold">Mark as Cancelled</button>
+                <button onClick={onClear} className="bg-yellow-300 hover:bg-yellow-400 text-yellow-900 px-3 py-1 rounded font-bold border border-yellow-500">Clear</button>
+            </div>
+        </div>
+    );
+
+    // Add state for bulk confirm modal
+    const [bulkConfirm, setBulkConfirm] = useState({ show: false, action: null, message: '' });
+
+    // Wrap bulk actions with confirmation
+    const confirmBulkDelete = () => setBulkConfirm({ show: true, action: handleBulkDelete, message: `Are you sure you want to delete ${selectedStudentIds.length} selected students? This action cannot be undone.` });
+    const confirmBulkMarkCancelled = () => setBulkConfirm({ show: true, action: handleBulkMarkCancelled, message: `Are you sure you want to mark ${selectedStudentIds.length} selected students as cancelled?` });
+
     return (
         <div className="min-h-screen w-full overflow-x-hidden flex flex-col "> {/* TANGGLAIN BG BLACK LATER */}
 
@@ -982,6 +1088,17 @@ const AdminPage = (props) =>
 
                 />
 
+                {/* Bulk Action Bar */}
+                {selectedStudentIds.length > 0 && (
+                    <BulkActionBar
+                        count={selectedStudentIds.length}
+                        onDelete={confirmBulkDelete}
+                        onDone={handleBulkMarkDone}
+                        onCancel={confirmBulkMarkCancelled}
+                        onClear={clearSelection}
+                    />
+                )}
+
                 {/* Table logic: show all students if showAllStudents is true, else paginatedStudents */}
                 <AdminTable
                     showAllStudents={showAllStudents}
@@ -998,6 +1115,10 @@ const AdminPage = (props) =>
                     sortBy={sortBy}
                     sortDirection={sortDirection}
                     handleSort={handleSort}
+                    selectedStudentIds={selectedStudentIds}
+                    handleSelectStudent={handleSelectStudent}
+                    handleSelectAll={handleSelectAll}
+                    studentsToShow={studentsToShow}
                 />
 
 
@@ -1015,6 +1136,17 @@ const AdminPage = (props) =>
                     endPage={endPage}
                 />
             </div>
+
+            {/* Confirmation Modal for bulk actions */}
+            <ConfirmModal
+                show={bulkConfirm.show}
+                message={bulkConfirm.message}
+                onConfirm={async () => {
+                    setBulkConfirm({ ...bulkConfirm, show: false });
+                    if (typeof bulkConfirm.action === 'function') await bulkConfirm.action();
+                }}
+                onCancel={() => setBulkConfirm({ ...bulkConfirm, show: false })}
+            />
         </div >
     );
 };
