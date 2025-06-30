@@ -17,7 +17,8 @@ const environment = import.meta.env.MODE || 'development';
 export const apiConfig = config[environment] || config.development;
 
 // Helper function to build full API URLs
-export const buildApiUrl = (endpoint) => {
+export const buildApiUrl = (endpoint) =>
+{
   const baseURL = apiConfig.baseURL;
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   return `${baseURL}${cleanEndpoint}`;
@@ -30,14 +31,12 @@ export const API_ENDPOINTS = {
   GET_STUDENTS: 'get_students.php',
   GET_STUDENT: 'get_student.php',
   GET_SLOT_COUNT: 'get_slot_count.php',
+  GET_MAX_SLOT_COUNT: 'get_max_slot_count.php',
+  ADJUST_SLOT_LIMIT: 'adjustLimitofSlots.php',
   BOOKING: 'booking.php',
   UPDATE_ADMIN: 'update_admin.php',
   INDEX: 'index.php',
-  // Aliases for backward compatibility
-  getStudents: 'get_students.php',
-  updateAdmin: 'update_admin.php',
-  updateStudent: 'index.php',
-  deleteStudent: 'index.php',
+  CONFIRM_SLOT: 'confirm_slot.php',
 };
 
 export default apiConfig; 

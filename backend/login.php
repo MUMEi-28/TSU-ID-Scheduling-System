@@ -37,11 +37,19 @@ try {
     }
 
     // Check required fields
-    if (!isset($input->fullname)) {
-        throw new Exception("Please enter your full name.");
+    if (empty($input->fullname)) {
+        echo json_encode([
+            'status' => 0,
+            'message' => 'Please enter your full name.'
+        ]);
+        exit;
     }
-    if (!isset($input->student_number)) {
-        throw new Exception("Please enter your student number.");
+    if (empty($input->student_number)) {
+        echo json_encode([
+            'status' => 0,
+            'message' => 'Please enter your student number.'
+        ]);
+        exit;
     }
 
     // Check if student_number is a 10-digit number
@@ -69,7 +77,7 @@ try {
         exit;
     }
 
-    // Check for duplicate students (same as register.php logic)
+    // Check for duplicate students
     $checkSql = "SELECT COUNT(*) FROM students WHERE fullname = :fullname AND student_number = :student_number";
     $checkStmt = $conn->prepare($checkSql);
     $checkStmt->bindParam(':fullname', $input->fullname);
@@ -84,15 +92,20 @@ try {
         exit;
     }
 
-    // Check for student with valid status
-    $studentSql = "SELECT id, fullname, student_number, status, schedule_date, schedule_time FROM students WHERE fullname = :fullname AND student_number = :student_number LIMIT 1";
+    // Check for existing student - use COALESCE to handle NULL email values
+    $studentSql = "SELECT id, fullname, student_number, status, schedule_date, schedule_time, 
+                          COALESCE(email, '') as email, id_reason 
+                   FROM students 
+                   WHERE fullname = :fullname AND student_number = :student_number 
+                   LIMIT 1";
     $studentStmt = $conn->prepare($studentSql);
     $studentStmt->bindParam(':fullname', $input->fullname);
     $studentStmt->bindParam(':student_number', $input->student_number);
     $studentStmt->execute();
     $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
+    
     if ($student) {
-        // Only allow login if status is not 'done' or 'cancelled'
+        // Handle different statuses
         if (in_array(strtolower($student['status']), ['done', 'cancelled'])) {
             $statusMessage = strtolower($student['status']) === 'done' 
                 ? 'Your ID has already been processed and completed. If you need assistance, please visit the Business Center.'
@@ -108,57 +121,64 @@ try {
                     'fullname' => $student['fullname'],
                     'student_number' => $student['student_number'],
                     'schedule_date' => $student['schedule_date'],
-                    'schedule_time' => $student['schedule_time']
+                    'schedule_time' => $student['schedule_time'],
+                    'email' => $student['email'],
+                    'id_reason' => $student['id_reason']
                 ]
             ]);
             exit;
         }
         
         // For pending students, check if they already have a schedule
-        if (strtolower($student['status']) === 'pending' && $student['schedule_date'] && $student['schedule_time']) {
-            // Pending student with existing schedule - show receipt only
-            echo json_encode([
-                'status' => 2, // Special status for pending with schedule
-                'message' => 'You already have a scheduled appointment. You can view your details.',
-                'student_status' => 'pending_with_schedule',
-                'student_id' => $student['id'],
-                'student_data' => [
-                    'id' => $student['id'],
-                    'fullname' => $student['fullname'],
-                    'student_number' => $student['student_number'],
-                    'schedule_date' => $student['schedule_date'],
-                    'schedule_time' => $student['schedule_time']
-                ]
-            ]);
-            exit;
+        if (strtolower($student['status']) === 'pending') {
+            if ($student['schedule_date'] && $student['schedule_time']) {
+                // Pending student with existing schedule - show receipt only
+                echo json_encode([
+                    'status' => 2, // Special status for pending with schedule
+                    'message' => 'You already have a scheduled appointment. You can view your details.',
+                    'student_status' => 'pending_with_schedule',
+                    'student_id' => $student['id'],
+                    'student_data' => [
+                        'id' => $student['id'],
+                        'fullname' => $student['fullname'],
+                        'student_number' => $student['student_number'],
+                        'schedule_date' => $student['schedule_date'],
+                        'schedule_time' => $student['schedule_time'],
+                        'email' => $student['email'],
+                        'id_reason' => $student['id_reason']
+                    ]
+                ]);
+                exit;
+            } else {
+                // Pending student without schedule - can proceed to schedule
+                $studentToken = bin2hex(random_bytes(16));
+                echo json_encode([
+                    'status' => 1,
+                    'message' => 'Student login - proceed to schedule',
+                    'student_token' => $studentToken,
+                    'student_id' => $student['id'],
+                    'is_admin' => false,
+                    'has_schedule' => false
+                ]);
+                exit;
+            }
         }
-        
-        // Pending student without schedule - can proceed to schedule
-        $studentToken = bin2hex(random_bytes(16));
-        echo json_encode([
-            'status' => 1,
-            'message' => 'Student login',
-            'student_token' => $studentToken,
-            'student_id' => $student['id'],
-            'is_admin' => false
-        ]);
-        exit;
     }
 
     // Not found - create token for new user (no restrictions)
     $studentToken = bin2hex(random_bytes(16));
     echo json_encode([
-        'status' => 1, // Same status as existing students
-        'message' => 'Student login',
+        'status' => 1, // Same status as existing students without schedule
+        'message' => 'New student - proceed to additional info',
         'student_token' => $studentToken,
         'student_id' => null, // No ID since they don't exist yet
-        'is_admin' => false
+        'is_admin' => false,
+        'is_new_user' => true
     ]);
 } catch (Exception $e) {
     error_log("[login.php] " . $e->getMessage() . "\n", 3, __DIR__ . '/error_log.txt');
     echo json_encode([
         'status' => 0,
-        'message' => 'Something went wrong. Please check your information and try again.',
-        'received_data' => $json ?? null
+        'message' => 'Please check your information and try again.'
     ]);
 }
