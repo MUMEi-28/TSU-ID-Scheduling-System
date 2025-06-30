@@ -17,7 +17,7 @@ export default function RegistrationForm(props)
     const [isNewUser, setIsNewUser] = useState(false);
 
     // New state for additional info form
-    const [showAdditionalInfo, setShowAdditionalInfo] = useState(true);
+    const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
     const [additionalInfo, setAdditionalInfo] = useState({
         email: '',
         id_reason: '',
