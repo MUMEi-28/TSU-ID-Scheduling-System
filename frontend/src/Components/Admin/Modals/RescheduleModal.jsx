@@ -2,6 +2,8 @@ import React, { useRef, useState } from 'react'
 import axios from 'axios';
 import { buildApiUrl, API_ENDPOINTS } from '../../../config/api';
 
+import { format } from 'date-fns';
+
 const TIME_SLOTS = [
     { canonical: '08:00:00', display: '8:00am - 9:00am' },
     { canonical: '09:00:00', display: '9:00am - 10:00am' },
@@ -23,12 +25,14 @@ export default function RescheduleModal(props)
     const modalRef = useRef(null);
 
     // Called by parent after picking a date
-    const fetchSlotCounts = async (dateString) => {
+    const fetchSlotCounts = async (dateString) =>
+    {
         if (!dateString) return;
         setLoading(true);
         setFetchError(null);
         const thisRequestId = ++requestIdRef.current;
-        try {
+        try
+        {
             const date = new Date(dateString);
             const formattedDate = date.toISOString().split('T')[0];
             const promises = TIME_SLOTS.map(slot =>
@@ -49,7 +53,8 @@ export default function RescheduleModal(props)
                 max: responses[i].data.max_capacity || 12
             }));
             setSlotData(normalized);
-        } catch (err) {
+        } catch (err)
+        {
             if (thisRequestId !== requestIdRef.current) return;
             setFetchError('Failed to load slot data. Please try again.');
             setSlotData([]);
@@ -62,13 +67,17 @@ export default function RescheduleModal(props)
         fetchSlotCounts
     }));
 
-    React.useEffect(() => {
-        function handleKeyDown(e) {
+    React.useEffect(() =>
+    {
+        function handleKeyDown(e)
+        {
             // Only handle Escape, Tab, and Enter keys
-            if (e.key === 'Escape') {
+            if (e.key === 'Escape')
+            {
                 e.preventDefault();
                 props.handleRescheduleCancel();
-            } else if (e.key === 'Enter') {
+            } else if (e.key === 'Enter')
+            {
                 // Only submit on Enter if focused on a button or the last input field
                 const focusableEls = modalRef.current.querySelectorAll(
                     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -77,13 +86,15 @@ export default function RescheduleModal(props)
                 const currentIndex = Array.from(focusable).indexOf(document.activeElement);
                 const isLastInput = currentIndex === focusable.length - 1;
                 const isButton = e.target.tagName === 'BUTTON';
-                
-                if (isButton || isLastInput) {
+
+                if (isButton || isLastInput)
+                {
                     e.preventDefault();
                     props.handleRescheduleSave();
                 }
                 // If not on button or last input, let Enter work normally
-            } else if (e.key === 'Tab') {
+            } else if (e.key === 'Tab')
+            {
                 const focusableEls = modalRef.current.querySelectorAll(
                     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
                 );
@@ -91,10 +102,12 @@ export default function RescheduleModal(props)
                 if (focusable.length === 0) return;
                 const first = focusable[0];
                 const last = focusable[focusable.length - 1];
-                if (!e.shiftKey && document.activeElement === last) {
+                if (!e.shiftKey && document.activeElement === last)
+                {
                     e.preventDefault();
                     first.focus();
-                } else if (e.shiftKey && document.activeElement === first) {
+                } else if (e.shiftKey && document.activeElement === first)
+                {
                     e.preventDefault();
                     last.focus();
                 }
@@ -118,17 +131,36 @@ export default function RescheduleModal(props)
                     <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                     <div className="flex items-center gap-2">
                         <span className="p-2 border border-gray-300 rounded-lg bg-gray-50 min-w-[140px]">
-                            {props.rescheduleDate ? props.rescheduleDate : 'No Date Chosen'}
+                            {
+                                props.rescheduleDate ? props.rescheduleDate : 'No Date Chosen'
+                            }
+
                         </span>
                         <button
                             type="button"
-                            onClick={() => {
+                            onClick={() =>
+                            {
                                 props.setShowCalendar(true);
                             }}
                             className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-bold border-2 border-blue-600 text-sm"
                         >
                             Pick Date
                         </button>
+
+
+                        {/* REMOVE THIS LATER - TESTING PURPOSES ONLY */}
+                        <button className='border'
+                            onClick={() =>
+                            {
+                                console.log(props.rescheduleDate);
+
+                                const formattedDate = format(props.rescheduleDate, 'yyyy-MM-dd');
+                                props.setRescheduleDate(formattedDate);
+                                console.log(formattedDate);
+
+                                /*  () => props.handleDateChange(); */
+                            }}
+                        >TEST BUTTON</button>
                     </div>
                 </div>
                 <div className="mb-4">
@@ -139,7 +171,8 @@ export default function RescheduleModal(props)
                         className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 font-bold focus:outline-none focus:ring-2 focus:ring-gray-400"
                         disabled={loading || !props.rescheduleDate}
                     >
-                        {slotData.map(slot => {
+                        {slotData.map(slot =>
+                        {
                             const isFull = slot.count >= slot.max;
                             return (
                                 <option

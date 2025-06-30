@@ -228,32 +228,39 @@ const AdminPage = (props) =>
         }));
     };
 
-    const handleEditSave = async (data, setError) => {
+    const handleEditSave = async (data, setError) =>
+    {
         setIsLoading(true);
-        try {
+        try
+        {
             const response = await axios.put(buildApiUrl(API_ENDPOINTS.INDEX), data, {
                 headers: { 'Content-Type': 'application/json' }
             });
             // Refresh the students list if successful
-            if (response.data && response.data.status === 1) {
-            invalidateStudentCache();
+            if (response.data && response.data.status === 1)
+            {
+                invalidateStudentCache();
                 const studentsRes = await axios.get(buildApiUrl(API_ENDPOINTS.GET_STUDENTS));
                 setStudents(studentsRes.data);
-            localStorage.setItem('admin_students_cache', JSON.stringify({
+                localStorage.setItem('admin_students_cache', JSON.stringify({
                     data: studentsRes.data,
-                timestamp: Date.now()
-            }));
+                    timestamp: Date.now()
+                }));
             }
             return response.data;
-        } catch (err) {
-            if (err.response && err.response.data && err.response.data.message) {
+        } catch (err)
+        {
+            if (err.response && err.response.data && err.response.data.message)
+            {
                 setError(err.response.data.message);
                 return err.response.data;
-            } else {
+            } else
+            {
                 setError('Failed to update student. Please try again.');
                 return { status: 0, message: 'Failed to update student. Please try again.' };
             }
-        } finally {
+        } finally
+        {
             setIsLoading(false);
         }
     };
@@ -415,7 +422,7 @@ const AdminPage = (props) =>
         {
             matchesTime = currentScheduleTime === 'all' || student.schedule_time === normalizedCurrentTime;
         }
-        console.log("SELECTED: " + normalizedCurrentTime + "  COMPARE: " + student.schedule_time);
+        //   console.log("SELECTED: " + normalizedCurrentTime + "  COMPARE: " + student.schedule_time);
         return matchesSearch && matchesStatus && matchesMonth && matchesYear && matchesDay && matchesTime;
     });
 
@@ -674,7 +681,8 @@ const AdminPage = (props) =>
                 }
             });
 
-            if (slotResponse.data.count >= (slotResponse.data.max_capacity || 12)) {
+            if (slotResponse.data.count >= (slotResponse.data.max_capacity || 12))
+            {
                 setToast({ show: true, message: 'Selected slot is already full. Please choose another slot.', type: 'error' });
                 return;
             }
@@ -726,6 +734,8 @@ const AdminPage = (props) =>
             year: 'numeric'
         });
         setRescheduleDate(formattedDate);
+
+        console.log("HANDLE DATE CHANGE: " + formattedDate);
     };
 
     const invalidateStudentCache = () =>
@@ -1007,9 +1017,11 @@ const AdminPage = (props) =>
     const rescheduleModalRef = useRef();
 
     // When a date is picked in the calendar modal for reschedule, update date and fetch slot data
-    const handleRescheduleDatePicked = (dateString) => {
+    const handleRescheduleDatePicked = (dateString) =>
+    {
         setRescheduleDate(dateString);
-        if (rescheduleModalRef.current && rescheduleModalRef.current.fetchSlotCounts) {
+        if (rescheduleModalRef.current && rescheduleModalRef.current.fetchSlotCounts)
+        {
             rescheduleModalRef.current.fetchSlotCounts(dateString);
         }
     };
@@ -1137,6 +1149,7 @@ const AdminPage = (props) =>
                 <RescheduleModal
                     innerRef={rescheduleModalRef}
                     rescheduleDate={rescheduleDate}
+                    setRescheduleDate={setRescheduleDate}
                     setShowCalendar={setShowCalendar}
                     rescheduleTime={rescheduleTime}
                     setRescheduleTime={setRescheduleTime}
@@ -1151,6 +1164,7 @@ const AdminPage = (props) =>
                     setSlotAdjustmentDate={setSlotAdjustmentDate}
                     setRescheduleDate={showRescheduleModal ? handleRescheduleDatePicked : undefined}
                     setShowCalendar={setShowCalendar}
+                    handleDateChange={handleDateChange}
                 />
             )}
 

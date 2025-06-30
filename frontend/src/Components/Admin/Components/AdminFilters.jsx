@@ -71,7 +71,8 @@ export default function AdminFilters(props)
                             className="w-full p-2 border border-gray-300 rounded-lg"
                         >
                             <option value="all">All Days</option>
-                            {props.currentScheduleMonth !== 'all' && props.currentScheduleYear !== 'all' && (() => {
+                            {props.currentScheduleMonth !== 'all' && props.currentScheduleYear !== 'all' && (() =>
+                            {
                                 const daysInMonth = new Date(Number(props.currentScheduleYear), Number(props.currentScheduleMonth) + 1, 0).getDate();
                                 return Array.from({ length: daysInMonth }, (_, i) => (
                                     <option key={i + 1} value={i + 1}>{i + 1}</option>

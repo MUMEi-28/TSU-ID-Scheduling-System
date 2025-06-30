@@ -4,23 +4,29 @@ import axios from 'axios';
 import { buildApiUrl, API_ENDPOINTS } from '../../../config/api';
 import { getCanonicalTimeSlots } from '../../../utils/timeUtils';
 
-function DatePicker(props) {
+function DatePicker(props)
+{
   // Normalize 'today' to the start of the day for consistent comparisons
-  const todayNormalized = useMemo(() => {
+  const todayNormalized = useMemo(() =>
+  {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     return d;
   }, []);
 
   // Calculate the earliest allowed 'currentWeekStart' (the Tuesday of the current week or today if today is Tuesday)
-  const initialCurrentWeekStart = useMemo(() => {
+  const initialCurrentWeekStart = useMemo(() =>
+  {
     const dayOfWeek = todayNormalized.getDay(); // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
 
-    if (dayOfWeek === 2) { // Tuesday (Tarlac City might have different start of week, but JS getDay() is consistent)
+    if (dayOfWeek === 2)
+    { // Tuesday (Tarlac City might have different start of week, but JS getDay() is consistent)
       return todayNormalized;
-    } else if (dayOfWeek < 2 || dayOfWeek === 6) { // Monday (1) or Sunday (0) or Saturday (6)
+    } else if (dayOfWeek < 2 || dayOfWeek === 6)
+    { // Monday (1) or Sunday (0) or Saturday (6)
       return nextTuesday(todayNormalized);
-    } else { // Wednesday (3), Thursday (4), Friday (5)
+    } else
+    { // Wednesday (3), Thursday (4), Friday (5)
       return previousTuesday(todayNormalized);
     }
   }, [todayNormalized]);
@@ -30,16 +36,19 @@ function DatePicker(props) {
   const [availableDates, setAvailableDates] = useState([]);
   const [fullDates, setFullDates] = useState([]);
 
-  const calculateWeekDays = useCallback(() => {
+  const calculateWeekDays = useCallback(() =>
+  {
     const dates = [];
     let currentDate = currentWeekStart;
     // Ensure currentWeekStart is valid before adding days
-    if (!(currentDate instanceof Date) || isNaN(currentDate.getTime())) {
+    if (!(currentDate instanceof Date) || isNaN(currentDate.getTime()))
+    {
       console.error("Invalid currentWeekStart detected in calculateWeekDays, resetting to initialCurrentWeekStart.");
       currentDate = initialCurrentWeekStart; // Fallback to a valid date
     }
 
-    for (let i = 0; i < 4; i++) { // Loop 4 times
+    for (let i = 0; i < 4; i++)
+    { // Loop 4 times
       dates.push(currentDate);
       currentDate = addDays(currentDate, 1);
     }
@@ -47,46 +56,57 @@ function DatePicker(props) {
   }, [currentWeekStart, initialCurrentWeekStart]); // Added initialCurrentWeekStart to dependencies
 
   // Recalculate dates whenever currentWeekStart changes
-  useEffect(() => {
+  useEffect(() =>
+  {
     calculateWeekDays();
   }, [currentWeekStart, calculateWeekDays]);
 
-  useEffect(() => {
+  useEffect(() =>
+  {
     // Check which dates are fully booked
     const validDatesForCache = availableDates.filter(d => d instanceof Date && !isNaN(d.getTime()));
     const cacheKey = `full_dates_${validDatesForCache.map(d => format(d, 'yyyy-MM-dd')).join('_')}`;
     const cache = localStorage.getItem(cacheKey);
     let shouldFetch = true;
-    if (cache) {
+    if (cache)
+    {
       const { data, timestamp } = JSON.parse(cache);
-      if (Date.now() - timestamp < 30000) { // 30 seconds
+      if (Date.now() - timestamp < 30000)
+      { // 30 seconds
         setFullDates(data);
         shouldFetch = false;
       }
     }
-    const checkFullDates = async () => {
+    const checkFullDates = async () =>
+    {
       const results = [];
-      for (const date of availableDates) {
+      for (const date of availableDates)
+      {
         // Validate date before formatting
-        if (!(date instanceof Date) || isNaN(date.getTime())) {
+        if (!(date instanceof Date) || isNaN(date.getTime()))
+        {
           console.error("Skipping invalid date in checkFullDates loop:", date);
           continue;
         }
         const formattedDate = format(date, 'yyyy-MM-dd');
         let allFull = true;
-        for (const time of getCanonicalTimeSlots()) {
-          try {
+        for (const time of getCanonicalTimeSlots())
+        {
+          try
+          {
             const res = await axios.get(buildApiUrl(API_ENDPOINTS.GET_SLOT_COUNT), {
               params: {
                 schedule_date: formattedDate,
                 schedule_time: time
               }
             });
-            if ((res.data.count || 0) < (res.data.max_capacity || 12)) {
+            if ((res.data.count || 0) < (res.data.max_capacity || 12))
+            {
               allFull = false;
               break;
             }
-          } catch (e) {
+          } catch (e)
+          {
             allFull = false;
             break;
           }
@@ -99,10 +119,13 @@ function DatePicker(props) {
     if (availableDates.length > 0 && shouldFetch) checkFullDates();
   }, [availableDates]);
 
-  const handleNextWeek = () => {
-    setCurrentWeekStart(prevDate => {
+  const handleNextWeek = () =>
+  {
+    setCurrentWeekStart(prevDate =>
+    {
       // Validate prevDate before using addDays
-      if (!(prevDate instanceof Date) || isNaN(prevDate.getTime())) {
+      if (!(prevDate instanceof Date) || isNaN(prevDate.getTime()))
+      {
         console.error("Invalid 'prevDate' in handleNextWeek, using initialCurrentWeekStart as base:", prevDate);
         return addDays(initialCurrentWeekStart, 7); // Use a valid base if 'prevDate' is invalid
       }
@@ -110,36 +133,44 @@ function DatePicker(props) {
     });
   };
 
-  const handlePrevWeek = () => {
-    setCurrentWeekStart(prevDate => {
+  const handlePrevWeek = () =>
+  {
+    setCurrentWeekStart(prevDate =>
+    {
       // Validate prevDate before using subDays
-      if (!(prevDate instanceof Date) || isNaN(prevDate.getTime())) {
+      if (!(prevDate instanceof Date) || isNaN(prevDate.getTime()))
+      {
         console.error("Invalid 'prevDate' in handlePrevWeek, using initialCurrentWeekStart as base:", prevDate);
         return initialCurrentWeekStart; // Use a valid base if 'prevDate' is invalid
       }
       const newDate = subDays(prevDate, 7);
       // Prevent going before the earliest allowed week start
-      if (isBefore(newDate, initialCurrentWeekStart)) {
+      if (isBefore(newDate, initialCurrentWeekStart))
+      {
         return initialCurrentWeekStart;
       }
       return newDate;
     });
   };
 
-  const handleDateSelect = (date) => {
+  const handleDateSelect = (date) =>
+  {
     // Validate date before use
-    if (!(date instanceof Date) || isNaN(date.getTime())) {
+    if (!(date instanceof Date) || isNaN(date.getTime()))
+    {
       console.error("Attempted to select an invalid date:", date);
       return;
     }
     const dateAsString = format(date, "MMMM d,yyyy");
-    if (props.selectedDate === dateAsString) {
+    if (props.selectedDate === dateAsString)
+    {
       props.setSelectedDate(null);
       props.setRegistrationInputs(prev => ({
         ...prev,
         schedule_date: null
       }));
-    } else {
+    } else
+    {
       props.setSelectedDate(dateAsString);
       props.setRegistrationInputs(prev => ({
         ...prev,
@@ -172,9 +203,11 @@ function DatePicker(props) {
 
         {/* Date Display */}
         <div className="flex flex-wrap justify-center sm:justify-start shadow-lg shadow-gray-300 w-full">
-          {availableDates.map((date) => {
+          {availableDates.map((date) =>
+          {
             // Validate date before rendering
-            if (!(date instanceof Date) || isNaN(date.getTime())) {
+            if (!(date instanceof Date) || isNaN(date.getTime()))
+            {
               console.error("Invalid date found in availableDates map during render:", date);
               return null; // Skip rendering this invalid date entry
             }
