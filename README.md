@@ -1,6 +1,6 @@
 # 🎓 TSU ID Scheduling System
 
-![Website Logo](frontend/public/kurukuru-logo.png)
+![Website Logo](frontend/src/Components/public/kurukuru-logo.png)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](#)
@@ -76,7 +76,7 @@ A full-stack web application for **Tarlac State University - Office of Business 
 
 | Student View | Admin View |
 |--------------|------------|
-| ![Student](frontend/src/Components/public/StudentView.png) | ![Admin](frontend/public/AdminView.png) |
+| ![Student](frontend/src/Components/public/StudentView.png) | ![Admin](frontend/src/Components/public/AdminView.png) |
 
 ---
 
